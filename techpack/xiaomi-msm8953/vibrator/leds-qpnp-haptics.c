@@ -1100,6 +1100,9 @@ static int qpnp_haptics_play_mode_config(struct hap_chip *chip)
 	return rc;
 }
 
+static int vmax_mv_override = 0;
+module_param_named(vmax_mv_override, vmax_mv_override, int, 0664);
+
 /* configuration api for max voltage */
 static int qpnp_haptics_vmax_config(struct hap_chip *chip, int vmax_mv,
 				bool overdrive)
@@ -1113,6 +1116,13 @@ static int qpnp_haptics_vmax_config(struct hap_chip *chip, int vmax_mv,
 	/* Allow setting override bit in VMAX_CFG only for PM660 */
 	if (chip->revid->pmic_subtype != PM660_SUBTYPE)
 		overdrive = false;
+
+	/* Apply vmax override if set */
+	if (vmax_mv_override) {
+		if (vmax_mv_override > HAP_VMAX_MAX_MV)
+			vmax_mv_override = HAP_VMAX_MAX_MV;
+		vmax_mv = vmax_mv_override;
+	}
 
 	if (vmax_mv < HAP_VMAX_MIN_MV)
 		vmax_mv = HAP_VMAX_MIN_MV;
