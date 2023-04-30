@@ -11,6 +11,8 @@ ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/jpeg_dma
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/fd
 ccflags-y += -I $(srctree)/drivers/media/platform/msm/camera_v2/common
 
+obj-$(CONFIG_MSMB_CAMERA) += init.o
+
 obj-$(CONFIG_MSMB_CAMERA) += common/
 obj-$(CONFIG_MSMB_CAMERA) += msm.o
 obj-$(CONFIG_MSMB_CAMERA) += camera/
