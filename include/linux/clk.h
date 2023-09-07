@@ -237,11 +237,11 @@ static inline long clk_get_phase(struct clk *clk)
 	return -ENOTSUPP;
 }
 
-static inline int clk_set_duty_cycle(struct clk *clk, unsigned int num,
+/*static inline int clk_set_duty_cycle(struct clk *clk, unsigned int num,
 				     unsigned int den)
 {
 	return -ENOTSUPP;
-}
+}*/
 
 static inline unsigned int clk_get_scaled_duty_cycle(struct clk *clk,
 						     unsigned int scale)
@@ -933,7 +933,7 @@ static inline struct clk *clk_get_optional(struct device *dev, const char *id)
 	return clk;
 }
 
-#if defined(CONFIG_OF) && defined(CONFIG_COMMON_CLK)
+#if defined(CONFIG_OF)
 struct clk *of_clk_get(struct device_node *np, int index);
 struct clk *of_clk_get_by_name(struct device_node *np, const char *name);
 struct clk *of_clk_get_from_provider(struct of_phandle_args *clkspec);
