@@ -118,3 +118,10 @@ config PROC_CMDLINE_OVERRIDE_ANDROID_BOOT_DEVICES
 	help
 	  Say Y here to override Android boot devices parameter value
 	  from bootdevice parameter that supplied by the LK bootloader.
+
+config PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT
+	bool "Append Android force normal boot parameter to /proc/cmdline"
+	default y
+	help
+	  Say Y here to append androidboot.force_normal_boot=1 to /proc/cmdline
+	  if skip_initramf is present in command line.
