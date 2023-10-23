@@ -8,10 +8,18 @@
 #include <linux/of.h>
 #endif
 
-#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
+#if defined(CONFIG_INITRAMFS_IGNORE_SKIP_FLAG) || \
+    defined(CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT)
 #define INITRAMFS_STR_FIND "skip_initramf"
+#endif
+
+#ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
 #define INITRAMFS_STR_REPLACE "want_initramf"
 #define INITRAMFS_STR_LEN (sizeof(INITRAMFS_STR_FIND) - 1)
+#endif
+
+#ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT
+#define ANDROID_FORCE_NORMAL_BOOT_STR "androidboot.force_normal_boot=1"
 #endif
 
 #ifdef CONFIG_PROC_CMDLINE_OVERRIDE_ANDROID_BOOT_DEVICES
@@ -32,6 +40,9 @@ static char proc_command_line[COMMAND_LINE_SIZE];
 static void proc_command_line_init(void) {
 	char *offset_addr, *offset_addr2;
 	size_t value_len;
+#ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT
+	char *proc_command_line_tail;
+#endif
 #ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FSTAB_SUFFIX
 	const char *android_fstab_suffix;
 #endif
@@ -47,6 +58,17 @@ static void proc_command_line_init(void) {
 #ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FSTAB_SUFFIX
 	if (of_property_read_string(of_find_node_by_path("/"), "android,fstab_suffix", &android_fstab_suffix) == 0)
 		snprintf(proc_command_line, COMMAND_LINE_SIZE, "%s androidboot.fstab_suffix=%s", proc_command_line, android_fstab_suffix);
+#endif
+
+#ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT
+	if (strstr(saved_command_line, INITRAMFS_STR_FIND)) {
+		proc_command_line_tail = proc_command_line + strlen(proc_command_line);
+		if (proc_command_line_tail - proc_command_line + 1 + sizeof(ANDROID_FORCE_NORMAL_BOOT_STR) < COMMAND_LINE_SIZE) {
+			memcpy(proc_command_line_tail, " ", 1);
+			memcpy(proc_command_line_tail + 1, ANDROID_FORCE_NORMAL_BOOT_STR,
+				sizeof(ANDROID_FORCE_NORMAL_BOOT_STR));
+		}
+	}
 #endif
 
 #ifdef CONFIG_PROC_CMDLINE_OVERRIDE_ANDROID_BOOT_DEVICES
