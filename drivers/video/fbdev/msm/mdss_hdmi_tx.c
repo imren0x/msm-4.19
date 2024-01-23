@@ -119,23 +119,23 @@ static struct mdss_hw hdmi_tx_hw = {
 	.irq_handler = hdmi_tx_isr,
 };
 
-static struct mmdss_gpio hpd_gpio_config[] = {
+static struct mdss_gpio hpd_gpio_config[] = {
 	{0, 1, COMPATIBLE_NAME "-hpd"},
 	{0, 1, COMPATIBLE_NAME "-mux-en"},
 	{0, 0, COMPATIBLE_NAME "-mux-sel"},
 	{0, 1, COMPATIBLE_NAME "-mux-lpm"}
 };
 
-static struct mmdss_gpio ddc_gpio_config[] = {
+static struct mdss_gpio ddc_gpio_config[] = {
 	{0, 1, COMPATIBLE_NAME "-ddc-mux-sel"},
 	{0, 1, COMPATIBLE_NAME "-ddc-clk"},
 	{0, 1, COMPATIBLE_NAME "-ddc-data"}
 };
 
-static struct mmdss_gpio core_gpio_config[] = {
+static struct mdss_gpio core_gpio_config[] = {
 };
 
-static struct mmdss_gpio cec_gpio_config[] = {
+static struct mdss_gpio cec_gpio_config[] = {
 	{0, 1, COMPATIBLE_NAME "-cec"}
 };
 
@@ -677,7 +677,7 @@ static int hdmi_tx_update_pixel_clk(struct hdmi_tx_ctrl *hdmi_ctrl)
 
 	DEV_DBG("%s: rate %ld\n", __func__, power_data->clk_config->rate);
 
-	msm_mmdss_clk_set_rate(power_data->clk_config, power_data->num_clk);
+	msm_mdss_clk_set_rate(power_data->clk_config, power_data->num_clk);
 end:
 	return rc;
 }
@@ -2522,7 +2522,7 @@ static int hdmi_tx_enable_power(struct hdmi_tx_ctrl *hdmi_ctrl,
 		mdss_update_reg_bus_vote(hdmi_ctrl->pdata.reg_bus_clt[module],
 			VOTE_INDEX_LOW);
 
-		rc = msm_mmdss_clk_set_rate(power_data->clk_config,
+		rc = msm_mdss_clk_set_rate(power_data->clk_config,
 			power_data->num_clk);
 		if (rc) {
 			DEV_ERR("%s: failed to set clks rate for %s. err=%d\n",
@@ -4219,7 +4219,7 @@ static int hdmi_tx_get_dt_gpio_data(struct device *dev,
 {
 	int i, j;
 	int mp_gpio_cnt = 0, gpio_list_size = 0;
-	struct mmdss_gpio *gpio_list = NULL;
+	struct mdss_gpio *gpio_list = NULL;
 	struct device_node *of_node = NULL;
 
 	DEV_DBG("%s: module: '%s'\n", __func__, hdmi_tx_pm_name(module_type));
@@ -4266,7 +4266,7 @@ static int hdmi_tx_get_dt_gpio_data(struct device *dev,
 	DEV_DBG("%s: mp_gpio_cnt = %d\n", __func__, mp_gpio_cnt);
 	mp->num_gpio = mp_gpio_cnt;
 
-	mp->gpio_config = devm_kzalloc(dev, sizeof(struct mmdss_gpio) *
+	mp->gpio_config = devm_kzalloc(dev, sizeof(struct mdss_gpio) *
 		mp_gpio_cnt, GFP_KERNEL);
 	if (!mp->gpio_config) {
 		DEV_ERR("%s: can't alloc '%s' gpio mem\n", __func__,
@@ -4285,7 +4285,7 @@ static int hdmi_tx_get_dt_gpio_data(struct device *dev,
 			continue;
 		}
 		memcpy(&mp->gpio_config[j], &gpio_list[i],
-			sizeof(struct mmdss_gpio));
+			sizeof(struct mdss_gpio));
 
 		mp->gpio_config[j].gpio = (unsigned int)gpio;
 
