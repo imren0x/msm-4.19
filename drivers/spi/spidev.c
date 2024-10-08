@@ -123,7 +123,9 @@ spidev_sync_write(struct spidev_data *spidev, size_t len)
 	struct spi_transfer	t = {
 			.tx_buf		= spidev->tx_buffer,
 			.len		= len,
-			.speed_hz	= spidev->speed_hz,
+			.speed_hz	= 960000,	//spidev->speed_hz
+			.delay_usecs = 0,
+			.cs_change   = 0,
 		};
 	struct spi_message	m;
 
@@ -163,6 +165,16 @@ spidev_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 	spidev = filp->private_data;
 
 	mutex_lock(&spidev->buf_lock);
+	/* 2021.08.18 longcheer xugui added for buffer kmalloc size begin */
+	if (!spidev->rx_buffer) {
+		spidev->rx_buffer = kmalloc(bufsiz, GFP_KERNEL);
+		if (!spidev->rx_buffer) {
+			dev_dbg(&spidev->spi->dev, "open/ENOMEM\n");
+			status = -ENOMEM;
+			goto read_unlock;
+		}
+	}
+	/* 2021.08.18 longcheer xugui added for buffer kmalloc size end */
 	status = spidev_sync_read(spidev, count);
 	if (status > 0) {
 		unsigned long	missing;
@@ -173,6 +185,12 @@ spidev_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 		else
 			status = status - missing;
 	}
+	/* 2021.08.18 longcheer xugui added for buffer kmalloc size begin */
+	kfree(spidev->rx_buffer);
+	spidev->rx_buffer = NULL;
+
+read_unlock:
+	/* 2021.08.18 longcheer xugui added for buffer kmalloc size end */
 	mutex_unlock(&spidev->buf_lock);
 
 	return status;
@@ -188,17 +206,35 @@ spidev_write(struct file *filp, const char __user *buf,
 	unsigned long		missing;
 
 	/* chipselect only toggles at start or end of operation */
+/*  henry.liu 2018.12.29 removed for buffer kmalloc size
 	if (count > bufsiz)
 		return -EMSGSIZE;
+*/
 
 	spidev = filp->private_data;
 
 	mutex_lock(&spidev->buf_lock);
+
+	if (!spidev->tx_buffer) {
+		spidev->tx_buffer = kmalloc(count, GFP_KERNEL);
+		if (!spidev->tx_buffer) {
+			dev_dbg(&spidev->spi->dev, "open/ENOMEM\n");
+			status = -ENOMEM;
+			goto write_unlock;
+		}
+	}
+
 	missing = copy_from_user(spidev->tx_buffer, buf, count);
 	if (missing == 0)
 		status = spidev_sync_write(spidev, count);
 	else
 		status = -EFAULT;
+
+	kfree(spidev->tx_buffer);
+	spidev->tx_buffer = NULL;
+
+write_unlock:
+
 	mutex_unlock(&spidev->buf_lock);
 
 	return status;
@@ -224,6 +260,24 @@ static int spidev_message(struct spidev_data *spidev,
 	 * We walk the array of user-provided transfers, using each one
 	 * to initialize a kernel version of the same transfer.
 	 */
+
+	if (!spidev->rx_buffer) {
+		spidev->rx_buffer = kmalloc(bufsiz, GFP_KERNEL);
+		if (!spidev->rx_buffer) {
+			dev_dbg(&spidev->spi->dev, "open/ENOMEM\n");
+			status = -ENOMEM;
+			goto rxbuffer_err;
+		}
+	}
+	if (!spidev->tx_buffer) {
+		spidev->tx_buffer = kmalloc(bufsiz, GFP_KERNEL);
+		if (!spidev->tx_buffer) {
+			dev_dbg(&spidev->spi->dev, "open/ENOMEM\n");
+			status = -ENOMEM;
+			goto txbuffer_err;
+		}
+	}
+
 	tx_buf = spidev->tx_buffer;
 	rx_buf = spidev->rx_buffer;
 	total = 0;
@@ -317,6 +371,13 @@ static int spidev_message(struct spidev_data *spidev,
 	status = total;
 
 done:
+	kfree(spidev->tx_buffer);
+	spidev->tx_buffer = NULL;
+txbuffer_err:
+	kfree(spidev->rx_buffer);
+	spidev->rx_buffer = NULL;
+rxbuffer_err:
+
 	kfree(k_xfers);
 	return status;
 }
@@ -576,6 +637,7 @@ static int spidev_open(struct inode *inode, struct file *filp)
 		goto err_find_dev;
 	}
 
+/*
 	if (!spidev->tx_buffer) {
 		spidev->tx_buffer = kmalloc(bufsiz, GFP_KERNEL);
 		if (!spidev->tx_buffer) {
@@ -593,6 +655,7 @@ static int spidev_open(struct inode *inode, struct file *filp)
 			goto err_alloc_rx_buf;
 		}
 	}
+*/
 
 	spidev->users++;
 	filp->private_data = spidev;
@@ -601,9 +664,13 @@ static int spidev_open(struct inode *inode, struct file *filp)
 	mutex_unlock(&device_list_lock);
 	return 0;
 
+/*
 err_alloc_rx_buf:
 	kfree(spidev->tx_buffer);
 	spidev->tx_buffer = NULL;
+*/
+
+
 err_find_dev:
 	mutex_unlock(&device_list_lock);
 	return status;
@@ -627,11 +694,13 @@ static int spidev_release(struct inode *inode, struct file *filp)
 	spidev->users--;
 	if (!spidev->users) {
 
+/*
 		kfree(spidev->tx_buffer);
 		spidev->tx_buffer = NULL;
 
 		kfree(spidev->rx_buffer);
 		spidev->rx_buffer = NULL;
+*/
 
 		if (dofree)
 			kfree(spidev);
@@ -674,6 +743,7 @@ static struct class *spidev_class;
 #ifdef CONFIG_OF
 static const struct of_device_id spidev_dt_ids[] = {
 	{ .compatible = "rohm,dh2228fv" },
+	{ .compatible = "ifrared,spi-msm-ir-slave", },
 	{ .compatible = "lineartechnology,ltc2488" },
 	{ .compatible = "ge,achc" },
 	{ .compatible = "semtech,sx1301" },
