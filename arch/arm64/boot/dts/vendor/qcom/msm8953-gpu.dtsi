@@ -41,21 +41,21 @@
 
 		opp-278 { opp-hz = /bits/ 64 < 2124 >;  }; /*  2. 278 MHz */
 
-		opp-304 { opp-hz = /bits/ 64 < 2929 >;  }; /*  3. 304 MHz */
+		opp-384 { opp-hz = /bits/ 64 < 2929 >;  }; /*  3. 384 MHz */
 
-		opp-347 { opp-hz = /bits/ 64 < 3222 >;  }; /*  4. 347 MHz */
+		opp-422 { opp-hz = /bits/ 64 < 3222 >;  }; /*  4. 422 MHz */
 
-		opp-437 { opp-hz = /bits/ 64 < 4248 >;  }; /*  5. 437 MHz */
+		opp-556 { opp-hz = /bits/ 64 < 4248 >;  }; /*  5. 556 MHz */
 
-		opp-527 { opp-hz = /bits/ 64 < 5126 >;  }; /*  6. 527 MHz */
+		opp-672 { opp-hz = /bits/ 64 < 5126 >;  }; /*  6. 672 MHz */
 
-		opp-597 { opp-hz = /bits/ 64 < 5859 >;  }; /*  7. 597 MHz */
+		opp-768 { opp-hz = /bits/ 64 < 5859 >;  }; /*  7. 768 MHz */
 
-		opp-620 { opp-hz = /bits/ 64 < 6152 >;  }; /*  8. 620 MHz */
+		opp-806 { opp-hz = /bits/ 64 < 6152 >;  }; /*  8. 806 MHz */
 
-		opp-760 { opp-hz = /bits/ 64 < 6445 >;  }; /*  9. 760 MHz */
+		opp-844 { opp-hz = /bits/ 64 < 6445 >;  }; /*  9. 844 MHz */
 
-		opp-922 { opp-hz = /bits/ 64 < 7104 >;  }; /* 10. 922 MHz */
+		opp-931 { opp-hz = /bits/ 64 < 7104 >;  }; /* 10. 931 MHz */
 	};
 
 	gpubw: qcom,gpubw {
