@@ -1814,11 +1814,44 @@ static int mdss_dsi_parse_reset_seq(struct device_node *np,
 	return 0;
 }
 
+static char sleep_out[1] = {0x11};	/* DTYPE_DCS_WRITE1 */
+static struct dsi_cmd_desc sleep_out_cmd = {
+	{DTYPE_DCS_LWRITE, 1, 0, 0, 5, sizeof(sleep_out)},
+	sleep_out
+};
+/* add sleep out for truly panel fix esd problem */
+static int mdss_dsi_truly_set_sleep_out(struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	struct dcs_cmd_req cmdreq;
+	struct mdss_panel_info *pinfo;
+
+	//pr_debug("%s:start truly sleep out\n", __func__);
+
+	pinfo = &(ctrl->panel_data.panel_info);
+	if (pinfo->dcs_cmd_by_left) {
+		if (ctrl->ndx != DSI_CTRL_LEFT)
+			return -EINVAL;
+	}
+
+		cmdreq.cmds = &sleep_out_cmd;
+		cmdreq.cmds_cnt = 1;
+		cmdreq.flags = CMD_REQ_COMMIT | CMD_CLK_CTRL | CMD_REQ_HS_MODE;
+		cmdreq.rlen = 0;
+		cmdreq.cb = NULL;
+		mdss_dsi_cmdlist_put(ctrl, &cmdreq);
+
+	//pr_debug("%s:end truly sleep out\n", __func__);
+	return 0;
+}
+
 static bool mdss_dsi_cmp_panel_reg_v2(struct mdss_dsi_ctrl_pdata *ctrl)
 {
 	int i, j = 0;
 	int len = 0, *lenp;
 	int group = 0;
+
+	if (!strncmp(ctrl->panel_data.panel_info.panel_name, "truly hx8394f", 13))
+		mdss_dsi_truly_set_sleep_out(ctrl);
 
 	lenp = ctrl->status_valid_params ?: ctrl->status_cmds_rlen;
 
