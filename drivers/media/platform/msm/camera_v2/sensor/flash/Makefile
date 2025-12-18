@@ -5,3 +5,6 @@ ccflags-y += -Idrivers/media/platform/msm/camera_v2/common
 ccflags-y += -Idrivers/media/platform/msm/camera_v2/sensor/io
 obj-$(CONFIG_MSMB_CAMERA) += msm_flash.o
 obj-$(CONFIG_MSMB_CAMERA) += qm215_gpio_flash.o
+ifdef CONFIG_MACH_XIAOMI_VINCE
+obj-$(CONFIG_MSMB_CAMERA) += msm_frontflash.o
+endif
