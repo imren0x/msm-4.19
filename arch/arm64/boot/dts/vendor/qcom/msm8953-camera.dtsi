@@ -399,14 +399,6 @@
 			<62 512 800000 800000>;
 	};
 
-	qcom,irqrouter@1b00000 {
-		status = "ok";
-		cell-index = <0>;
-		compatible = "qcom,irqrouter";
-		reg = <0x1b00000 0x100>;
-		reg-names = "irqrouter";
-	};
-
 	qcom,cpp@1b04000 {
 		status = "ok";
 		cell-index = <0>;
