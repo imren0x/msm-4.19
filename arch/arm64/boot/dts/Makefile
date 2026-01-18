@@ -1,8 +1,4 @@
 # SPDX-License-Identifier: GPL-2.0
-dtstree		:= $(srctree)/$(src)
-
-vendor := $(dtstree)/vendor-legacy
-ifeq "$(wildcard $(vendor)/Makefile)" ""
 subdir-y += actions
 subdir-y += al
 subdir-y += allwinner
@@ -32,8 +28,13 @@ subdir-y += xilinx
 subdir-y += zte
 
 
-else
+dtstree		:= $(srctree)/$(src)
+
+ifneq ($(CONFIG_OF_IGNORE_QCOM_VENDOR_DTS),y)
+vendor := $(dtstree)/vendor-legacy
+ifneq "$(wildcard $(vendor)/Makefile)" ""
         subdir-y += vendor-legacy
+endif
 endif
 
 dtb-$(CONFIG_OF_ALL_DTBS) := $(patsubst $(dtstree)/%.dts,%.dtb, $(foreach d,$(subdir), $(wildcard $(dtstree)/$(d)/*.dts)))
