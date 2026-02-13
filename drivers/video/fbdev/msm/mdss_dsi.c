@@ -503,7 +503,7 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		}
 	}
 #elif defined(CONFIG_MACH_XIAOMI_VINCE)
-	if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi) || (!NVT_gesture_func_on)){
+	if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi)){
 		if (nvt_csot_esd_status->nova_csot_panel && nvt_csot_esd_status->ESD_TE_status){
 			ret = nova_esd_recovery(pdata);
 		} else {
