@@ -154,6 +154,9 @@ int panel_suspend_reset_flag = 0;
 int panel_suspend_power_flag = 0;
 #endif
 
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+int panel_suspend_reset_flag = 0;
+#endif
 static void mdss_dsi_pm_qos_add_request(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct irq_info *irq_info;
@@ -481,6 +484,13 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 #endif
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
 		pr_debug("reset disable: pinctrl not enabled\n");
+
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+	if (panel_suspend_reset_flag == 2)
+		msleep(1); /* delay 1ms */
+	else if (panel_suspend_reset_flag == 3)
+		msleep(4); /* delay 4ms */
+#endif
 
 #ifdef CONFIG_MACH_XIAOMI_TISSOT
 	if ((panel_suspend_power_flag != 3) && acc_vreg) {
@@ -3415,6 +3425,13 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 			ESD_interval = 500;
 		}
 #endif
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+		if (!strcmp(panel_name, "qcom,mdss_dsi_otm1911_fhd_video"))
+			panel_suspend_reset_flag = 2;
+		else if (!strcmp(panel_name, "qcom,mdss_dsi_ili9885_boe_fhd_video"))
+			panel_suspend_reset_flag = 3;
+		else
+#endif
 		mdss_node = of_parse_phandle(pdev->dev.of_node,
 			"qcom,mdss-mdp", 0);
 		if (!mdss_node) {
@@ -4727,6 +4744,54 @@ int init_te_irq(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 }
 #endif
 
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+u32 te_count;
+static irqreturn_t te_interrupt(int irq, void *data)
+{
+	disable_irq_nosync(irq);
+	te_count++;
+	enable_irq(irq);
+
+	return IRQ_HANDLED;
+}
+
+int init_te_irq(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	int rc = -1;
+	int irq;
+
+	if (gpio_is_valid(ctrl_pdata->disp_te_gpio)) {
+		rc = gpio_request(ctrl_pdata->disp_te_gpio, "te-gpio");
+		if (rc < 0) {
+			pr_err("%s: gpio_request fail rc=%d\n", __func__, rc);
+			return rc ;
+		}
+
+		rc = gpio_direction_input(ctrl_pdata->disp_te_gpio);
+		if (rc < 0) {
+			pr_err("%s: gpio_direction_input fail rc=%d\n",
+				__func__, rc);
+			return rc ;
+		}
+
+		irq = gpio_to_irq(ctrl_pdata->disp_te_gpio);
+		pr_debug("%s:liujia irq = %d\n", __func__, irq);
+		rc = request_threaded_irq(irq, te_interrupt, NULL,
+			IRQF_TRIGGER_RISING|IRQF_ONESHOT,
+			"te-irq", ctrl_pdata);
+		if (rc < 0) {
+			pr_err("%s: request_irq fail rc=%d\n", __func__, rc);
+			return rc ;
+		}
+	} else {
+		 pr_err("%s:liujia irq gpio not provided\n", __func__);
+		 return rc;
+	}
+
+	return 0;
+}
+#endif /* MACH_XIAOMI_C6 */
+
 static int mdss_dsi_parse_gpio_params(struct platform_device *ctrl_pdev,
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
@@ -4907,6 +4972,12 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	else if (ctrl_pdata->status_mode == ESD_TE_NT35596) {
 		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
 	    init_te_irq(ctrl_pdata);
+	}
+#endif
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+	else if (ctrl_pdata->status_mode == ESD_TE_NT35596) {
+		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
+		init_te_irq(ctrl_pdata);
 	}
 #endif
 	else if (ctrl_pdata->status_mode == ESD_BTA)
