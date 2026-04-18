@@ -240,9 +240,6 @@ extern struct device dsi_dev;
 extern u32 dsi_irq;
 extern struct mdss_dsi_ctrl_pdata *ctrl_list[];
 
-#ifdef CONFIG_MACH_XIAOMI_TISSOT
-extern int ft8716_gesture_func_on;
-#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 extern bool synaptics_gesture_func_on;
 extern bool synaptics_gesture_func_on_lansi;
@@ -690,10 +687,7 @@ int mdss_dsi_cmdlist_commit(struct mdss_dsi_ctrl_pdata *ctrl, int from_mdp);
 void mdss_dsi_cmdlist_kickoff(int intf);
 int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
 int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#ifdef CONFIG_MACH_XIAOMI_MIDO
-int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#endif
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#if (defined CONFIG_MACH_XIAOMI_MIDO) || (defined CONFIG_MACH_XIAOMI_VINCE)
 int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
 #endif
 bool __mdss_dsi_clk_enabled(struct mdss_dsi_ctrl_pdata *ctrl, u8 clk_type);
