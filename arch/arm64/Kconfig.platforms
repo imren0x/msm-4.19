@@ -481,4 +481,78 @@ config MACH_XIAOMI_TITANIUM
 	  Support for the Xiaomi Titanium platform
 	  which is based on QCOM TITANIUM chipset.
 
+config MACH_XIAOMI_TISSOT
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi MI A1 platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_DAISY
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi MI A2 Lite platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_SAKURA
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Redmi 6 PRO platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_YSL
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Redmi S2 platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_VINCE
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_MIDO
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Redmi Note 4 platform
+	  which is based on QCOM MSM8953 chipset.
+
+config MACH_XIAOMI_OXYGEN
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Mi Max 2 platform
+	  which is based on QCOM MSM8953 chipset.
+
+config TAS2557_REGMAP
+	bool  "Texas Audio TAS2557"
+	depends on MACH_XIAOMI_VINCE
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
+config TAS2557_CODEC
+	bool  "Texas Audio TAS2557"
+	depends on MACH_XIAOMI_VINCE
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
+config TAS2557_MISC
+	bool  "Texas Audio TAS2557"
+	depends on MACH_XIAOMI_VINCE
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
+config SND_SOC_MAX98927
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi Redmi 6 Pro platform
+	  which is based on QCOM MSM8953 chipset.
+
 endmenu
