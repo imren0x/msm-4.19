@@ -12,6 +12,7 @@
 
 #include <linux/module.h>
 #include <linux/ratelimit.h>
+#include <linux/sched/clock.h>
 #include <asm/div64.h>
 #include "msm_isp40.h"
 #include "msm_isp_util.h"
