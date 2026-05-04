@@ -175,4 +175,11 @@ config SMB1398_CHARGER
 	      wireless charger receiver and provide the input for downstream
 	      chargers.
 
+config PMIC_VOTER
+	tristate "SMB1398 power supply framework based driver"
+	depends on MFD_I2C_PMIC
+	help
+	  Say Y to include the support of pmic-voter driver based on power
+	  supply framework.
+
 endmenu
