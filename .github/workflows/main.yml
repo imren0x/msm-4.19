@@ -1,0 +1,105 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      config:
+          description: 'kernel config target'
+          required: true
+          default: 'vince.config'
+      kernelname:
+          description: 'Kernel name'
+          required: true
+          default: 'perf'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      TZ: Asia/Jakarta
+      CONFIG: ${{ github.event.inputs.config }}
+      KERNELNAME: ${{ github.event.inputs.kernelname }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Clone dts kernel
+        run: |
+          git clone --recursive --depth=1 -j $(nproc) https://github.com/imren0x/kernel_devicetree_msm-4.19 -b main arch/arm64/boot/dts/vendor-legacy
+
+      - name: Clone prima wlan source
+        run: |
+          git clone --recursive --depth=1 -j $(nproc) https://github.com/Mi-Thorium/vendor_qcom_opensource_wlan_prima -b wlan/LA.UM.9.6.4/mithorium/master drivers/staging/prima
+
+      - name: Clone techpack xiaomi-titanium kernel source
+        run: |
+          git clone --recursive --depth=1 -j $(nproc) https://github.com/imren0x/kernel_techpack_xiaomi-titanium -b techpack/titanium/4.19/master techpack/xiaomi-titanium
+
+      - name: Clone techpack audio kernel source
+        run: |
+          git clone --recursive --depth=1 -j $(nproc) https://github.com/imren0x/kernel_techpack_audio-legacy -b audio/4.19/master techpack/audio-legacy
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bc bison flex libssl-dev build-essential \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            gcc-arm-linux-gnueabihf python3 aria2 cpio
+
+      - name: Clone AOSP Clang 20
+        run: |
+          mkdir -p prebuilts/clang/host/linux-x86/clang-r547379
+          aria2c -x 16 -s 16 -k 1M https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
+          tar -xzf clang-r547379.tar.gz -C prebuilts/clang/host/linux-x86/clang-r547379
+
+      # 4. Set environment variables
+      - name: Export build vars
+        run: |
+          export KERNEL_DIR=$PWD
+          export CLANG_PATH=$PWD/prebuilts/clang/host/linux-x86/clang-r547379/bin
+          echo "PATH=$CLANG_PATH:/usr/bin:$PATH" >> $GITHUB_ENV
+          echo "KERNEL_DIR=$KERNEL_DIR" >> $GITHUB_ENV
+
+      - name: Start kernel build
+        run: |
+          export PATH="$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CLANG_TRIPLE=aarch64-linux-gnu-
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          export CC=clang
+          export LD=ld.lld
+          export AR=llvm-ar
+          export NM=llvm-nm
+          export OBJCOPY=llvm-objcopy
+          export OBJDUMP=llvm-objdump
+          export STRIP=llvm-strip
+          export LLVM=1
+          export LLVM_IAS=1
+          export KBUILD_BUILD_USER=Reiame
+          export KBUILD_BUILD_HOST=Mika
+
+          mkdir -p out
+          make O=out vendor/msm8953-perf_defconfig vendor/xiaomi/$CONFIG
+          make -j$(nproc --all) O=out \
+
+      - name: Clone AnyKernel3
+        run: |
+          git clone https://github.com/KanariaAlt/Anykernel3 AnyKernel
+          cp out/arch/arm64/boot/Image.gz-dtb AnyKernel/
+
+      - name: Zip kernel
+        run: |
+          cd AnyKernel
+          zip -r9 Kernel-$KERNELNAME-$(date +%Y%m%d).zip ./*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-$KERNELNAME
+          path: AnyKernel/*.zip
