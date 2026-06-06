@@ -4,6 +4,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <asm/setup.h>
+
 #if defined(CONFIG_INITRAMFS_IGNORE_SKIP_FLAG) || \
     defined(CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT)
 #define INITRAMFS_STR_FIND "skip_initramf"
@@ -25,10 +26,13 @@ static void proc_command_line_init(void) {
 	char *proc_command_line_tail;
 
 	strcpy(proc_command_line, saved_command_line);
+
 #ifdef CONFIG_INITRAMFS_IGNORE_SKIP_FLAG
 	offset_addr = strstr(proc_command_line, INITRAMFS_STR_FIND);
 	if (offset_addr)
 		memcpy(offset_addr, INITRAMFS_STR_REPLACE, INITRAMFS_STR_LEN);
+#endif
+
 
 #ifdef CONFIG_PROC_CMDLINE_APPEND_ANDROID_FORCE_NORMAL_BOOT
 	if (strstr(saved_command_line, INITRAMFS_STR_FIND)) {
