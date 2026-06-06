@@ -488,6 +488,13 @@ config MACH_XIAOMI_TISSOT
 	  Support for the Xiaomi MI A1 platform
 	  which is based on QCOM MSM8953 chipset.
 
+config MACH_XIAOMI_TIFFANY
+	bool  "XIAOMI platform"
+	depends on ARCH_MSM8953
+	help
+	  Support for the Xiaomi MI A1 platform
+	  which is based on QCOM MSM8953 chipset.
+
 config MACH_XIAOMI_DAISY
 	bool  "XIAOMI platform"
 	depends on ARCH_MSM8953
