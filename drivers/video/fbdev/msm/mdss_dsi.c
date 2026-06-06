@@ -152,6 +152,10 @@ void mdss_dump_dsi_debug_bus(u32 bus_dump_flag,
 #ifdef CONFIG_MACH_XIAOMI_MIDO
 int panel_suspend_reset_flag = 0;
 #endif
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+int panel_suspend_reset_flag = 0;
+int panel_suspend_power_flag = 0;
+#endif
 static void mdss_dsi_pm_qos_add_request(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct irq_info *irq_info;
@@ -441,6 +445,10 @@ end:
 }
 #endif
 
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+int acc_vreg = 0;
+#endif
+
 #ifdef CONFIG_MACH_XIAOMI_MSM8953
 int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 #else
@@ -482,7 +490,27 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		msleep(4); /* delay 4ms */
 #endif
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+	if ((panel_suspend_power_flag != 3) && acc_vreg) {
+		ret = msm_mdss_enable_vreg( // git
+			ctrl_pdata->panel_power_data.vreg_config,
+			ctrl_pdata->panel_power_data.num_vreg, 0);
+		acc_vreg--;
+		if (ret)
+			pr_err("%s: failed to disable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+	} else {
+		if (!acc_vreg) {
+			ret = msm_mdss_enable_vreg( // git
+					ctrl_pdata->panel_power_data.vreg_config,
+					ctrl_pdata->panel_power_data.num_vreg, 0);
+			acc_vreg--;
+			if (ret)
+				pr_err("%s: failed to disable vregs for %s\n",
+					 __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+		}
+	}
+#elif defined(CONFIG_MACH_XIAOMI_VINCE)
 	if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi)){
 		if (nvt_csot_esd_status->nova_csot_panel && nvt_csot_esd_status->ESD_TE_status){
 			ret = nova_esd_recovery(pdata);
@@ -527,12 +555,18 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+	if (!acc_vreg) {
+#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 	if (!vspn_power_state) {
 #endif
 	ret = msm_mdss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+		acc_vreg++;
+#endif
 	if (ret) {
 		pr_err("%s: failed to enable vregs for %s\n",
 			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
@@ -543,7 +577,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 	vspn_power_state = true;
 #endif
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#if defined(CONFIG_MACH_XIAOMI_TISSOT) || defined(CONFIG_MACH_XIAOMI_VINCE) || defined(CONFIG_MACH_XIAOMI_TIFFANY)
 	}
 #endif
 
@@ -3378,6 +3412,18 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 		if (!strcmp(panel_name, NONE_PANEL))
 			goto exit;
 
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+		if (!strcmp(panel_name, "qcom,mdss_dsi_td4310_fhd_video")) {
+			panel_suspend_reset_flag = 1;
+			panel_suspend_power_flag = 1;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_otm1911_fhd_video")) {
+			panel_suspend_reset_flag = 2;
+			panel_suspend_power_flag = 2;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_ft8716_fhd_video")) {
+			panel_suspend_reset_flag = 3;
+			panel_suspend_power_flag = 3;
+		}
+#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 		if (!strcmp(panel_name, "qcom,mdss_dsi_nt36672_csot_fhdplus_video_e7")){
 			nvt_csot_esd_status->nova_csot_panel = true;
@@ -3685,6 +3731,10 @@ error:
 	return rc;
 }
 
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+struct mdss_panel_data *panel_data;
+#endif
+
 static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 {
 	int rc = 0;
@@ -3780,6 +3830,10 @@ static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 	} else {
 		ctrl_pdata->bklt_ctrl = UNKNOWN_CTRL;
 	}
+
+#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
+	panel_data = &ctrl_pdata->panel_data;
+#endif
 
 	rc = dsi_panel_device_register(pdev, dsi_pan_node, ctrl_pdata);
 	if (rc) {
