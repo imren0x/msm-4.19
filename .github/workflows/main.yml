@@ -28,7 +28,7 @@ jobs:
 
       - name: SukiSU Setup
         run: |
-          curl -LSs "https://raw.githubusercontent.com/KanariaAlt/SukiSU-Ultra/susfs-main/kernel/setup.sh" | bash -s susfs-main
+          curl -LSs "https://raw.githubusercontent.com/KanariaAlt/SukiSU-Ultra/nongki/kernel/setup.sh" | bash -s nongki
 
       - name: Clone dts kernel
         run: |
