@@ -26,6 +26,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: SukiSU Setup
+        run: |
+          curl -LSs "https://raw.githubusercontent.com/KanariaAlt/SukiSU-Ultra/susfs-main/kernel/setup.sh" | bash -s susfs-main
+
       - name: Clone dts kernel
         run: |
           git clone --recursive --depth=1 -j $(nproc) https://github.com/imren0x/kernel_devicetree_msm-4.19 -b main arch/arm64/boot/dts/vendor-legacy
