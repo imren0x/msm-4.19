@@ -17,6 +17,9 @@
 #include "mdss_mdp.h"
 #include "mdss_mdp_trace.h"
 #include "mdss_debug.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
+#include <xiaomi-titanium/mach.h>
+#endif
 
 #define MDSS_MDP_QSEED3_VER_DOWNSCALE_LIM 2
 #define NUM_MIXERCFG_REGS 3
@@ -4667,7 +4670,8 @@ void mdss_mdp_check_ctl_reset_status(struct mdss_mdp_ctl *ctl)
 
 	pr_debug("hw ctl reset is set for ctl:%d\n", ctl->num);
 	/* poll for at least ~1 frame */
-	status = mdss_mdp_poll_ctl_reset_status(ctl, 320);
+	status = mdss_mdp_poll_ctl_reset_status(ctl, 
+		(xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) ? 640 : 320);
 	if (status) {
 		pr_err("hw recovery is not complete for ctl:%d status:0x%x\n",
 			ctl->num, status);

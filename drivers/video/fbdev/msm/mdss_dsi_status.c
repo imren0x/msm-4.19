@@ -15,6 +15,9 @@
 #include <linux/kobject.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
+#include <xiaomi-titanium/mach.h>
+#endif
 
 #include "mdss_fb.h"
 #include "mdss_dsi.h"
@@ -26,7 +29,9 @@
 #define DSI_STATUS_CHECK_INIT -1
 #define DSI_STATUS_CHECK_DISABLE 1
 
-static uint32_t interval = STATUS_CHECK_INTERVAL_MS;
+uint32_t ESD_interval = STATUS_CHECK_INTERVAL_MS;
+#define interval ESD_interval
+
 static int32_t dsi_status_disable = DSI_STATUS_CHECK_INIT;
 struct dsi_status_data *pstatus_data;
 
@@ -248,6 +253,12 @@ static int param_set_interval(const char *val, const struct kernel_param *kp)
 int __init mdss_dsi_status_init(void)
 {
 	int rc = 0;
+
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+		ESD_interval = 1000; /* 1000 ms for Vince */
+	} else {
+		ESD_interval = 5000; /* 5000 ms for mi8953 */
+	}
 
 	pstatus_data = kzalloc(sizeof(struct dsi_status_data), GFP_KERNEL);
 	if (!pstatus_data)
