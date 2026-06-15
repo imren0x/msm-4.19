@@ -479,7 +479,7 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		ret = 0;
 	}
 
-#ifdef CONFIG_MACH_XIAOMI_MSM8953
+#ifdef CONFIG_MACH_XIAOMI_VINCE
  	usleep_range(1000,1000); 
 #endif
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
