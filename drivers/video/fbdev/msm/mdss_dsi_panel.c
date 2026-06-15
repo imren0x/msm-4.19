@@ -2123,7 +2123,7 @@ static void mdss_dsi_parse_esd_params(struct device_node *np,
 			ctrl->status_mode = ESD_REG;
 			ctrl->check_read_status =
 				mdss_dsi_gen_read_status;
-#if (defined CONFIG_MACH_XIAOMI_MIDO) || (defined CONFIG_MACH_XIAOMI_VINCE)
+#ifdef CONFIG_MACH_XIAOMI_VINCE
 		} else if (!strcmp(string, "TE_check_NT35596")) {
 			ctrl->status_mode = ESD_TE_NT35596;
 #endif

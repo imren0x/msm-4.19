@@ -101,7 +101,7 @@ enum dsi_panel_status_mode {
 	ESD_BTA,
 	ESD_REG,
 	ESD_REG_NT35596,
-#if (defined CONFIG_MACH_XIAOMI_MIDO) || (defined CONFIG_MACH_XIAOMI_VINCE)
+#ifdef CONFIG_MACH_XIAOMI_VINCE
 	ESD_TE_NT35596,
 #endif
 	ESD_TE,
@@ -690,9 +690,6 @@ int mdss_dsi_cmdlist_commit(struct mdss_dsi_ctrl_pdata *ctrl, int from_mdp);
 void mdss_dsi_cmdlist_kickoff(int intf);
 int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
 int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#ifdef CONFIG_MACH_XIAOMI_MIDO
-int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
 #endif
