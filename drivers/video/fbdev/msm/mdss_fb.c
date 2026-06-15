@@ -47,6 +47,9 @@
 #include "mdss_smmu.h"
 #include "mdss_mdp.h"
 #include "mdss_sync.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
+#include <xiaomi-titanium/mach.h>
+#endif
 
 #include "mdss_livedisplay.h"
 
