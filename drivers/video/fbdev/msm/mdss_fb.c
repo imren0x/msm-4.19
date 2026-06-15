@@ -56,6 +56,9 @@
 #include "mdss_mdp.h"
 #include "mdp3_ctrl.h"
 #include "mdss_sync.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
+#include <xiaomi-titanium/mach.h>
+#endif
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
 #define MDSS_FB_NUM 3
