@@ -13,6 +13,9 @@
 #include <linux/sched.h>
 #include <uapi/linux/sched/types.h>
 #include <linux/msm-bus.h>
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
+#include <xiaomi-titanium/mach.h>
+#endif
 
 #include "mdss.h"
 #include "mdss_dsi.h"
@@ -1303,6 +1306,29 @@ int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 
 	return ret;
 }
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
+    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+extern u32 te_count;
+static u32 te_count_old = 1;
+int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	int ret = 1;
+
+	if (te_count_old != te_count)
+		te_count_old = te_count;
+	else {
+		pr_err("liujia te_count doesn't add as time\n");
+		ret = 0;
+	}
+
+	if (te_count >= 10000)
+		te_count = 0;
+
+	return ret;
+
+}
+#endif
 
 void mdss_dsi_dsc_config(struct mdss_dsi_ctrl_pdata *ctrl, struct dsc_desc *dsc)
 {
