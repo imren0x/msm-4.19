@@ -1300,7 +1300,7 @@ static int mdss_fb_init_panel_modes(struct msm_fb_data_type *mfd,
 	return 0;
 }
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#ifdef CONFIG_MACH_XIAOMI_MSM8953
 static int ffbm_first_close_bl;
 #endif
 static int mdss_fb_probe(struct platform_device *pdev)
@@ -1394,7 +1394,7 @@ static int mdss_fb_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, mfd);
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#ifdef CONFIG_MACH_XIAOMI_MSM8953
 	if (strnstr(saved_command_line, "androidboot.mode=ffbm-01",
 			strlen(saved_command_line))) {
 		ffbm_first_close_bl = true;
@@ -1866,7 +1866,7 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 		 */
 		if (mfd->bl_level_scaled == temp) {
 			mfd->bl_level = bkl_lvl;
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#ifdef CONFIG_MACH_XIAOMI_MSM8953
 		if ((0 == temp) && (ffbm_first_close_bl == true)) {
 			pdata->set_backlight(pdata, temp);
 			ffbm_first_close_bl = false;
@@ -2221,7 +2221,7 @@ static int mdss_fb_blank(int blank_mode, struct fb_info *info)
 	struct mdss_panel_data *pdata;
 	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
 
-#if (defined CONFIG_MACH_XIAOMI_TISSOT) || (defined CONFIG_MACH_XIAOMI_VINCE) || (defined CONFIG_MACH_XIAOMI_YSL) || (defined CONFIG_MACH_XIAOMI_TIFFANY)
+#ifdef CONFIG_MACH_XIAOMI_MSM8953
 	if ((info == prim_fbi) && (blank_mode == FB_BLANK_UNBLANK) &&
 		atomic_read(&prim_panel_is_on)) {
 		atomic_set(&prim_panel_is_on, false);

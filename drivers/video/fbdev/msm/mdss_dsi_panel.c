@@ -379,9 +379,7 @@ free:
 ret:
 	return rc;
 }
-#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
-extern int panel_suspend_reset_flag;
-#endif
+
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 extern bool pullDownReset;
 #endif
@@ -510,18 +508,6 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
 			gpio_free(ctrl_pdata->disp_en_gpio);
 		}
-#if (defined CONFIG_MACH_XIAOMI_TIFFANY) || (defined CONFIG_MACH_XIAOMI_TISSOT)
-		if (panel_suspend_reset_flag == 2 || (panel_suspend_reset_flag == 3)) {
-			gpio_set_value((ctrl_pdata->rst_gpio), 1);
-			mdelay(10);
-			gpio_set_value((ctrl_pdata->rst_gpio), 0);
-			mdelay(10);
-			gpio_set_value((ctrl_pdata->rst_gpio), 1);
-			mdelay(10);
-			gpio_set_value((ctrl_pdata->rst_gpio), 0);
-			mdelay(10);
-		} else
-#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 		if (pullDownReset)
 #endif
