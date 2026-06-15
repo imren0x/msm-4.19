@@ -132,6 +132,9 @@ void mdss_dump_dsi_debug_bus(u32 bus_dump_flag,
 	pr_info("========End DSI Debug Bus=========\n");
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
+int panel_suspend_reset_flag = 0;
+#endif
 static void mdss_dsi_pm_qos_add_request(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	struct irq_info *irq_info;
@@ -379,6 +382,15 @@ int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
 		pr_debug("reset disable: pinctrl not enabled\n");
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+		if (panel_suspend_reset_flag == 2)
+			msleep(1);
+		else if (panel_suspend_reset_flag == 3)
+			msleep(4);
+	}
+#endif
 
 	ret = msm_mdss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
@@ -3220,6 +3232,15 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 		}
 		pr_info("%s: cmdline:%s panel_name:%s\n",
 			__func__, panel_cfg, panel_name);
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+			if (!strcmp(panel_name, "qcom,mdss_dsi_otm1911_fhd_video")) {
+				panel_suspend_reset_flag = 2;
+			} else if (!strcmp(panel_name, "qcom,mdss_dsi_ili9885_boe_fhd_video")) {
+				panel_suspend_reset_flag = 3;
+			}
+		}
+#endif
 		if (!strcmp(panel_name, NONE_PANEL))
 			goto exit;
 
