@@ -42,7 +42,6 @@
 #if (defined CONFIG_MACH_XIAOMI_TISSOT) || (defined CONFIG_MACH_XIAOMI_YSL)
 #include <linux/mdss_io_util.h>
 #endif
-#include <linux/pm_wakeup.h>
 #include "mdss_fb.h"
 #include "mdss_mdp_splash_logo.h"
 #define CREATE_TRACE_POINTS
@@ -121,14 +120,12 @@ static void mdss_fb_set_mdp_sync_pt_threshold(struct msm_fb_data_type *mfd,
 		int type);
 #ifdef CONFIG_MACH_XIAOMI_MSM8953
 #define WAIT_RESUME_TIMEOUT 200
-static struct fb_info *prim_fbi;
+struct fb_info *prim_fbi;
+static struct delayed_work prim_panel_work;
 static atomic_t prim_panel_is_on;
+static struct wakeup_source prim_panel_wakelock;
 static void prim_panel_off_delayed_work(struct work_struct *work)
 {
-	struct delayed_work *dw = to_delayed_work(work);
-	struct msm_fb_data_type *mfd = container_of(dw, struct msm_fb_data_type,
-		prim_panel_work);
-
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE
 	console_lock();
 #endif
@@ -141,7 +138,7 @@ static void prim_panel_off_delayed_work(struct work_struct *work)
 	if (atomic_read(&prim_panel_is_on)) {
 		fb_blank(prim_fbi, FB_BLANK_POWERDOWN);
 		atomic_set(&prim_panel_is_on, false);
-		__pm_relax(mfd->prim_panel_wakelock);
+		__pm_relax(&prim_panel_wakelock);
 	}
 
 	unlock_fb_info(prim_fbi);
@@ -1516,8 +1513,8 @@ static int mdss_fb_remove(struct platform_device *pdev)
 #ifdef CONFIG_MACH_XIAOMI_MSM8953
 	if (mfd->panel_info && mfd->panel_info->is_prim_panel) {
 		atomic_set(&prim_panel_is_on, false);
-		cancel_delayed_work_sync(&mfd->prim_panel_work);
-		wakeup_source_unregister(mfd->prim_panel_wakelock);
+		cancel_delayed_work_sync(&prim_panel_work);
+		wakeup_source_trash(&prim_panel_wakelock);
 	}
 #endif
 
@@ -2225,8 +2222,8 @@ static int mdss_fb_blank(int blank_mode, struct fb_info *info)
 	if ((info == prim_fbi) && (blank_mode == FB_BLANK_UNBLANK) &&
 		atomic_read(&prim_panel_is_on)) {
 		atomic_set(&prim_panel_is_on, false);
-		__pm_relax(mfd->prim_panel_wakelock);
-		cancel_delayed_work_sync(&mfd->prim_panel_work);
+		__pm_relax(&prim_panel_wakelock);
+		cancel_delayed_work_sync(&prim_panel_work);
 		return 0;
 	}
 #endif
@@ -2904,8 +2901,8 @@ static int mdss_fb_register(struct msm_fb_data_type *mfd)
 	if (panel_info->is_prim_panel) {
 		prim_fbi = fbi;
 		atomic_set(&prim_panel_is_on, false);
-		INIT_DELAYED_WORK(&mfd->prim_panel_work, prim_panel_off_delayed_work);
-		mfd->prim_panel_wakelock = wakeup_source_register(NULL, "prim_panel_wakelock");
+		INIT_DELAYED_WORK(&prim_panel_work, prim_panel_off_delayed_work);
+		wakeup_source_init(&prim_panel_wakelock, "prim_panel_wakelock");
 	}
 #endif
 
@@ -5461,17 +5458,16 @@ int mdss_prim_panel_fb_unblank(int timeout)
 #endif
 			return 0;
 		}
-		__pm_stay_awake(mfd->prim_panel_wakelock);
+		__pm_stay_awake(&prim_panel_wakelock);
 		ret = fb_blank(prim_fbi, FB_BLANK_UNBLANK);
 		if (!ret) {
 			atomic_set(&prim_panel_is_on, true);
-
-			if (timeout > 0)
-				schedule_delayed_work(&mfd->prim_panel_work, msecs_to_jiffies(timeout));
-			else
-				__pm_relax(mfd->prim_panel_wakelock);
+			if (timeout > 0) {
+				schedule_delayed_work(&prim_panel_work, msecs_to_jiffies(timeout));
+			} else
+				__pm_relax(&prim_panel_wakelock);
 		} else
-			__pm_relax(mfd->prim_panel_wakelock);
+			__pm_relax(&prim_panel_wakelock);
 		unlock_fb_info(prim_fbi);
 #ifdef CONFIG_FRAMEBUFFER_CONSOLE
 		console_unlock();
