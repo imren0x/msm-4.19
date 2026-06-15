@@ -246,6 +246,7 @@ extern int ft8716_gesture_func_on;
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 extern bool synaptics_gesture_func_on;
 extern bool synaptics_gesture_func_on_lansi;
+extern bool NVT_gesture_func_on;
 #endif
 
 enum {
