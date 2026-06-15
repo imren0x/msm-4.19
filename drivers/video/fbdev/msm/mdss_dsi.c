@@ -149,6 +149,11 @@ void mdss_dump_dsi_debug_bus(u32 bus_dump_flag,
 	pr_info("========End DSI Debug Bus=========\n");
 }
 
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+int panel_suspend_reset_flag = 0;
+int panel_suspend_power_flag = 0;
+#endif
+
 #ifdef CONFIG_MACH_XIAOMI_MIDO
 int panel_suspend_reset_flag = 0;
 #endif
@@ -377,6 +382,11 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev,
 	return rc;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+extern int ft8716_suspend;
+extern int ft8716_gesture_func_on;
+int acc_vreg = 0;
+#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 static int nova_esd_2fingers_rst(struct mdss_panel_data *pdata){
 	int ret = 0;
@@ -482,7 +492,27 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 		msleep(4); /* delay 4ms */
 #endif
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+	if ((panel_suspend_power_flag != 3) && acc_vreg) {
+		ret = msm_mdss_enable_vreg( // git
+			ctrl_pdata->panel_power_data.vreg_config,
+			ctrl_pdata->panel_power_data.num_vreg, 0);
+		acc_vreg--;
+		if (ret)
+			pr_err("%s: failed to disable vregs for %s\n",
+				__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+	} else {
+		if (!ft8716_gesture_func_on && ft8716_suspend && acc_vreg) {
+			ret = msm_mdss_enable_vreg( // git
+					ctrl_pdata->panel_power_data.vreg_config,
+					ctrl_pdata->panel_power_data.num_vreg, 0);
+			acc_vreg--;
+			if (ret)
+				pr_err("%s: failed to disable vregs for %s\n",
+					 __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+		}
+	}
+#elif defined(CONFIG_MACH_XIAOMI_VINCE)
 	if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi)){
 		if (nvt_csot_esd_status->nova_csot_panel && nvt_csot_esd_status->ESD_TE_status){
 			ret = nova_esd_recovery(pdata);
@@ -527,12 +557,18 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+	if (!acc_vreg) {
+#endif
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 	if (!vspn_power_state) {
 #endif
 	ret = msm_mdss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+		acc_vreg++;
+#endif
 	if (ret) {
 		pr_err("%s: failed to enable vregs for %s\n",
 			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
@@ -543,7 +579,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 	vspn_power_state = true;
 #endif
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#if defined(CONFIG_MACH_XIAOMI_TISSOT) || defined(CONFIG_MACH_XIAOMI_VINCE)
 	}
 #endif
 
@@ -3368,21 +3404,33 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 		}
 		pr_info("%s: cmdline:%s panel_name:%s\n",
 			__func__, panel_cfg, panel_name);
+		if (!strcmp(panel_name, NONE_PANEL))
+			goto exit;
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+		if (!strcmp(panel_name, "qcom,mdss_dsi_td4310_fhd_video")) {
+			panel_suspend_reset_flag = 1;
+			panel_suspend_power_flag = 1;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_otm1911_fhd_video")) {
+			panel_suspend_reset_flag = 2;
+			panel_suspend_power_flag = 2;
+		} else if (!strcmp(panel_name, "qcom,mdss_dsi_ft8716_fhd_video")) {
+			panel_suspend_reset_flag = 3;
+			panel_suspend_power_flag = 3;
+		}
+#endif
+#ifdef CONFIG_MACH_XIAOMI_VINCE
+		if (!strcmp(panel_name, "qcom,mdss_dsi_nt36672_csot_fhdplus_video_e7")){
+			nvt_csot_esd_status->nova_csot_panel = true;
+			ESD_interval = 500;
+		}
+#endif
 #ifdef CONFIG_MACH_XIAOMI_MIDO
 		if (!strcmp(panel_name, "qcom,mdss_dsi_otm1911_fhd_video"))
 			panel_suspend_reset_flag = 2;
 		else if (!strcmp(panel_name, "qcom,mdss_dsi_ili9885_boe_fhd_video"))
 			panel_suspend_reset_flag = 3;
 		else
-#endif
-		if (!strcmp(panel_name, NONE_PANEL))
-			goto exit;
-
-#ifdef CONFIG_MACH_XIAOMI_VINCE
-		if (!strcmp(panel_name, "qcom,mdss_dsi_nt36672_csot_fhdplus_video_e7")){
-			nvt_csot_esd_status->nova_csot_panel = true;
-			ESD_interval = 500;
-		}
 #endif
 		mdss_node = of_parse_phandle(pdev->dev.of_node,
 			"qcom,mdss-mdp", 0);
@@ -3684,6 +3732,9 @@ static int mdss_dsi_ctrl_validate_config(struct mdss_dsi_ctrl_pdata *ctrl)
 error:
 	return rc;
 }
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+struct mdss_panel_data *panel_data;
+#endif
 
 static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 {
@@ -3780,6 +3831,10 @@ static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 	} else {
 		ctrl_pdata->bklt_ctrl = UNKNOWN_CTRL;
 	}
+
+#ifdef CONFIG_MACH_XIAOMI_TISSOT
+	panel_data = &ctrl_pdata->panel_data;
+#endif
 
 	rc = dsi_panel_device_register(pdev, dsi_pan_node, ctrl_pdata);
 	if (rc) {
@@ -4648,11 +4703,7 @@ static int mdss_dsi_parse_ctrl_params(struct platform_device *ctrl_pdev,
 
 #ifdef CONFIG_MACH_XIAOMI_VINCE
 u32 te_count = 60;
-#endif
-#ifdef CONFIG_MACH_XIAOMI_MIDO
-u32 te_count;
-#endif
-#if (defined CONFIG_MACH_XIAOMI_MIDO) || (defined CONFIG_MACH_XIAOMI_VINCE)
+
 static irqreturn_t te_interrupt(int irq, void *data)
 {
 	disable_irq_nosync(irq);
@@ -4692,6 +4743,54 @@ int init_te_irq(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	return 0;
 }
 #endif
+
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+u32 te_count;
+static irqreturn_t te_interrupt(int irq, void *data)
+{
+	disable_irq_nosync(irq);
+	te_count++;
+	enable_irq(irq);
+
+	return IRQ_HANDLED;
+}
+
+int init_te_irq(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	int rc = -1;
+	int irq;
+
+	if (gpio_is_valid(ctrl_pdata->disp_te_gpio)) {
+		rc = gpio_request(ctrl_pdata->disp_te_gpio, "te-gpio");
+		if (rc < 0) {
+			pr_err("%s: gpio_request fail rc=%d\n", __func__, rc);
+			return rc ;
+		}
+
+		rc = gpio_direction_input(ctrl_pdata->disp_te_gpio);
+		if (rc < 0) {
+			pr_err("%s: gpio_direction_input fail rc=%d\n",
+				__func__, rc);
+			return rc ;
+		}
+
+		irq = gpio_to_irq(ctrl_pdata->disp_te_gpio);
+		pr_debug("%s:liujia irq = %d\n", __func__, irq);
+		rc = request_threaded_irq(irq, te_interrupt, NULL,
+			IRQF_TRIGGER_RISING|IRQF_ONESHOT,
+			"te-irq", ctrl_pdata);
+		if (rc < 0) {
+			pr_err("%s: request_irq fail rc=%d\n", __func__, rc);
+			return rc ;
+		}
+	} else {
+		 pr_err("%s:liujia irq gpio not provided\n", __func__);
+		 return rc;
+	}
+
+	return 0;
+}
+#endif /* MACH_XIAOMI_C6 */
 
 static int mdss_dsi_parse_gpio_params(struct platform_device *ctrl_pdev,
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata)
@@ -4869,10 +4968,16 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	if (ctrl_pdata->status_mode == ESD_REG ||
 			ctrl_pdata->status_mode == ESD_REG_NT35596)
 		ctrl_pdata->check_status = mdss_dsi_reg_status_check;
-#if (defined CONFIG_MACH_XIAOMI_MIDO) || (defined CONFIG_MACH_XIAOMI_VINCE)
+#ifdef CONFIG_MACH_XIAOMI_VINCE
 	else if (ctrl_pdata->status_mode == ESD_TE_NT35596) {
 		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
 	    init_te_irq(ctrl_pdata);
+	}
+#endif
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+	else if (ctrl_pdata->status_mode == ESD_TE_NT35596) {
+		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
+		init_te_irq(ctrl_pdata);
 	}
 #endif
 	else if (ctrl_pdata->status_mode == ESD_BTA)
