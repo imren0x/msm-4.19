@@ -9188,6 +9188,36 @@ static struct platform_driver fg_driver = {
 
 static int __init fg_init(void)
 {
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		fg_sram_update_period_ms = 30000 / 3;
+	} else {
+		fg_sram_update_period_ms = 3000;
+	}
+
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TISSOT) {
+		
+		settings[FG_MEM_SOFT_COLD].value = 150;
+		settings[FG_MEM_SOFT_HOT].value = 450;
+		settings[FG_MEM_HARD_COLD].value = 0;
+		
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+			settings[FG_MEM_HARD_HOT].value = 550;
+		} else {
+			settings[FG_MEM_HARD_HOT].value = 450;
+		}
+	}
+
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TISSOT ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+		
+		settings[FG_MEM_VBAT_EST_DIFF].value = 200;
+	}
+#endif
 	return platform_driver_register(&fg_driver);
 }
 
