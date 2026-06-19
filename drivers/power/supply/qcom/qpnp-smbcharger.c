@@ -117,6 +117,9 @@ struct smbchg_chip {
 	u8				revision[4];
 
 	/* configuration parameters */
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	int				cool_xiaomi;
+#endif
 	int				iterm_ma;
 	int				usb_max_current_ma;
 	int				typec_current_ma;
@@ -212,6 +215,9 @@ struct smbchg_chip {
 	bool				batt_cold;
 	bool				batt_warm;
 	bool				batt_cool;
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	bool				batt_cool_xiaomi;
+#endif
 	unsigned int			thermal_levels;
 	unsigned int			therm_lvl_sel;
 	unsigned int			*thermal_mitigation;
@@ -1147,6 +1153,10 @@ static int get_prop_batt_health(struct smbchg_chip *chip)
 		return POWER_SUPPLY_HEALTH_WARM;
 	else if (chip->batt_cool)
 		return POWER_SUPPLY_HEALTH_COOL;
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	else if (chip->batt_cool_xiaomi)
+		return POWER_SUPPLY_HEALTH_COOL_XIAOMI;
+#endif
 	else
 		return POWER_SUPPLY_HEALTH_GOOD;
 }
