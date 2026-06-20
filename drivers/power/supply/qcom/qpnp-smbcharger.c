@@ -2904,6 +2904,8 @@ static int smbchg_system_temp_level_set(struct smbchg_chip *chip,
 	int prev_therm_lvl;
 	int thermal_icl_ma;
 
+	unsigned int	hvdcp_thermal_mitigation[7] = {2500, 2500, 1500, 1000, 1000, 500, 0};
+
 	if (!chip->thermal_mitigation) {
 		dev_err(chip->dev, "Thermal mitigation not supported\n");
 		return -EINVAL;
@@ -2947,28 +2949,39 @@ static int smbchg_system_temp_level_set(struct smbchg_chip *chip,
 	}
 
 	if (chip->therm_lvl_sel == 0) {
-		rc = vote(chip->usb_icl_votable, THERMAL_ICL_VOTER, false, 0);
-		if (rc < 0)
-			pr_err("Couldn't disable USB thermal ICL vote rc=%d\n",
-				rc);
+        rc = vote(chip->usb_icl_votable, THERMAL_ICL_VOTER, false, 0);
+        if (rc < 0)
+            pr_err("Couldn't disable USB thermal ICL vote rc=%d\n",
+                rc);
 
-		rc = vote(chip->dc_icl_votable, THERMAL_ICL_VOTER, false, 0);
-		if (rc < 0)
-			pr_err("Couldn't disable DC thermal ICL vote rc=%d\n",
-				rc);
-	} else {
-		thermal_icl_ma =
-			(int)chip->thermal_mitigation[chip->therm_lvl_sel];
-		rc = vote(chip->usb_icl_votable, THERMAL_ICL_VOTER, true,
-					thermal_icl_ma);
-		if (rc < 0)
-			pr_err("Couldn't vote for USB thermal ICL rc=%d\n", rc);
+        rc = vote(chip->dc_icl_votable, THERMAL_ICL_VOTER, false, 0);
+        if (rc < 0)
+            pr_err("Couldn't disable DC thermal ICL vote rc=%d\n",
+                rc);
+    } else {
+        int mach = xiaomi_msm8953_mach_get();
+        int is_tiffany_or_vince = (mach == XIAOMI_MSM8953_MACH_TIFFANY || 
+                                   mach == XIAOMI_MSM8953_MACH_VINCE);
 
-		rc = vote(chip->dc_icl_votable, THERMAL_ICL_VOTER, true,
-					thermal_icl_ma);
-		if (rc < 0)
-			pr_err("Couldn't vote for DC thermal ICL rc=%d\n", rc);
-	}
+        if (is_tiffany_or_vince && 
+            (chip->usb_supply_type == POWER_SUPPLY_TYPE_USB_HVDCP || 
+             chip->usb_supply_type == POWER_SUPPLY_TYPE_USB_HVDCP_3)) {
+            
+            thermal_icl_ma = (int)hvdcp_thermal_mitigation[chip->therm_lvl_sel];
+        } else {
+            thermal_icl_ma = (int)chip->thermal_mitigation[chip->therm_lvl_sel];
+        }
+
+        rc = vote(chip->usb_icl_votable, THERMAL_ICL_VOTER, true,
+                    thermal_icl_ma);
+        if (rc < 0)
+            pr_err("Couldn't vote for USB thermal ICL rc=%d\n", rc);
+
+        rc = vote(chip->dc_icl_votable, THERMAL_ICL_VOTER, true,
+                    thermal_icl_ma);
+        if (rc < 0)
+            pr_err("Couldn't vote for DC thermal ICL rc=%d\n", rc);
+    }
 
 	if (prev_therm_lvl == chip->thermal_levels - 1) {
 		/*
