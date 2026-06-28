@@ -18,6 +18,9 @@
 #include "msm_flash.h"
 #include "msm_camera_dt_util.h"
 #include "msm_cci.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
+#endif
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
@@ -103,41 +106,62 @@ static struct led_classdev msm_torch_led[MAX_LED_TRIGGERS] = {
 	},
 };
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+static int msm_torch_led_num;
+#endif
+
 static int32_t msm_torch_create_classdev(struct platform_device *pdev,
 				void *data)
 {
-	int32_t rc = 0;
-	int32_t i = 0;
-	struct msm_flash_ctrl_t *fctrl =
-		(struct msm_flash_ctrl_t *)data;
+	 int32_t rc = 0;
+    int32_t i = 0;
+    struct msm_flash_ctrl_t *fctrl =
+        (struct msm_flash_ctrl_t *)data;
+    int is_ysl = (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL);
 
-	if (!fctrl) {
-		pr_err("Invalid fctrl\n");
-		return -EINVAL;
-	}
+    if (!fctrl) {
+        pr_err("Invalid fctrl\n");
+        return -EINVAL;
+    }
 
-	for (i = 0; i < fctrl->torch_num_sources; i++) {
-		if (fctrl->torch_trigger[i]) {
-			torch_trigger = fctrl->torch_trigger[i];
-			CDBG("%s:%d legacy_msm_torch_brightness_set for torch %d",
-				__func__, __LINE__, i);
-			legacy_msm_torch_brightness_set(&msm_torch_led[i],
-				LED_OFF);
+    for (i = 0; i < fctrl->torch_num_sources; i++) {
+        if (fctrl->torch_trigger[i]) {
+            torch_trigger = fctrl->torch_trigger[i];
+            CDBG("%s:%d legacy_msm_torch_brightness_set for torch %d",
+                __func__, __LINE__, i);
+            
+            if (is_ysl) {
+                legacy_msm_torch_brightness_set(&msm_torch_led[msm_torch_led_num + i],
+                    LED_OFF);
+            } else {
+                legacy_msm_torch_brightness_set(&msm_torch_led[i],
+                    LED_OFF);
+            }
 
-			rc = led_classdev_register(&pdev->dev,
-				&msm_torch_led[i]);
-			if (rc) {
-				pr_err("Failed to register %d led dev. rc = %d\n",
-						i, rc);
-				return rc;
-			}
-		} else {
-			pr_err("Invalid fctrl->torch_trigger[%d]\n", i);
-			return -EINVAL;
-		}
-	}
+            if (is_ysl) {
+                rc = led_classdev_register(&pdev->dev,
+                    &msm_torch_led[msm_torch_led_num + i]);
+            } else {
+                rc = led_classdev_register(&pdev->dev,
+                    &msm_torch_led[i]);
+            }
+            
+            if (rc) {
+                pr_err("Failed to register %d led dev. rc = %d\n",
+                        i, rc);
+                return rc;
+            }
 
-	return 0;
+            if (is_ysl) {
+                msm_torch_led_num++;
+            }
+        } else {
+            pr_err("Invalid fctrl->torch_trigger[%d]\n", i);
+            return -EINVAL;
+        }
+    }
+
+    return 0;
 };
 
 static int32_t msm_flash_get_subdev_id(
@@ -521,6 +545,11 @@ static int32_t msm_flash_init(
 			return rc;
 		}
 	}
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		flash_ctrl->func_tbl->camera_flash_off(flash_ctrl, NULL);
+	}
+#endif
 
 	flash_ctrl->flash_state = MSM_CAMERA_FLASH_INIT;
 
