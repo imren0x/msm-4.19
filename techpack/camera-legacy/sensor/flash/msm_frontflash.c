@@ -43,15 +43,15 @@ static struct msm_flash_table *frontflash_table[] = {
 };
 
 static struct msm_camera_i2c_fn_t msm_sensor_cci_func_tbl = {
-	.i2c_read = msm_camera_cci_i2c_read,
-	.i2c_read_seq = msm_camera_cci_i2c_read_seq,
-	.i2c_write = msm_camera_cci_i2c_write,
-	.i2c_write_table = msm_camera_cci_i2c_write_table,
-	.i2c_write_seq_table = msm_camera_cci_i2c_write_seq_table,
+	.i2c_read = legacy_msm_camera_cci_i2c_read,
+	.i2c_read_seq = legacy_msm_camera_cci_i2c_read_seq,
+	.i2c_write = legacy_msm_camera_cci_i2c_write,
+	.i2c_write_table = legacy_msm_camera_cci_i2c_write_table,
+	.i2c_write_seq_table = legacy_msm_camera_cci_i2c_write_seq_table,
 	.i2c_write_table_w_microdelay =
-		msm_camera_cci_i2c_write_table_w_microdelay,
-	.i2c_util = msm_sensor_cci_i2c_util,
-	.i2c_poll =  msm_camera_cci_i2c_poll,
+		legacy_msm_camera_cci_i2c_write_table_w_microdelay,
+	.i2c_util = legacy_msm_sensor_cci_i2c_util,
+	.i2c_poll =  legacy_msm_camera_cci_i2c_poll,
 };
 
 struct gpio_flash_led_pinctrl {
@@ -288,11 +288,11 @@ static int32_t msm_frontflash_i2c_init(
 		goto msm_flash_i2c_init_fail;
 	}
 
-	rc = msm_camera_power_up(&flash_ctrl->power_info,
+	rc = legacy_msm_camera_power_up(&flash_ctrl->power_info,
 		flash_ctrl->flash_device_type,
 		&flash_ctrl->flash_i2c_client);
 	if (rc < 0) {
-		pr_err("%s msm_camera_power_up failed %d\n",
+		pr_err("%s legacy_msm_camera_power_up failed %d\n",
 			__func__, __LINE__);
 		goto msm_flash_i2c_init_fail;
 	}
@@ -367,11 +367,11 @@ static int32_t msm_frontflash_i2c_release(
 {
 	int32_t rc;
 
-	rc = msm_camera_power_down(&flash_ctrl->power_info,
+	rc = legacy_msm_camera_power_down(&flash_ctrl->power_info,
 		flash_ctrl->flash_device_type,
 		&flash_ctrl->flash_i2c_client);
 	if (rc < 0) {
-		pr_err("%s msm_camera_power_down failed %d\n",
+		pr_err("%s legacy_msm_camera_power_down failed %d\n",
 			__func__, __LINE__);
 		return -EINVAL;
 	}
@@ -1016,10 +1016,10 @@ static int32_t msm_frontflash_get_dt_data(struct device_node *of_node,
 	}
 
 	/* Read the gpio information from device tree */
-	rc = msm_sensor_driver_get_gpio_data(
+	rc = legacy_msm_sensor_driver_get_gpio_data(
 		&(fctrl->power_info.gpio_conf), of_node);
 	if (rc < 0) {
-		pr_err("%s:%d msm_sensor_driver_get_gpio_data failed rc %d\n",
+		pr_err("%s:%d legacy_msm_sensor_driver_get_gpio_data failed rc %d\n",
 			__func__, __LINE__, rc);
 		return rc;
 	}
@@ -1173,7 +1173,7 @@ static int32_t msm_frontflash_platform_probe(struct platform_device *pdev)
 	}
 
 	cci_client = flash_ctrl->flash_i2c_client.cci_client;
-	cci_client->cci_subdev = msm_cci_get_subdev();
+	cci_client->cci_subdev = legacy_msm_cci_get_subdev();
 	cci_client->cci_i2c_master = flash_ctrl->cci_i2c_master;
 
 	/* Initialize sub device */
@@ -1189,11 +1189,11 @@ static int32_t msm_frontflash_platform_probe(struct platform_device *pdev)
 	flash_ctrl->msm_sd.sd.entity.obj_type = MEDIA_ENTITY_TYPE_V4L2_SUBDEV;
 	flash_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_FLASH;
 	flash_ctrl->msm_sd.close_seq = MSM_SD_CLOSE_2ND_CATEGORY | 0x1;
-	msm_sd_register(&flash_ctrl->msm_sd);
+	legacy_msm_sd_register(&flash_ctrl->msm_sd);
 
 	pr_err("[camera]%s:%d frontflash sd name = %s\n", __func__, __LINE__,
 		flash_ctrl->msm_sd.sd.entity.name);
-	msm_cam_copy_v4l2_subdev_fops(&msm_frontflash_v4l2_subdev_fops);
+	legacy_msm_cam_copy_v4l2_subdev_fops(&msm_frontflash_v4l2_subdev_fops);
 #ifdef CONFIG_COMPAT
 	msm_frontflash_v4l2_subdev_fops.compat_ioctl32 =
 		msm_frontflash_subdev_fops_ioctl;
