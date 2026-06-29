@@ -2362,7 +2362,7 @@ static void msm_isp_update_camif_output_count(
 #define ISP_BUS_UTILIZATION_FACTOR 6
 static int legacy_n_msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev)
 {
-	int i, rc = 0
+	int i, rc = 0;
 	struct msm_vfe_axi_stream *stream_info;
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
 	uint64_t total_pix_bandwidth = 0, total_rdi_bandwidth = 0;
