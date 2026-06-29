@@ -2615,8 +2615,6 @@ int legacy_n_msm_vfe47_enable_regulators(struct vfe_device *vfe_dev, int enable)
 int legacy_n_msm_vfe47_get_platform_data(struct vfe_device *vfe_dev)
 {
 	int rc = 0;
-	void __iomem *vfe_fuse_base;
-	uint32_t vfe_fuse_base_size;
 
 	vfe_dev->vfe_base = legacy_n_msm_camera_get_reg_base(vfe_dev->pdev, "vfe", 0);
 	if (!vfe_dev->vfe_base)
@@ -2640,18 +2638,6 @@ int legacy_n_msm_vfe47_get_platform_data(struct vfe_device *vfe_dev)
 	if (!vfe_dev->vfe_base_size || !vfe_dev->vfe_vbif_base_size) {
 		rc = -ENOMEM;
 		goto get_res_fail;
-	}
-	vfe_dev->vfe_hw_limit = 0;
-	vfe_fuse_base = legacy_n_msm_camera_get_reg_base(vfe_dev->pdev,
-					"vfe_fuse", 0);
-	vfe_fuse_base_size = legacy_n_msm_camera_get_res_size(vfe_dev->pdev,
-						"vfe_fuse");
-	if (vfe_fuse_base) {
-		if (vfe_fuse_base_size)
-			vfe_dev->vfe_hw_limit =
-				(legacy_n_msm_camera_io_r(vfe_fuse_base) >> 7) & 0x3;
-		legacy_n_msm_camera_put_reg_base(vfe_dev->pdev, vfe_fuse_base,
-				"vfe_fuse", 0);
 	}
 	rc = vfe_dev->hw_info->vfe_ops.platform_ops.get_regulators(vfe_dev);
 	if (rc)
