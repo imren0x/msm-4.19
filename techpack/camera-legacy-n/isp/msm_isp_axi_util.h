@@ -54,8 +54,6 @@ void legacy_n_msm_isp_start_avtimer(void);
 void legacy_n_msm_isp_stop_avtimer(void);
 void legacy_n_msm_isp_get_avtimer_ts(struct msm_isp_timestamp *time_stamp);
 int legacy_n_msm_isp_cfg_axi_stream(struct vfe_device *vfe_dev, void *arg);
-int legacy_n_msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev,
-	enum msm_vfe_hw_state hw_state);
 int legacy_n_msm_isp_release_axi_stream(struct vfe_device *vfe_dev, void *arg);
 int legacy_n_msm_isp_update_axi_stream(struct vfe_device *vfe_dev, void *arg);
 void legacy_n_msm_isp_axi_cfg_update(struct vfe_device *vfe_dev,
