@@ -18,3 +18,18 @@ header-y += msm_isp-legacy.h
 header-y += msm_jpeg_dma-legacy.h
 header-y += msm_jpeg-legacy.h
 endif
+
+ifneq ($(wildcard ../../../techpack/camera-legacy-n/include/uapi/media/Kbuild),)
+header-y += msmb_camera-legacy-n.h
+header-y += msmb_generic_buf_mgr-legacy-n.h
+header-y += msmb_isp-legacy-n.h
+header-y += msmb_ispif-legacy-n.h
+header-y += msmb_pproc-legacy-n.h
+header-y += msm_camera-legacy-n.h
+header-y += msm_cam_sensor-legacy-n.h
+header-y += msm_camsensor_sdk-legacy-n.h
+header-y += msm_fd-legacy-n.h
+header-y += msm_isp-legacy-n.h
+header-y += msm_jpeg_dma-legacy-n.h
+header-y += msm_jpeg-legacy-n.h
+endif

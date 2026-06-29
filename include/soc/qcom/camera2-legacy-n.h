@@ -1,0 +1,1 @@
+../../../techpack/camera-legacy-n/include/soc/qcom/camera2-legacy-n.h
