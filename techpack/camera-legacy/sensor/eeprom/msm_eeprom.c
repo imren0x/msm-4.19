@@ -17,9 +17,21 @@
 #include "msm_sd.h"
 #include "msm_cci.h"
 #include "msm_eeprom.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
+#endif
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_ROSY)
+#include "msm_eeprom_otp_interface.h"
+#endif
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_ROSY)
+char fusionid_back_d1[64] = { 0 };
+char fusionid_front_d1[64] = { 0 };
+extern char fusionid_front[];
+extern char fusionid_back[];
+#endif
 
 DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 #ifdef CONFIG_COMPAT
@@ -660,31 +672,35 @@ static int msm_eeprom_config(struct msm_eeprom_ctrl_t *e_ctrl,
 		rc = eeprom_config_read_cal_data(e_ctrl, cdata);
 		break;
 	case CFG_EEPROM_GET_MM_INFO:
-		CDBG("%s E CFG_EEPROM_GET_MM_INFO\n", __func__);
-		rc = msm_eeprom_get_cmm_data(e_ctrl, cdata);
-		break;
-	case CFG_EEPROM_INIT:
-		if (e_ctrl->userspace_probe == 0) {
-			pr_err("%s:%d Eeprom already probed at kernel boot",
-				__func__, __LINE__);
-			rc = 0;
-			break;
-		}
-		if (e_ctrl->cal_data.num_data == 0) {
-			rc = eeprom_init_config(e_ctrl, argp);
-			if (rc < 0) {
-				pr_err("%s:%d Eeprom init failed\n",
-					__func__, __LINE__);
-				return rc;
-			}
-		} else {
-			CDBG("%s:%d Already read eeprom\n",
-				__func__, __LINE__);
-		}
-		break;
-	default:
-		break;
-	}
+        CDBG("%s E CFG_EEPROM_GET_MM_INFO\n", __func__);
+        rc = msm_eeprom_get_cmm_data(e_ctrl, cdata);
+        break;
+    case CFG_EEPROM_INIT:
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_ROSY)
+        if (xiaomi_msm8953_mach_get() != XIAOMI_MSM8953_MACH_ROSY) {
+            if (e_ctrl->userspace_probe == 0) {
+                pr_err("%s:%d Eeprom already probed at kernel boot",
+                    __func__, __LINE__);
+                rc = 0;
+                break;
+            }
+        }
+#endif
+        if (e_ctrl->cal_data.num_data == 0) {
+            rc = eeprom_init_config(e_ctrl, argp);
+            if (rc < 0) {
+                pr_err("%s:%d Eeprom init failed\n",
+                    __func__, __LINE__);
+                return rc;
+            }
+        } else {
+            CDBG("%s:%d Already read eeprom\n",
+                __func__, __LINE__);
+        }
+        break;
+    default:
+        break;
+    }
 
 	CDBG("%s X rc: %d\n", __func__, rc);
 	return rc;
@@ -1584,202 +1600,354 @@ static long msm_eeprom_subdev_fops_ioctl32(struct file *file, unsigned int cmd,
 
 #endif
 
-static int msm_eeprom_platform_probe(struct platform_device *pdev)
-{
-	int rc = 0;
-	int j = 0;
-	uint32_t temp;
-
-	struct msm_camera_cci_client *cci_client = NULL;
-	struct msm_eeprom_ctrl_t *e_ctrl = NULL;
-	struct msm_eeprom_board_info *eb_info = NULL;
-	struct device_node *of_node = pdev->dev.of_node;
-	struct msm_camera_power_ctrl_t *power_info = NULL;
-
-	CDBG("%s E\n", __func__);
-
-	e_ctrl = kzalloc(sizeof(*e_ctrl), GFP_KERNEL);
-	if (!e_ctrl) {
-		pr_err("%s:%d kzalloc failed\n", __func__, __LINE__);
-		return -ENOMEM;
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_ROSY)
+static uint16_t fusion_read_id_D1_back(uint8_t *data){
+	uint16_t i;
+	uint8_t *fusion_id = data;
+	memset(fusionid_back_d1, 0, sizeof(fusionid_back_d1));
+	for (i = 0; i < 16; i++){
+		sprintf(fusionid_back_d1 + strlen(fusionid_back_d1), "%u", fusion_id[i]);
 	}
-	e_ctrl->eeprom_v4l2_subdev_ops = &msm_eeprom_subdev_ops;
-	e_ctrl->eeprom_mutex = &msm_eeprom_mutex;
+	CDBG("fusionid_back: %s\n", fusionid_back_d1);
+	return 0;
+}
 
-	e_ctrl->cal_data.mapdata = NULL;
-	e_ctrl->cal_data.map = NULL;
-	e_ctrl->userspace_probe = 0;
-	e_ctrl->is_supported = 0;
-	if (!of_node) {
-		pr_err("%s dev.of_node NULL\n", __func__);
-		rc = -EINVAL;
-		goto ectrl_free;
+static uint16_t fusion_read_id_D1_front(uint8_t *data){
+	uint16_t i;
+	uint8_t *fusion_id = data;
+	memset(fusionid_front_d1, 0, sizeof(fusionid_front_d1));
+	for (i = 0; i < 16; i++){
+		sprintf(fusionid_front_d1+ strlen(fusionid_front_d1), "%u", fusion_id[i]);
 	}
-
-	/* Set platform device handle */
-	e_ctrl->pdev = pdev;
-	/* Set device type as platform device */
-	e_ctrl->eeprom_device_type = MSM_CAMERA_PLATFORM_DEVICE;
-	e_ctrl->i2c_client.i2c_func_tbl = &msm_eeprom_cci_func_tbl;
-	e_ctrl->i2c_client.cci_client = kzalloc(sizeof(
-		struct msm_camera_cci_client), GFP_KERNEL);
-	if (!e_ctrl->i2c_client.cci_client) {
-		pr_err("%s failed no memory\n", __func__);
-		rc = -ENOMEM;
-		goto ectrl_free;
-	}
-
-	e_ctrl->eboard_info = kzalloc(sizeof(
-		struct msm_eeprom_board_info), GFP_KERNEL);
-	if (!e_ctrl->eboard_info) {
-		pr_err("%s failed line %d\n", __func__, __LINE__);
-		rc = -ENOMEM;
-		goto cciclient_free;
-	}
-
-	eb_info = e_ctrl->eboard_info;
-	power_info = &eb_info->power_info;
-	cci_client = e_ctrl->i2c_client.cci_client;
-	cci_client->cci_subdev = legacy_msm_cci_get_subdev();
-	cci_client->retries = 3;
-	cci_client->id_map = 0;
-	power_info->dev = &pdev->dev;
-
-	/*Get clocks information*/
-	rc = legacy_msm_camera_get_clk_info(e_ctrl->pdev,
-		&power_info->clk_info,
-		&power_info->clk_ptr,
-		&power_info->clk_info_size);
-	if (rc < 0) {
-		pr_err("failed: legacy_msm_camera_get_clk_info rc %d", rc);
-		goto board_free;
-	}
-
-	rc = of_property_read_u32(of_node, "cell-index",
-		&pdev->id);
-	CDBG("cell-index %d, rc %d\n", pdev->id, rc);
-	if (rc < 0) {
-		pr_err("failed rc %d\n", rc);
-		goto board_free;
-	}
-	e_ctrl->subdev_id = pdev->id;
-
-	rc = of_property_read_u32(of_node, "qcom,cci-master",
-		&e_ctrl->cci_master);
-	CDBG("qcom,cci-master %d, rc %d\n", e_ctrl->cci_master, rc);
-	if (rc < 0) {
-		pr_err("%s failed rc %d\n", __func__, rc);
-		goto board_free;
-	}
-	cci_client->cci_i2c_master = e_ctrl->cci_master;
-
-	rc = of_property_read_string(of_node, "qcom,eeprom-name",
-		&eb_info->eeprom_name);
-	CDBG("%s qcom,eeprom-name %s, rc %d\n", __func__,
-		eb_info->eeprom_name, rc);
-	if (rc < 0) {
-		pr_err("%s failed %d\n", __func__, __LINE__);
-		e_ctrl->userspace_probe = 1;
-	}
-
-	rc = msm_eeprom_get_dt_data(e_ctrl);
-	if (rc < 0)
-		goto board_free;
-
-	if (e_ctrl->userspace_probe == 0) {
-		rc = of_property_read_u32(of_node, "qcom,slave-addr",
-			&temp);
-		if (rc < 0) {
-			pr_err("%s failed rc %d\n", __func__, rc);
-			goto board_free;
-		}
-
-		rc = of_property_read_u32(of_node, "qcom,i2c-freq-mode",
-			&e_ctrl->i2c_freq_mode);
-		CDBG("qcom,i2c_freq_mode %d, rc %d\n",
-			e_ctrl->i2c_freq_mode, rc);
-		if (rc < 0) {
-			pr_err("%s qcom,i2c-freq-mode read fail. Setting to 0 %d\n",
-				__func__, rc);
-			e_ctrl->i2c_freq_mode = 0;
-		}
-		if (e_ctrl->i2c_freq_mode >= I2C_MAX_MODES) {
-			pr_err("%s:%d invalid i2c_freq_mode = %d\n",
-				__func__, __LINE__, e_ctrl->i2c_freq_mode);
-			e_ctrl->i2c_freq_mode = 0;
-		}
-		eb_info->i2c_slaveaddr = temp;
-		CDBG("qcom,slave-addr = 0x%X\n", eb_info->i2c_slaveaddr);
-		eb_info->i2c_freq_mode = e_ctrl->i2c_freq_mode;
-		cci_client->i2c_freq_mode = e_ctrl->i2c_freq_mode;
-		cci_client->sid = eb_info->i2c_slaveaddr >> 1;
-
-		rc = msm_eeprom_parse_memory_map(of_node, &e_ctrl->cal_data);
-		if (rc < 0)
-			goto board_free;
-
-		rc = legacy_msm_camera_power_up(power_info, e_ctrl->eeprom_device_type,
-			&e_ctrl->i2c_client);
-		if (rc) {
-			pr_err("failed rc %d\n", rc);
-			goto memdata_free;
-		}
-		rc = read_eeprom_memory(e_ctrl, &e_ctrl->cal_data);
-		if (rc < 0) {
-			pr_err("%s read_eeprom_memory failed\n", __func__);
-			goto power_down;
-		}
-		for (j = 0; j < e_ctrl->cal_data.num_data; j++)
-			CDBG("memory_data[%d] = 0x%X\n", j,
-				e_ctrl->cal_data.mapdata[j]);
-
-		e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
-
-		rc = legacy_msm_camera_power_down(power_info,
-			e_ctrl->eeprom_device_type, &e_ctrl->i2c_client);
-		if (rc) {
-			pr_err("failed rc %d\n", rc);
-			goto memdata_free;
-		}
-	} else
-		e_ctrl->is_supported = 1;
-
-	v4l2_subdev_init(&e_ctrl->msm_sd.sd,
-		e_ctrl->eeprom_v4l2_subdev_ops);
-	v4l2_set_subdevdata(&e_ctrl->msm_sd.sd, e_ctrl);
-	platform_set_drvdata(pdev, &e_ctrl->msm_sd.sd);
-	e_ctrl->msm_sd.sd.internal_ops = &msm_eeprom_internal_ops;
-	e_ctrl->msm_sd.sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
-	snprintf(e_ctrl->msm_sd.sd.name,
-		ARRAY_SIZE(e_ctrl->msm_sd.sd.name), "msm_eeprom");
-	media_entity_pads_init(&e_ctrl->msm_sd.sd.entity, 0, NULL);
-	e_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_EEPROM;
-	legacy_msm_sd_register(&e_ctrl->msm_sd);
-
-#ifdef CONFIG_COMPAT
-	legacy_msm_cam_copy_v4l2_subdev_fops(&msm_eeprom_v4l2_subdev_fops);
-	msm_eeprom_v4l2_subdev_fops.compat_ioctl32 =
-		msm_eeprom_subdev_fops_ioctl32;
-	e_ctrl->msm_sd.sd.devnode->fops = &msm_eeprom_v4l2_subdev_fops;
+	CDBG("fusionid_front: %s\n", fusionid_front_d1);
+	return 0;
+}
+static int module_id = -1;
+int main_module_id = -1;
+int sub_module_id = -1;
 #endif
 
-	e_ctrl->is_supported = (e_ctrl->is_supported << 1) | 1;
-	CDBG("%s X\n", __func__);
-	return rc;
+static int msm_eeprom_platform_probe(struct platform_device *pdev)
+{
+    int rc = 0;
+    int j = 0;
+    uint32_t temp;
+
+    struct msm_camera_cci_client *cci_client = NULL;
+    struct msm_eeprom_ctrl_t *e_ctrl = NULL;
+    struct msm_eeprom_board_info *eb_info = NULL;
+    struct device_node *of_node = pdev->dev.of_node;
+    struct msm_camera_power_ctrl_t *power_info = NULL;
+
+    CDBG("%s E\n", __func__);
+
+    e_ctrl = kzalloc(sizeof(*e_ctrl), GFP_KERNEL);
+    if (!e_ctrl) {
+        pr_err("%s:%d kzalloc failed\n", __func__, __LINE__);
+        return -ENOMEM;
+    }
+    e_ctrl->eeprom_v4l2_subdev_ops = &msm_eeprom_subdev_ops;
+    e_ctrl->eeprom_mutex = &msm_eeprom_mutex;
+
+    e_ctrl->cal_data.mapdata = NULL;
+    e_ctrl->cal_data.map = NULL;
+    e_ctrl->userspace_probe = 0;
+    e_ctrl->is_supported = 0;
+    if (!of_node) {
+        pr_err("%s dev.of_node NULL\n", __func__);
+        rc = -EINVAL;
+        goto ectrl_free;
+    }
+
+    /* Set platform device handle */
+    e_ctrl->pdev = pdev;
+    /* Set device type as platform device */
+    e_ctrl->eeprom_device_type = MSM_CAMERA_PLATFORM_DEVICE;
+    e_ctrl->i2c_client.i2c_func_tbl = &msm_eeprom_cci_func_tbl;
+    e_ctrl->i2c_client.cci_client = kzalloc(sizeof(
+        struct msm_camera_cci_client), GFP_KERNEL);
+    if (!e_ctrl->i2c_client.cci_client) {
+        pr_err("%s failed no memory\n", __func__);
+        rc = -ENOMEM;
+        goto ectrl_free;
+    }
+
+    e_ctrl->eboard_info = kzalloc(sizeof(
+        struct msm_eeprom_board_info), GFP_KERNEL);
+    if (!e_ctrl->eboard_info) {
+        pr_err("%s failed line %d\n", __func__, __LINE__);
+        rc = -ENOMEM;
+        goto cciclient_free;
+    }
+
+    eb_info = e_ctrl->eboard_info;
+    power_info = &eb_info->power_info;
+    cci_client = e_ctrl->i2c_client.cci_client;
+    cci_client->cci_subdev = legacy_msm_cci_get_subdev();
+    cci_client->retries = 3;
+    cci_client->id_map = 0;
+    power_info->dev = &pdev->dev;
+
+    /*Get clocks information*/
+    rc = legacy_msm_camera_get_clk_info(e_ctrl->pdev,
+        &power_info->clk_info,
+        &power_info->clk_ptr,
+        &power_info->clk_info_size);
+    if (rc < 0) {
+        pr_err("failed: legacy_msm_camera_get_clk_info rc %d", rc);
+        goto board_free;
+    }
+
+    rc = of_property_read_u32(of_node, "cell-index",
+        &pdev->id);
+    CDBG("cell-index %d, rc %d\n", pdev->id, rc);
+    if (rc < 0) {
+        pr_err("failed rc %d\n", rc);
+        goto board_free;
+    }
+    e_ctrl->subdev_id = pdev->id;
+
+    rc = of_property_read_u32(of_node, "qcom,cci-master",
+        &e_ctrl->cci_master);
+    CDBG("qcom,cci-master %d, rc %d\n", e_ctrl->cci_master, rc);
+    if (rc < 0) {
+        pr_err("%s failed rc %d\n", __func__, rc);
+        goto board_free;
+    }
+    cci_client->cci_i2c_master = e_ctrl->cci_master;
+
+    rc = of_property_read_string(of_node, "qcom,eeprom-name",
+        &eb_info->eeprom_name);
+    CDBG("%s qcom,eeprom-name %s, rc %d\n", __func__,
+        eb_info->eeprom_name, rc);
+    if (rc < 0) {
+        pr_err("%s failed %d\n", __func__, __LINE__);
+        e_ctrl->userspace_probe = 1;
+    }
+
+    rc = msm_eeprom_get_dt_data(e_ctrl);
+    if (rc < 0)
+        goto board_free;
+
+    if (e_ctrl->userspace_probe == 0) {
+        rc = of_property_read_u32(of_node, "qcom,slave-addr",
+            &temp);
+        if (rc < 0) {
+            pr_err("%s failed rc %d\n", __func__, rc);
+            goto board_free;
+        }
+
+        rc = of_property_read_u32(of_node, "qcom,i2c-freq-mode",
+            &e_ctrl->i2c_freq_mode);
+        CDBG("qcom,i2c_freq_mode %d, rc %d\n",
+            e_ctrl->i2c_freq_mode, rc);
+        if (rc < 0) {
+            pr_err("%s qcom,i2c-freq-mode read fail. Setting to 0 %d\n",
+                __func__, rc);
+            e_ctrl->i2c_freq_mode = 0;
+        }
+        if (e_ctrl->i2c_freq_mode >= I2C_MAX_MODES) {
+            pr_err("%s:%d invalid i2c_freq_mode = %d\n",
+                __func__, __LINE__, e_ctrl->i2c_freq_mode);
+            e_ctrl->i2c_freq_mode = 0;
+        }
+        eb_info->i2c_slaveaddr = temp;
+        CDBG("qcom,slave-addr = 0x%X\n", eb_info->i2c_slaveaddr);
+        eb_info->i2c_freq_mode = e_ctrl->i2c_freq_mode;
+        cci_client->i2c_freq_mode = e_ctrl->i2c_freq_mode;
+        cci_client->sid = eb_info->i2c_slaveaddr >> 1;
+
+        rc = msm_eeprom_parse_memory_map(of_node, &e_ctrl->cal_data);
+        if (rc < 0)
+            goto board_free;
+
+        rc = legacy_msm_camera_power_up(power_info, e_ctrl->eeprom_device_type,
+            &e_ctrl->i2c_client);
+        if (rc) {
+            pr_err("failed rc %d\n", rc);
+            goto memdata_free;
+        }
+
+        if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY) {
+            if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")){
+                printk("insensor eeprom todo init the otp register!\n");
+                eeprom_init_ov5675_reg_otp(e_ctrl, 0x20);
+            } else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")){
+                printk("insensor eeprom todo init the otp register!\n");
+                eeprom_init_ov5675_reg_otp(e_ctrl, 0x6c);
+            } else {
+                printk("the eeprom is not insensor!\n");
+            }
+
+            if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
+                module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
+                pr_err("eeprom %s read module id %d", eb_info->eeprom_name, module_id);
+                if (7 != module_id){
+                    pr_err("%s match id for ovt_ov12a10_i failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
+                module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
+                pr_err("eeprom %s read module id %d\n", eb_info->eeprom_name, module_id);
+                if (1 != module_id){
+                    pr_err("%s match id for sony_imx486_ii failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
+                module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
+                pr_err("eeprom %s read module id %d\n", eb_info->eeprom_name, module_id);
+                if (6 != module_id){
+                    pr_err("%s match id for ovt_ov5675_i failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
+                module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
+                pr_err("eeprom %s read module id %d\n", eb_info->eeprom_name, module_id);
+                if (7 != module_id){
+                    pr_err("%s match id for ovt_ov5675_ii failed\n", __func__);
+                    goto power_down;
+                }
+            }
+        }
+
+        rc = read_eeprom_memory(e_ctrl, &e_ctrl->cal_data);
+        if (rc < 0) {
+            pr_err("%s read_eeprom_memory failed\n", __func__);
+            goto power_down;
+        }
+
+        for (j = 0; j < e_ctrl->cal_data.num_data; j++)
+            CDBG("memory_data[%d] = 0x%X\n", j,
+                e_ctrl->cal_data.mapdata[j]);
+
+        if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY) {
+            if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
+                CDBG("match id for ovt_ov12a10_i\n");
+                if (e_ctrl->cal_data.mapdata[0] == 0x01){
+                    module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+                } else {
+                    module_id = -1;
+                }
+                printk("match id for ovt_ov12a10_i module_id=%d\n", module_id);
+                if (module_id == 7) {
+                    CDBG("match id for ovt_ov12a10_i success\n");
+                    main_module_id = module_id;
+                    fusion_read_id_D1_back(&e_ctrl->cal_data.mapdata[16]);
+                    strcpy(fusionid_back, fusionid_back_d1);
+                } else {
+                    pr_err("%s match id for ovt_ov12a10_i failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
+                CDBG("match id for sony_imx486_ii\n");
+                if (e_ctrl->cal_data.mapdata[0] == 0x01){
+                    module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+                } else {
+                    module_id = -1;
+                }
+                printk("match id for sony_imx486_ii module_id=%d\n", module_id);
+                if (module_id == 1) {
+                    CDBG("match id for sony_imx486_ii success\n");
+                    main_module_id = module_id;
+                    fusion_read_id_D1_back(&e_ctrl->cal_data.mapdata[16]);
+                    strcpy(fusionid_back, fusionid_back_d1);
+                } else {
+                    pr_err("%s match id for sony_imx486_ii failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
+                CDBG("match id for ovt_ov5675_i\n");
+                if (e_ctrl->cal_data.mapdata[0] == 0x01) {
+                    module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+                } else if (e_ctrl->cal_data.mapdata[80] == 0x01){
+                    module_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
+                } else {
+                    module_id = -1;
+                }
+                printk("match id for ovt_ov5675_i module_id=%d\n", module_id);
+                if (module_id == 6) {
+                    CDBG("match id for ovt_ov5675_i success\n");
+                    sub_module_id = module_id;
+                    fusion_read_id_D1_front(&e_ctrl->cal_data.mapdata[16]);
+                    strcpy(fusionid_front, fusionid_front_d1);
+                } else {
+                    pr_err("%s match id for ovt_ov5675_i failed\n", __func__);
+                    goto power_down;
+                }
+            } else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
+                CDBG("match id for ovt_ov5675_ii\n");
+                if (e_ctrl->cal_data.mapdata[0] == 0x01) {
+                    module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+                } else if (e_ctrl->cal_data.mapdata[80] == 0x01){
+                    module_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
+                } else {
+                    module_id = -1;
+                }
+                printk("match id for ovt_ov5675_ii module_id=%d\n", module_id);
+                if (module_id == 7) {
+                    CDBG("match id for ovt_ov5675_ii success\n");
+                    sub_module_id = module_id;
+                    fusion_read_id_D1_front(&e_ctrl->cal_data.mapdata[16]);
+                    strcpy(fusionid_front, fusionid_front_d1);
+                } else {
+                    pr_err("%s match id for ovt_ov5675_ii failed\n", __func__);
+                    goto power_down;
+                }
+            } else {
+                pr_err("%s eeprom name match failed\n", __func__);
+                goto power_down;
+            }
+            CDBG("%s eeprom module id: main_module_id=%d  sub_module_id=%d\n", __func__, main_module_id, sub_module_id);
+        }
+
+        e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
+
+        rc = legacy_msm_camera_power_down(power_info,
+            e_ctrl->eeprom_device_type, &e_ctrl->i2c_client);
+        if (rc) {
+            pr_err("failed rc %d\n", rc);
+            goto memdata_free;
+        }
+    } else {
+        e_ctrl->is_supported = 1;
+    }
+
+    v4l2_subdev_init(&e_ctrl->msm_sd.sd,
+        e_ctrl->eeprom_v4l2_subdev_ops);
+    v4l2_set_subdevdata(&e_ctrl->msm_sd.sd, e_ctrl);
+    platform_set_drvdata(pdev, &e_ctrl->msm_sd.sd);
+    e_ctrl->msm_sd.sd.internal_ops = &msm_eeprom_internal_ops;
+    e_ctrl->msm_sd.sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+    snprintf(e_ctrl->msm_sd.sd.name,
+        ARRAY_SIZE(e_ctrl->msm_sd.sd.name), "msm_eeprom");
+    media_entity_pads_init(&e_ctrl->msm_sd.sd.entity, 0, NULL);
+    e_ctrl->msm_sd.sd.entity.group_id = MSM_CAMERA_SUBDEV_EEPROM;
+    legacy_msm_sd_register(&e_ctrl->msm_sd);
+
+#ifdef CONFIG_COMPAT
+    legacy_msm_cam_copy_v4l2_subdev_fops(&msm_eeprom_v4l2_subdev_fops);
+    msm_eeprom_v4l2_subdev_fops.compat_ioctl32 =
+        msm_eeprom_subdev_fops_ioctl32;
+    e_ctrl->msm_sd.sd.devnode->fops = &msm_eeprom_v4l2_subdev_fops;
+#endif
+
+    e_ctrl->is_supported = (e_ctrl->is_supported << 1) | 1;
+    CDBG("%s X\n", __func__);
+    return rc;
 
 power_down:
-	legacy_msm_camera_power_down(power_info, e_ctrl->eeprom_device_type,
-		&e_ctrl->i2c_client);
+    legacy_msm_camera_power_down(power_info, e_ctrl->eeprom_device_type,
+        &e_ctrl->i2c_client);
 memdata_free:
-	kfree(e_ctrl->cal_data.mapdata);
-	kfree(e_ctrl->cal_data.map);
+    kfree(e_ctrl->cal_data.mapdata);
+    kfree(e_ctrl->cal_data.map);
 board_free:
-	kfree(e_ctrl->eboard_info);
+    kfree(e_ctrl->eboard_info);
 cciclient_free:
-	kfree(e_ctrl->i2c_client.cci_client);
+    kfree(e_ctrl->i2c_client.cci_client);
 ectrl_free:
-	kfree(e_ctrl);
-	return rc;
+    kfree(e_ctrl);
+    return rc;
 }
 
 static int msm_eeprom_platform_remove(struct platform_device *pdev)
