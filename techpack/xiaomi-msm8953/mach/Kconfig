@@ -67,6 +67,11 @@ config MACH_XIAOMI_YSL
 	help
 	  Support for Xiaomi Redmi S2 / Y2 (ysl).
 
+config SND_SOC_TAS2557
+	bool  "Texas Audio TAS2557"
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
 config TAS2557_REGMAP
 	bool  "Texas Audio TAS2557"
 	help

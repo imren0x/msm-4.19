@@ -157,6 +157,14 @@ else
 	WCD9XXX_OBJS += audio-ext-clk-up.o
 endif
 
+ifdef CONFIG_SND_SOC_TAS2557
+	TAS2557_OBJS += tas2557/tas2557-core.o
+	TAS2557_OBJS += tas2557/tas2557-regmap.o
+	TAS2557_OBJS += tas2557/tas2557-codec.o
+	TAS2557_OBJS += tas2557/tas2557-misc.o
+	TAS2557_OBJS += tas2557/tiload.o
+endif
+
 ifdef CONFIG_SND_SOC_WCD9335
 	WCD9335_OBJS += wcd9335.o
 endif
@@ -260,6 +268,9 @@ endif
 obj-$(CONFIG_WCD9XXX_CODEC_CORE) += wcd_core_dlkm.o
 obj-$(CONFIG_WCD9XXX_CODEC_CORE_V2) += wcd_core_dlkm.o
 wcd_core_dlkm-y := $(CORE_OBJS)
+
+obj-$(CONFIG_SND_SOC_TAS2557) += tas2557_dlkm.o
+tas2557_dlkm-y := $(TAS2557_OBJS)
 
 obj-$(CONFIG_SND_SOC_WCD9XXX_V2) += wcd9xxx_dlkm.o
 wcd9xxx_dlkm-y := $(WCD9XXX_OBJS)
