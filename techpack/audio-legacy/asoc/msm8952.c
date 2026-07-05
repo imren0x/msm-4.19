@@ -26,6 +26,7 @@
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 #include <xiaomi-msm8953/mach.h>
 #endif
+#include "spk_ext_pa_mtp.h"
 
 #define DRV_NAME "msm8952-asoc-wcd"
 
@@ -3657,6 +3658,13 @@ parse_mclk_freq:
 	pdata->lb_mode = false;
 	msm8952_dt_parse_cap_info(pdev, pdata);
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+		ret = msm_setup_spk_ext_pa(pdev, pdata);
+		if (ret)
+			pr_debug("%s, msm_setup_spk_ext_pa error!\n", __func__);
+#endif
+
 	card->dev = &pdev->dev;
 	platform_set_drvdata(pdev, card);
 	snd_soc_card_set_drvdata(card, pdata);
@@ -3665,6 +3673,10 @@ parse_mclk_freq:
 		goto err;
 	/* initialize timer */
 	INIT_DELAYED_WORK(&pdata->disable_int_mclk0_work, msm8952_disable_mclk);
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+		INIT_DELAYED_WORK(&pdata->pa_gpio_work, msm_spk_ext_pa_delayed);
+#endif
 	mutex_init(&pdata->cdc_int_mclk0_mutex);
 	atomic_set(&pdata->int_mclk0_rsc_ref, 0);
 	if (card->aux_dev) {
