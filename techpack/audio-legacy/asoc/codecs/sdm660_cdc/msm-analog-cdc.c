@@ -2309,7 +2309,7 @@ static int msm_anlg_cdc_codec_enable_spk_pa(struct snd_soc_dapm_widget *w,
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 	struct msm_asoc_mach_data *pdata = NULL;
-	pdata = snd_soc_card_get_drvdata(codec->component.card);
+	pdata = snd_soc_card_get_drvdata(component->card);
 #endif
 
 	dev_dbg(component->dev, "%s %d %s\n", __func__, event, w->name);
@@ -3380,7 +3380,7 @@ static int msm_anlg_cdc_codec_enable_lo_pa(struct snd_soc_dapm_widget *w,
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 	struct msm_asoc_mach_data *pdata = NULL;
-	pdata = snd_soc_card_get_drvdata(codec->component.card);
+	pdata = snd_soc_card_get_drvdata(component->card);
 #endif
 
 	dev_dbg(component->dev, "%s: %d %s\n", __func__, event, w->name);
