@@ -1,0 +1,8 @@
+&focaltech_ts {
+	status = "okay";
+
+    focaltech,alternate-i2c-addr = <0x39>;
+	focaltech,display-coords = <0 0 720 1440>;
+	focaltech,ignore-id-check;
+	focaltech,charger-detect;
+};

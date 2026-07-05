@@ -1,0 +1,143 @@
+/* msm-pm8953 */
+&spmi_bus {
+	qcom,pm8953@0 {
+		qcom,power-on@800 {
+			qcom,store-hard-reset-reason;
+			qcom,pon_1 {
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <4480>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <8>;
+			};
+
+			qcom,pon_3 {
+				qcom,pon-type = <3>;
+				qcom,pull-up = <1>;
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <1352>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <1>;
+				qcom,use-bark;
+			};
+		};
+		/delete-node/ qcom,pm8953_typec@bf00;
+	};
+};
+
+&pm8953_vadc {
+	/delete-node/ chan@13;
+};
+
+&pm8953_vadc {
+	chan@11 {
+		label = "case_therm";
+		reg = <0x11>;
+		qcom,decimation = <0>;
+		qcom,pre-div-channel-scaling = <0>;
+		qcom,calibration-type = "ratiometric";
+		qcom,scale-function = <2>;
+		qcom,hw-settle-time = <2>;
+		qcom,fast-avg-setup = <0>;
+		qcom,vadc-thermal-node;
+	};
+};	
+
+/* msm-pmi8940 */
+&spmi_bus {
+    qcom,pmi8940@2 {  
+   		qpnp_smbcharger: qcom,qpnp-smbcharger {
+			spmi-dev-container;
+			compatible = "qcom,qpnp-smbcharger";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			qcom,iterm-ma = <200>;
+			qcom,float-voltage-mv = <4400>;
+			qcom,resume-delta-mv = <50>;
+			qcom,chg-inhibit-fg;
+			dpdm-supply = <&qusb_phy>;
+			qcom,hvdcp-disable;
+			qcom,micro-usb;
+			
+			/delete-property/qcom,chg-inhibit-en;
+			/delete-property/ qcom,external-typec;
+        		/delete-property/ qcom,typec-psy-name;
+			qcom,rparasitic-uohm = <100000>;
+			qcom,bms-psy-name = "bms";
+			qcom,thermal-mitigation = <2000 1000 800 500 200 0>;
+			qcom,pmic-revid = <&pmi8940_revid>;
+			qcom,force-aicl-rerun;
+			qcom,aicl-rerun-period-s = <180>;/*default 180*/
+			qcom,autoadjust-vfloat;
+			qcom,fastchg-current-ma = <2000>;
+			qcom,dc-psy-type = "Mains";
+			qcom,dc-psy-ma = <2000>;
+			qcom,low-volt-dcin;
+			qcom,bmd-pin-src = "bpd_thm_id";
+			qcom,charge-unknown-battery;
+			/*xiaomi-jeita*/
+			qcom,jeita-temp-hard-limit = <1>;
+			/delete-property/qcom,fastchg-current-comp;
+			qcom,cool-xiaomi-bat-decidegc = <50>;
+			qcom,battery-data = <&mtp_batterydata>;
+	    	/delete-property/ qcom,chg-led-sw-controls;
+			/delete-property/ qcom,chg-led-support;
+		};
+	
+		qcom_fg: qcom,fg {
+			spmi-dev-container;
+			compatible = "qcom,qpnp-fg";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "okay";
+			qcom,resume-soc = <99>;
+			qcom,resume-soc-raw = <254>;
+			qcom,hold-soc-while-full;
+			qcom,fg-delta-soc = <1>;//fg soc update frequency
+			qcom,bcl-lm-threshold-ma = <127>;
+			qcom,bcl-mh-threshold-ma = <405>;
+			qcom,fg-iterm-ma = <400>;
+			qcom,fg-chg-iterm-ma = <200>;/*default 100ma*/
+			qcom,pmic-revid = <&pmi8940_revid>;
+			qcom,fg-cutoff-voltage-mv = <3400>;
+			qcom,cycle-counter-en;
+			qcom,battery-data = <&mtp_batterydata>;
+			qcom,fg-cc-cv-threshold-mv = <4390>;
+			qcom,vbat-estimate-diff-mv = <150>;
+			qcom,thermal-coefficients = [C8 86 C1 50 D3 37];/*R=10K B25/85 = 3435*/
+			qcom,cold-hot-jeita-hysteresis = <10 20>;//jeita recharger
+			/delete-property/qcom,capacity-learning-on;
+			/*xiaomi-jeita*/
+			qcom,hot-bat-decidegc = <600>;
+			qcom,warm-bat-decidegc = <450>;
+			qcom,cool-bat-decidegc = <150>;
+			qcom,cold-bat-decidegc = <0>;
+    		};
+    	};
+};
+
+&usb3 {
+	qcom,usbin-vadc = <&pmi8940_vadc>;
+	qcom,detect-dpdm-floating;
+	vbus_dwc3-supply = <&smbcharger_charger_otg>;
+	extcon = <&qpnp_smbcharger>;
+};
+
+&spmi_bus {
+	qcom,pmi8940@3 {
+		labibb: qpnp-labibb-regulator {
+			status = "ok";
+			ibb_regulator: qcom,ibb@dc00 {
+				qcom,qpnp-ibb-init-lcd-voltage = <5500000>;
+			};
+
+			lab_regulator: qcom,lab@de00 {
+				qcom,qpnp-lab-init-lcd-voltage = <5500000>;
+			};
+		};
+	};
+};
+
+&wled {
+	qcom,cabc;
+};
