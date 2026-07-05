@@ -98,6 +98,9 @@
 #include <asm/setup.h>
 #include <asm/sections.h>
 #include <asm/cacheflush.h>
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
+#endif
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/initcall.h>
@@ -555,10 +558,14 @@ static void __init mm_init(void)
 	pti_init();
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+int fpsensor=1;
+#endif
 asmlinkage __visible void __init start_kernel(void)
 {
 	char *command_line;
 	char *after_dashes;
+	char *p = NULL;
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
@@ -588,6 +595,15 @@ asmlinkage __visible void __init start_kernel(void)
 	page_alloc_init();
 
 	pr_notice("Kernel command line: %s\n", boot_command_line);
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		p = strstr(boot_command_line, "androidboot.fpsensor=fpc");
+		if (p)
+			fpsensor = 1; // fpc1020
+		else
+			fpsensor = 2; // gf3208
+	}
+#endif
 	/* parameters may set static keys */
 	jump_label_init();
 	parse_early_param();
