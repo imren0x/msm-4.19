@@ -157,6 +157,10 @@ else
 	WCD9XXX_OBJS += audio-ext-clk-up.o
 endif
 
+ccflags-y += -DCONFIG_TAS2557_CODEC
+ccflags-y += -DCONFIG_TAS2557_MISC
+ccflags-y += -DCONFIG_TAS2557_REGMAP
+
 ifdef CONFIG_SND_SOC_TAS2557
 	TAS2557_OBJS += tas2557/tas2557-core.o
 	TAS2557_OBJS += tas2557/tas2557-regmap.o
