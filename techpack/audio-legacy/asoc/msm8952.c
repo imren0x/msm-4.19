@@ -3398,6 +3398,33 @@ static struct snd_soc_card *msm8952_populate_sndcard_dailinks(
 			}
 		}
 	}
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+		for (i = 0; i < len1; i++) {
+			switch (msm8952_dai[i].id) {
+			case MSM_BACKEND_DAI_QUINARY_MI2S_TX:
+				msm8952_dai[i].codec_dai_name = "tas2557 ASI1";
+				msm8952_dai[i].codec_name = "tas2557.2-004c";
+				break;
+			default:
+				break;
+			}
+		}
+		{
+			int j;
+			for (j = 0; j < ARRAY_SIZE(msm8952_quin_dai_link); j++) {
+				switch (msm8952_quin_dai_link[j].id) {
+				case MSM_BACKEND_DAI_QUINARY_MI2S_RX:
+					msm8952_quin_dai_link[j].codec_dai_name = "tas2557 ASI1";
+					msm8952_quin_dai_link[j].codec_name = "tas2557.2-004c";
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+#endif
 	memcpy(msm8952_dai_links, msm8952_dai, sizeof(msm8952_dai));
 	dailink = msm8952_dai_links;
 
