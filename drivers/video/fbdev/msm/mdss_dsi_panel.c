@@ -17,8 +17,8 @@
 #include <linux/err.h>
 #include <linux/string.h>
 #include <linux/display_state.h>
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
-#include <xiaomi-titanium/mach.h>
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
 #endif
 
 #include "mdss_dsi.h"
