@@ -190,6 +190,8 @@ ifdef CONFIG_SND_SOC_SDM450
 	MACHINE_OBJS += msm8952.o
 endif
 
+MACHINE_OBJS += spk_ext_pa_mtp.o
+
 # for SDM450 external codec sound card driver
 ifdef CONFIG_SND_SOC_EXT_CODEC_SDM450
 	MACHINE_EXT_OBJS += msm8952-slimbus.o
