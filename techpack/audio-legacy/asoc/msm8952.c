@@ -3725,6 +3725,32 @@ static struct platform_driver msm8952_asoc_machine_driver = {
 
 static int __init msm8952_machine_init(void)
 {
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	switch (xiaomi_msm8953_mach_get()) {
+		case XIAOMI_MSM8953_MACH_ROSY:
+			mbhc_cfg.key_code[1] = KEY_PREVIOUSSONG_NEW;
+			mbhc_cfg.key_code[2] = KEY_NEXTSONG_NEW;
+			mbhc_cfg.key_code[3] = KEY_VOICECOMMAND;
+			break;
+		case XIAOMI_MSM8953_MACH_MIDO:
+			mbhc_cfg.key_code[1] = BTN_1;
+			mbhc_cfg.key_code[2] = BTN_2;
+			mbhc_cfg.key_code[3] = 0;
+			break;
+		case XIAOMI_MSM8953_MACH_YSL:
+		case XIAOMI_MSM8953_MACH_VINCE:
+		case XIAOMI_MSM8953_MACH_MARKW:
+		case XIAOMI_MSM8953_MACH_SAKURA:
+			mbhc_cfg.key_code[1] = KEY_MEDIA;
+			mbhc_cfg.key_code[2] = KEY_VOLUMEUP;
+			mbhc_cfg.key_code[3] = KEY_VOLUMEDOWN;
+			break;
+		case XIAOMI_MSM8953_MACH_TIFFANY:
+			break;
+		default:
+			break;
+	}
+#endif
 	return platform_driver_register(&msm8952_asoc_machine_driver);
 }
 module_init(msm8952_machine_init);
