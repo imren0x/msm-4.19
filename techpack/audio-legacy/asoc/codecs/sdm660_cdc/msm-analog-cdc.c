@@ -3400,6 +3400,7 @@ static int msm_anlg_cdc_codec_enable_lo_pa(struct snd_soc_dapm_widget *w,
 			pdata->pa_is_on = 0;
 		}
 #endif
+		usleep_range(4000, 5000);
 		msm_anlg_cdc_dig_notifier_call(component,
 				       DIG_CDC_EVENT_RX3_MUTE_ON);
 		break;
