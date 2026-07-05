@@ -23,6 +23,9 @@
 #include <asoc/msm-cdc-pinctrl.h>
 #include "msm8952.h"
 #include "msm-pcm-voice-v2.h"
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
+#endif
 
 #define DRV_NAME "msm8952-asoc-wcd"
 
@@ -1623,6 +1626,62 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 	btn_high[3] = 450;
 	btn_low[4] = 500;
 	btn_high[4] = 500;
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	switch (xiaomi_msm8953_mach_get()) {
+		case XIAOMI_MSM8953_MACH_ROSY:
+			btn_low[0] = 25;
+			btn_high[0] = 75;
+			btn_low[1] = 200;
+			btn_high[1] = 225;
+			btn_low[2] = 325;
+			btn_high[2] = 450;
+			btn_low[3] = 500;
+			btn_high[3] = 510;
+			btn_low[4] = 530;
+			btn_high[4] = 540;
+			break;
+		case XIAOMI_MSM8953_MACH_YSL:
+			btn_low[0] = 100;
+			btn_high[0] = 100;
+			btn_low[1] = 200;
+			btn_high[1] = 200;
+			btn_low[2] = 450;
+			btn_high[2] = 450;
+			btn_low[3] = 500;
+			btn_high[3] = 500;
+			btn_low[4] = 500;
+			btn_high[4] = 500;
+			break;
+		case XIAOMI_MSM8953_MACH_VINCE:
+		case XIAOMI_MSM8953_MACH_SAKURA:
+			btn_low[0] = 91;
+			btn_high[0] = 91;
+			btn_low[1] = 259;
+			btn_high[1] = 259;
+			btn_low[2] = 488;
+			btn_high[2] = 488;
+			btn_low[3] = 488;
+			btn_high[3] = 488;
+			btn_low[4] = 488;
+			btn_high[4] = 488;
+			break;
+		case XIAOMI_MSM8953_MACH_MIDO:
+			btn_low[0] = 73;
+			btn_high[0] = 73;
+			btn_low[1] = 233;
+			btn_high[1] = 233;
+			btn_low[2] = 438;
+			btn_high[2] = 438;
+			btn_low[3] = 438;
+			btn_high[3] = 438;
+			btn_low[4] = 438;
+			btn_high[4] = 438;
+			break;
+		default:
+			break;
+	}
+#endif
 
 	return msm8952_wcd_cal;
 }
