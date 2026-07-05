@@ -1,0 +1,3 @@
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n/sensor/io
+obj-$(CONFIG_MSMB_CAMERA) += msm_vpe.o

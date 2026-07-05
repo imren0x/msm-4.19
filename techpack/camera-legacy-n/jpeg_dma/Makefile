@@ -1,0 +1,3 @@
+ccflags-y += -Idrivers/media/video/msm
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n/common
+obj-$(CONFIG_MSM_JPEGDMA) += msm_jpeg_dma_dev.o msm_jpeg_dma_hw.o
