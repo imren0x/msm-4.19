@@ -1,0 +1,11 @@
+&i2c_2 { /* BLSP1 QUP2 */
+	/delete-node/ adv7533@39;
+};
+
+&spi_5 {
+	status = "okay";
+};
+
+&spidev_ir {
+	status = "okay";
+};

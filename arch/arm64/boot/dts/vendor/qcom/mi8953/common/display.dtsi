@@ -1,0 +1,17 @@
+&mdss_mdp {
+	qcom,mdss-pref-prim-intf = "dsi";
+};
+
+&mdss_dsi {
+	hw-config = "single_dsi";
+};
+
+&mdss_dsi0 {
+	lab-supply = <&lab_regulator>;
+	ibb-supply = <&ibb_regulator>;
+	pinctrl-names = "mdss_default", "mdss_sleep";
+};
+
+&mdss_dsi1 {
+	status = "disabled";
+};

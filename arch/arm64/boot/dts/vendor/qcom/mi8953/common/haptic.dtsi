@@ -1,0 +1,11 @@
+&pmi_haptic { 
+	qcom,actuator-type = <1>;
+	qcom,wave-play-rate-us = <4165>;
+	qcom,vmax-mv = <3000>;
+	qcom,use-play-irq;
+	qcom,use-sc-irq;
+
+	/delete-property/ qcom,lra-auto-res-mode;
+	/delete-property/ qcom,lra-high-z;
+	/delete-property/ qcom,lra-res-cal-period;
+};

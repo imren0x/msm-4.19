@@ -1,0 +1,151 @@
+&soc { 
+	i2c@78b7000 { /* BLSP1 QUP3 */
+		status = "okay";
+
+        focaltech_ts: focaltech@38{
+		    compatible = "focaltech,fts_ts-mi8953";
+		    focaltech,ic-type = <>; // Unknown
+		    reg = <0x38>;
+		    interrupt-parent = <&tlmm>;
+		    interrupts = <65 0x2>;
+
+            status = "disabled";
+
+		    vdd-supply = <&pm8953_l10>;
+		    vcc_i2c-supply = <&pm8953_l6>;
+		    /* pins used by touchscreen */
+                        pinctrl-names = "pmx_ts_active","pmx_ts_suspend",
+                                                        "pmx_ts_release";
+                        pinctrl-0 = <&ts_int_active &ts_reset_active>;
+                        pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
+                        pinctrl-2 = <&ts_release>;
+		    focaltech,reset-gpio = <&tlmm 64 0x00>;
+		    focaltech,irq-gpio = <&tlmm 65 0x02>;
+		    focaltech,max-touch-number = <10>;
+	    };
+
+		gt917d_ts: goodix@5d{
+			compatible = "goodix,gt9xx";
+
+			status = "disabled";
+
+			reg = <0x5d>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <65 0x2008>;
+
+			vdd_ana-supply = <&pm8953_l10>;
+			vcc_i2c-supply = <&pm8953_l6>;
+			pinctrl-names = "gdix_ts_int_default", "gdix_ts_int_output_low",
+				"gdix_ts_int_output_high", "gdix_ts_int_input",
+				"gdix_ts_rst_default", "gdix_ts_rst_output_low",
+				"gdix_ts_rst_output_high", "gdix_ts_rst_input";
+			pinctrl-0 = <&ts_int_default>;
+			pinctrl-1 = <&ts_int_output_low>;
+			pinctrl-2 = <&ts_int_output_high>;
+			pinctrl-3 = <&ts_int_input>;
+			pinctrl-4 = <&ts_rst_default>;
+			pinctrl-5 = <&ts_rst_output_low>;
+			pinctrl-6 = <&ts_rst_output_high>;
+			pinctrl-7 = <&ts_rst_input>;
+			reset-gpios = <&tlmm 64 0x00>;
+			irq-gpios = <&tlmm 65 0x2008>;
+			irq-flags = <1>;
+			touchscreen-max-id = <10>;
+			goodix,type-a-report = <0>;
+			goodix,driver-send-cfg = <1>;
+			goodix,wakeup-with-reset = <0>;
+			goodix,resume-in-workqueue = <1>;
+			goodix,int-sync = <1>;
+			goodix,swap-x2y = <0>;
+			goodix,esd-protect = <1>;
+			goodix,pen-suppress-finger = <0>;
+			goodix,auto-update = <1>;
+			goodix,auto-update-cfg = <0>;
+			goodix,power-off-sleep = <0>;
+			goodix,slide-wakeup = <1>;
+		};
+
+		gt9xx_ts: goodix_ts@14 {
+			compatible = "goodix,gt9xx";
+			reg = <0x14>;
+			vdd_ana-supply = <&pm8953_l10>;
+			vcc_i2c-supply = <&pm8953_l6>;
+
+			interrupt-parent = <&tlmm>;
+			interrupts = <65 0x2008>;
+
+			status = "disabled";
+
+			pinctrl-names = "gdix_ts_int_default", "gdix_ts_int_output_low",
+				"gdix_ts_int_output_high", "gdix_ts_int_input",
+				"gdix_ts_rst_default", "gdix_ts_rst_output_low",
+				"gdix_ts_rst_output_high", "gdix_ts_rst_input";
+			pinctrl-0 = <&ts_int_default>;
+			pinctrl-1 = <&ts_int_output_low>;
+			pinctrl-2 = <&ts_int_output_high>;
+			pinctrl-3 = <&ts_int_input>;
+			pinctrl-4 = <&ts_rst_default>;
+			pinctrl-5 = <&ts_rst_output_low>;
+			pinctrl-6 = <&ts_rst_output_high>;
+			pinctrl-7 = <&ts_rst_input>;
+			reset-gpios = <&tlmm 64 0x00>;
+			irq-gpios = <&tlmm 65 0x2008>;
+			irq-flags = <1>;
+			touchscreen-max-id = <10>;
+			goodix,type-a-report = <0>;
+			goodix,driver-send-cfg = <1>;
+			goodix,wakeup-with-reset = <0>;
+			goodix,resume-in-workqueue = <1>;
+			goodix,int-sync = <1>;
+			goodix,swap-x2y = <0>;
+			goodix,esd-protect = <1>;
+			goodix,pen-suppress-finger = <0>;
+			goodix,auto-update = <0>;
+			goodix,auto-update-cfg = <0>;
+			goodix,power-off-sleep = <0>;
+			goodix,slide-wakeup = <1>;
+			goodix,rst-gpio = <&tlmm 64 0x0>;
+			goodix,irq-gpio = <&tlmm 65 0x2008>;
+
+		};
+
+		novatek_ts: novatek@62 {
+			compatible = "novatek,NVT-ts_vince";
+			reg = <0x62>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+
+            status = "disabled";
+
+			novatek,reset-gpio = <&tlmm 64 0x0>;
+			novatek,irq-gpio = <&tlmm 65 0x2001>;
+		};
+	};
+};
+
+&spi_5 {
+	spidev_ir: spi_ir@1 {
+	    compatible = "ifrared,spi-msm-ir-slave";
+	    reg = <1>; /* Chip select 0 */
+	    spi-max-frequency = <50000000>;
+	    spi-cpol;
+		status = "disabled";
+	};
+};
+
+&spi_6 {
+	spi_peel_ir: peel_ir@0 {
+		compatible = "peel_ir";
+		reg = <0x0>;
+		spi-max-frequency = <19200000>;
+		vdd-supply = <&pm8953_l8>; //vdd
+		peel_ir,reg-id = "vdd";
+		peel_ir,lr-gpio = <73>;
+		peel_ir,lr-gpio-valid = <0>;
+		peel_ir,spi-bpw = <32>;
+		peel_ir,spi-clk-speed = <960000>;
+		peel_ir,spi-mode = <0>;
+		peel_ir,peel-field = <2345>;
+		status = "disabled";
+	};
+};
