@@ -1,0 +1,10 @@
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n/sensor/cci
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n/common
+ccflags-y += -I $(srctree)/techpack/camera-legacy-n/sensor/io
+obj-$(CONFIG_MSMB_CAMERA) += msm_flash.o
+obj-$(CONFIG_MSMB_CAMERA) += msm_led_flash.o
+obj-$(CONFIG_MSMB_CAMERA) += msm_led_trigger.o
+obj-$(CONFIG_MSMB_CAMERA) += msm_led_i2c_trigger.o
+obj-$(CONFIG_MSMB_CAMERA) += adp1660.o
+obj-$(CONFIG_MSMB_CAMERA) += msm_led_torch.o
