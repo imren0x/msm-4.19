@@ -1,0 +1,58 @@
+/{
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <5>;
+		#include "../common/batterydata/Vince-sunwoda-40Kohm-4000mah.dtsi"
+		#include "../common/batterydata/Vince-desay-24Kohm-4000mAh.dtsi"
+		#include "../common/batterydata/Vince-coslight-50Kohm-4000mah.dtsi"
+		/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+	};
+};
+
+&qpnp_smbcharger {
+	compatible = "qcom,qpnp-smbcharger";
+
+	qcom,iterm-ma = <200>;
+	qcom,float-voltage-mv = <4380>;
+	qcom,resume-delta-mv = <50>;
+	/delete-property/ qcom,rparasitic-uohm;
+	qcom,rparasitics-uohm = <100000>;
+	qcom,charge-unknown-battery;
+	/delete-property/ qcom,parallel-usb-min-current-ma;
+	/delete-property/ qcom,parallel-usb-9v-min-current-ma;
+	/delete-property/ qcom,parallel-allowed-lowering-ma;
+	qcom,override-usb-current;
+	qcom,fastchg-current-comp = <1200>;
+	qcom,float-voltage-comp = <15>;
+	/delete-property/ qcom,autoadjust-vfloat;
+	qcom,battery-data = <&qrd_batterydata>;
+	/delete-property/ qcom,external-typec;
+	/delete-property/ qcom,typec-psy-name;
+	status = "okay";
+};
+
+&qpnp_fg {
+	compatible = "qcom,qpnp-fg";
+
+	/delete-property/ qcom,resume-soc;
+	qcom,resume-soc-raw = <254>;
+	qcom,fg-iterm-ma = <300>;
+	qcom,fg-chg-iterm-ma = <200>;
+	qcom,fg-cutoff-voltage-mv = <3400>;
+	qcom,hold-soc-while-full;
+	qcom,fg-cc-cv-threshold-mv =<4370>;
+	qcom,vbat-estimate-diff-mv = <200>;
+	qcom,battery-data = <&qrd_batterydata>;
+	qcom,thermal-coefficients = [c8 86 c1 50 d3 37];
+	qcom,cold-bat-decidegc = <0>;
+	qcom,cool-bat-decidegc = <150>;
+	qcom,warm-bat-decidegc = <450>;
+	qcom,bad-battery-detection-enable;
+	status = "okay";
+};
+
+&usb3 {
+	qcom,usbin-vadc = <&pmi8950_vadc>;
+	qcom,detect-dpdm-floating;
+	vbus_dwc3-supply = <&smbcharger_charger_otg>;
+	extcon = <&qpnp_smbcharger>;
+};

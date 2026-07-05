@@ -1,0 +1,100 @@
+/* msm-pm8953 */
+
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
+
+&spmi_bus {
+	qcom,pm8953@0 {
+		qcom,power-on@800 {
+			qcom,store-hard-reset-reason;
+			qcom,pon_1 {
+				qcom,support-reset = <1>;
+				qcom,s1-timer = <6720>;
+				qcom,s2-timer = <0>;
+				qcom,s2-type = <7>;
+			};
+
+			qcom,pon_3 {
+				qcom,pon-type = <3>;
+				qcom,support-reset = <1>;
+				qcom,pull-up = <1>;
+				qcom,s1-timer = <6720>;
+				qcom,s2-timer = <2000>;
+				qcom,s2-type = <7>;
+			};
+		};
+		/delete-node/ qcom,pm8953_typec@bf00;
+	};
+};
+
+&spmi_bus {
+	qcom,pm8953@0 {
+		qcom,leds@a100 {
+			status = "okay";
+			compatible = "qcom,leds-qpnp";
+			reg = <0xa100 0x100>;
+			label = "mpp";
+			qcom,led_mpp_2 {
+				label = "mpp";
+				linux,name = "button-backlight";
+				linux,default-trigger = "none";
+				qcom,default-state = "off";
+				qcom,max-current = <10>;
+				qcom,current-setting = <5>;
+				qcom,id = <6>;
+				qcom,mode = "manual";
+				qcom,source-sel = <1>;
+				qcom,mode-ctrl = <0x61>;
+			};
+		};
+	};
+
+	qcom,pmi8950@2 {
+		pmi8950_gpios: gpios {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pwm_ir_default>;
+
+			pwm_ir_default: pmi8950_gpio1 {
+				status = "okay";
+				pins = "gpio1";
+				output-low;
+				bias-pull-down;
+				function = "func1";
+				qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
+			};
+		};
+	};
+
+	qcom,pmi8950@3 {
+		labibb: qpnp-labibb-regulator {
+			status = "ok";
+			ibb_regulator: qcom,ibb@dc00 {
+				/delete-property/
+					qcom,qpnp-ibb-use-default-voltage;
+				qcom,qpnp-ibb-init-lcd-voltage = <5700000>;
+			};
+
+			lab_regulator: qcom,lab@de00 {
+				/delete-property/
+					qcom,qpnp-ibb-use-default-voltage;
+				qcom,qpnp-ibb-init-lcd-voltage = <5700000>;
+			};
+		};
+	};
+};
+
+&pmi8950_pwm {
+	status = "okay";
+};
+
+&wled {
+	/delete-property/ qcom,en-ext-pfet-sc-pro;
+};
+
+&soc {
+	pwm_ir {
+    	compatible = "pwm-ir-mi8953";
+        pwms = <&pmi8950_pwm 0 0>;
+        reg-id = "vdd";
+        vdd-supply = <&pm8953_l8>;
+    };
+};

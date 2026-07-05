@@ -1,0 +1,8 @@
+/ {
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <15>;
+		#include "../common/batterydata/batterydata-Scud-4v4-3300mah.dtsi"
+		#include "../common/batterydata/batterydata-Sunwoda-4v4-3300mah.dtsi"
+		#include "../common/batterydata/batterydata-D1_Default-4v4-3300mah.dtsi"
+	};
+};

@@ -1,0 +1,7 @@
+&spi_6 {
+	status = "okay";
+};
+
+&spi_peel_ir {
+	status = "okay";
+};
