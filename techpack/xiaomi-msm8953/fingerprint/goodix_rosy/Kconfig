@@ -1,0 +1,4 @@
+config FINGERPRINT_GF3208_ROSY
+	tristate "GF3208 fingerprint driver"
+	help
+	  add support for goodix fingerprint driver.

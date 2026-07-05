@@ -1,0 +1,7 @@
+source "techpack/xiaomi-msm8953/fingerprint/fpc/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/fpc_ysl/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/fpc_rosy/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/goodix/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/goodix_ysl/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/goodix_rosy/Kconfig"
+source "techpack/xiaomi-msm8953/fingerprint/goodix_vince/Kconfig"

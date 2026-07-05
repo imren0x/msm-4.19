@@ -1,0 +1,1 @@
+obj-$(CONFIG_MACH_XIAOMI_MSM8953) += mach_detect.o
