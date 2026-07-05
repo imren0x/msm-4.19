@@ -1,0 +1,83 @@
+# Machine families
+config MACH_FAMILY_XIAOMI_MTP
+	bool
+
+config MACH_FAMILY_XIAOMI_QRD
+	bool
+
+config MACH_FAMILY_XIAOMI_QRD_SDM450
+	bool
+	depends on ARCH_SDM450
+	select MACH_FAMILY_XIAOMI_QRD
+
+config MACH_FAMILY_XIAOMI_QRD_MSM8953
+	bool
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD
+
+# Machines
+config MACH_XIAOMI_ROSY
+	bool "Xiaomi Redmi 5 (rosy)"
+	select MACH_FAMILY_XIAOMI_QRD_SDM450
+	help
+	  Support for Xiaomi Redmi 5 (rosy).
+
+config MACH_XIAOMI_VINCE
+	bool "Xiaomi Redmi 5 Plus (vince)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD_MSM8953
+	help
+	  Support for Xiaomi Redmi 5 Plus (vince).
+
+config MACH_XIAOMI_SAKURA
+	bool "Xiaomi Redmi 6 Pro (sakura)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD_MSM8953
+	help
+	  Support for Xiaomi Redmi 6 Pro (sakura).
+
+config MACH_XIAOMI_TISSOT
+	bool "Xiaomi Mi a1 (tissot)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD_MSM8953
+	help
+	  Support for Xiaomi Mi a1 (tissot).
+
+config MACH_XIAOMI_TIFFANY
+	bool "Xiaomi Mi 5X (tiffany)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD_MSM8953
+	help
+	  Support for Xiaomi Mi a1 (tissot).
+
+config MACH_XIAOMI_MIDO
+	bool "Xiaomi Redmi 4 (mido)"
+	help
+	  Support for Xiaomi Redmi 4 (mido).
+
+config MACH_XIAOMI_MARKW
+	bool "Xiaomi Redmi 4 (mido)"
+	help
+	  Support for Xiaomi Redmi 4 (mido).
+
+config MACH_XIAOMI_YSL
+	bool "Xiaomi Redmi S2 / Y2 (ysl)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_MTP
+	help
+	  Support for Xiaomi Redmi S2 / Y2 (ysl).
+
+config TAS2557_REGMAP
+	bool  "Texas Audio TAS2557"
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
+config TAS2557_CODEC
+	bool  "Texas Audio TAS2557"
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.
+
+config TAS2557_MISC
+	bool  "Texas Audio TAS2557"
+	help
+	  Support for the Xiaomi Redmi 5 Plus platform.

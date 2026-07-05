@@ -1,0 +1,1 @@
+obj-$(CONFIG_LEDS_AW2013_MI8953)		+= leds-aw2013.o
