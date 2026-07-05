@@ -1,0 +1,1 @@
+source "techpack/xiaomi-msm8953/power_supply/qcom/Kconfig"
