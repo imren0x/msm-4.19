@@ -45,7 +45,7 @@
 			compatible = "android,firmware";
 			vbmeta {
 				compatible = "android,vbmeta";
-				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
+				parts = "vbmeta,boot,system,vendor,dtbo";
 			};
 
 			fstab {
@@ -55,7 +55,7 @@
 					dev = "/dev/block/platform/soc/7824900.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait,avb";
+					fsmgr_flags = "wait,slotselect,avb";
 					status = "ok";
 				};
 
@@ -134,12 +134,12 @@
 			status = "disabled";
 		};
 
-		cont_splash_mem: splash_region@0x90001000 {
+		cont_splash_mem: splash_region@90001000 {
 			reg = <0x0 0x90001000 0x0 0x13ff000>;
 			label = "cont_splash_mem";
 		};
 
-		adsp_shmem_device_mem: adsp_shmem_device_region@0xc0100000 {
+		adsp_shmem_device_mem: adsp_shmem_device_region@c0100000 {
 			compatible = "shared-dma-pool";
 			label = "adsp_shmem_device_mem";
 			reusable;
@@ -159,7 +159,9 @@
 		dump_mem: mem_dump_region {
 			compatible = "shared-dma-pool";
 			reusable;
-			size = <0 0x400000>;
+			alloc-ranges = <0x0 0x00000000 0x0 0xffffffff>;
+			alignment = <0x0 0x400000>;
+			size = <0 0x19d000>;
 		};
 
 		/* global autoconfigured region for contiguous allocations */
@@ -202,7 +204,6 @@
 #include "msm8953-cpu.dtsi"
 #include "msm8953-pm.dtsi"
 #include "msm8953-bus.dtsi"
-#include "msm8953-coresight.dtsi"
 #include "msm8953-ion.dtsi"
 #include "msm-arm-smmu-8953.dtsi"
 #include "msm8953-vidc.dtsi"
@@ -366,7 +367,7 @@
 	};
 
 	qcom,sps {
-		compatible = "qcom,msm_sps_4k";
+		compatible = "qcom,msm-sps-4k";
 		qcom,pipe-attr-ee;
 	};
 
@@ -409,6 +410,86 @@
 		misc_data_dump {
 			qcom,dump-size = <0x1000>;
 			qcom,dump-id = <0xe8>;
+		};
+
+		l1_icache0 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x60>;
+		};
+
+		l1_icache1 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x61>;
+		};
+
+		l1_icache2 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x62>;
+		};
+
+		l1_icache3 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x63>;
+		};
+
+		l1_icache100 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x64>;
+		};
+
+		l1_icache101 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x65>;
+		};
+
+		l1_icache102 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x66>;
+		};
+
+		l1_icache103 {
+			qcom,dump-size = <0x8800>;
+			qcom,dump-id = <0x67>;
+		};
+
+		l1_dcache0 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x80>;
+		};
+
+		l1_dcache1 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x81>;
+		};
+
+		l1_dcache2 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x82>;
+		};
+
+		l1_dcache3 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x83>;
+		};
+
+		l1_dcache100 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x84>;
+		};
+
+		l1_dcache101 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x85>;
+		};
+
+		l1_dcache102 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x86>;
+		};
+
+		l1_dcache103 {
+			qcom,dump-size = <0x9000>;
+			qcom,dump-id = <0x87>;
 		};
 
 	};
@@ -1668,7 +1749,7 @@
 		clock-names = "core_clk";
 	};
 
-		sdcc1_ice: sdcc1ice@7803000 {
+	sdcc1_ice: sdcc1ice@7803000 {
 		compatible = "qcom,ice";
 		reg = <0x7803000 0x8000>;
 		interrupt-names = "sdcc_ice_nonsec_level_irq",
