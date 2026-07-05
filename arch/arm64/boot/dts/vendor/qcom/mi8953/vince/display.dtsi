@@ -1,0 +1,127 @@
+#include "../common/panel/dsi-panel-td4310-fhdplus-video_e7.dtsi"
+#include "../common/panel/dsi-panel-td4310-fhdplus-video_e7_g55.dtsi"
+#include "../common/panel/dsi-panel-td4310-ebbg-fhdplus-video_e7.dtsi"
+#include "../common/panel/dsi-panel-nt36672-tianma-fhdplus-video_e7.dtsi"
+#include "../common/panel/dsi-panel-nt36672-csot-fhdplus-video_e7.dtsi"
+
+/* msm8953-mdss */
+&soc {
+	mdss_mdp: qcom,mdss_mdp@1a00000 {
+			qcom,mdss-clk-factor = <110 100>;	/* 1.10 times */
+	};
+};
+
+/* msm8953-mdss-pll */
+&soc {
+	mdss_dsi0_pll: qcom,mdss_dsi_pll@994400 {
+		/delete-property/ qcom,dsi-pll-ssc-en;
+		/delete-property/ qcom,dsi-pll-ssc-mode;
+	};
+	mdss_dsi1_pll: qcom,mdss_dsi_pll@996400 {
+		/delete-property/ qcom,dsi-pll-ssc-en;
+		/delete-property/ qcom,dsi-pll-ssc-mode;
+	};
+};
+
+&dsi_panel_pwr_supply {
+	qcom,panel-supply-entry@2 {
+		reg = <2>;
+		qcom,supply-name = "lab";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		qcom,supply-post-on-sleep = <10>;
+		qcom,supply-post-off-sleep = <2>;
+	};
+
+	qcom,panel-supply-entry@3 {
+		reg = <3>;
+		qcom,supply-name = "ibb";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		/*qcom,supply-post-on-sleep = <10>;*/
+	};
+};
+
+&soc {
+	dsi_panel_pwr_supply: dsi_panel_pwr_supply {
+		qcom,panel-supply-entry@0 {
+			qcom,supply-post-on-sleep= <2>;
+		};
+		qcom,panel-supply-entry@1 {
+			qcom,supply-post-on-sleep= <2>;
+		};
+	};
+};
+
+&dsi_td4310_fhdplus_e7_vid {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 08 0a 06 03 04 a0];
+};
+
+&dsi_td4310_fhdplus_e7_g55_vid {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 09 0a 06 03 04 a0
+					      25 1f 08 0a 06 03 04 a0];
+};
+
+&dsi_td4310_ebbg_fhdplus_e7_vid {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [19 1F 09 0A 06 03 04 a0
+		19 1F 09 0A 06 03 04 a0
+		19 1F 09 0A 06 03 04 a0
+		19 1F 09 0A 06 03 04 a0
+		19 1E 08 0A 06 03 04 a0];
+};
+
+&dsi_nt36672_tianma_fhdplus_e7_vid {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [24 1F 08 09 05 03 04 a0
+		24 1F 08 09 05 03 04 a0
+		24 1F 08 09 05 03 04 a0
+		24 1F 08 09 05 03 04 a0
+		24 1C 08 09 05 03 04 a0];
+};
+
+&dsi_nt36672_csot_fhdplus_e7_vid {
+	qcom,mdss-dsi-panel-timings-phy-v2 = [25 1f 09 0a 06 03 04 a0
+		25 1f 09 0a 06 03 04 a0
+		25 1f 09 0a 06 03 04 a0
+		25 1f 09 0a 06 03 04 a0
+		25 1e 08 0a 06 03 04 a0];
+};
+
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_td4310_fhdplus_e7_vid>;
+	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
+	pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
+	qcom,platform-te-gpio = <&tlmm 24 0>;
+	qcom,platform-reset-gpio = <&tlmm 61 0>;
+};
+
+&dsi_td4310_fhdplus_e7_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_td4310_fhdplus_e7_g55_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+
+&dsi_td4310_ebbg_fhdplus_e7_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_nt36672_tianma_fhdplus_e7_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};
+
+&dsi_nt36672_csot_fhdplus_e7_vid {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+};

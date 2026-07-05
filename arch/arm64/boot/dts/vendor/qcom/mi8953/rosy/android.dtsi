@@ -1,0 +1,19 @@
+&firmware {
+	android {
+		/delete-node/ vbmeta;
+		fstab {
+			vendor {
+				dev = "/dev/block/platform/soc/7824900.sdhci/by-name/cust";
+				fsmgr_flags = "wait";
+			};
+		};
+	};
+};
+
+&other_ext_mem {
+	reg = <0x0 0x84A00000 0x0 0x1E00000>;
+};
+
+&secure_mem {
+	size = <0 0x09800000>;
+};

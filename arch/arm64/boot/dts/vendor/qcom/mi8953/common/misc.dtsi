@@ -1,0 +1,16 @@
+/* msm8953-qrd */
+&soc {
+	i2c@78b6000 { /* BLSP1 QUP3 */
+		led_aw2013: aw2013@45 { /*blink */
+			compatible = "awinic,aw2013-mi8953";
+			reg = <0x45>;
+			
+			vdd-supply = <&pm8953_l10>;
+			vcc-supply = <&pm8953_l5>;
+
+			status = "okay";
+
+			AW2013_LED(white, 0)
+		};
+	};
+};
