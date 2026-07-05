@@ -27,6 +27,8 @@
 	/delete-property/ qcom,parallel-allowed-lowering-ma;
 	/delete-property/ qcom,external-typec;
 	/delete-property/ qcom,typec-psy-name;
+	io-channels = <&pmi8950_vadc VADC_VCHG_SNS_LEGACY>;
+	io-channel-names = "vchg_sns";
     status = "okay";
 };
 

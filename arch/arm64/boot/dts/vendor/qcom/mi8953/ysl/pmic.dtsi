@@ -29,16 +29,15 @@
 };
 
 &pm8953_vadc {
-	chan@11 {
+	case_therm {
 		label = "case_therm";
-		reg = <0x11>;
-		qcom,decimation = <0>;
-		qcom,pre-div-channel-scaling = <0>;
-		qcom,calibration-type = "ratiometric";
-		qcom,scale-function = <2>;
-		qcom,hw-settle-time = <2>;
-		qcom,fast-avg-setup = <0>;
-		qcom,vadc-thermal-node;
+		reg = <VADC_P_MUX2_1_1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <200>;
+		qcom,pre-scaling = <1 1>;
+
+		qcom,iio-chan-type-override = "IIO_VOLTAGE";
+		qcom,scale-fn-type = <0>; // SCALE_DEFAULT
 	};
 };	
 
@@ -82,6 +81,8 @@
 			qcom,battery-data = <&mtp_batterydata>;
 	    	/delete-property/ qcom,chg-led-sw-controls;
 			/delete-property/ qcom,chg-led-support;
+			io-channels = <&pmi8940_vadc VADC_VCHG_SNS_LEGACY>;
+			io-channel-names = "vchg_sns";
 		};
 	
 		qcom_fg: qcom,fg {
