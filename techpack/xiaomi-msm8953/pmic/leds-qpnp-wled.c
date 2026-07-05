@@ -25,7 +25,7 @@
 #include <linux/irq.h>
 #include <linux/err.h>
 #include <linux/delay.h>
-#include <xiaomi-titanium/leds-qpnp-wled.h>
+#include <xiaomi-msm8953/leds-qpnp-wled.h>
 #include <linux/qpnp/qpnp-revid.h>
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 #include <xiaomi-msm8953/mach.h>
