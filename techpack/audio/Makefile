@@ -1,5 +1,5 @@
 # auto-detect subdirs
-ifeq (,$(filter y,$(CONFIG_ARCH_MSM8937) $(CONFIG_ARCH_MSM8953)))
+ifeq (,$(filter y,$(CONFIG_ARCH_MSM8937) $(CONFIG_ARCH_SDM450) $(CONFIG_ARCH_MSM8953)))
 
 ifeq ($(CONFIG_ARCH_SDXPOORWILLS), y)
 include $(srctree)/techpack/audio/config/sdxpoorwillsauto.conf
