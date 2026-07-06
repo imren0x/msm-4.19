@@ -52,6 +52,7 @@
 		qcom,mdss-dsi-reset-sequence = <1 10>, <0 10>, <1 50>;
 		qcom,mdss-dsi-lp11-init;
 		qcom,mdss-dsi-tx-eot-append;
+		qcom,esd-check-enabled;
 		qcom,mdss-dsi-panel-status-command = [06 01 00 01 05 00 01 09
 				06 01 00 01 05 00 01 d9
 				];
@@ -80,6 +81,11 @@
 		qcom,mdss-dsi-off-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-panel-timings = [29 40 2c 01 76 7a
 			30 44 34 03 04 00];
+		qcom,mdss-dsi-panel-timings-phy-v2 = [25 1f 09 0a 06 03 04 a0
+			25 1f 09 0a 06 03 04 a0
+			25 1f 09 0a 06 03 04 a0
+			25 1f 09 0a 06 03 04 a0
+			25 1e 08 0a 06 03 04 a0];
 		qcom,mdss-dsi-t-clk-post = <0x0e>;
 		qcom,mdss-dsi-t-clk-pre = <0x34>;
         qcom,mdss-dsi-CE_on-command-state = "dsi_hs_mode";
