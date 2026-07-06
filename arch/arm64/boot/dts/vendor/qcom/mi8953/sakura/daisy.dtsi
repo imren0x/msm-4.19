@@ -16,6 +16,7 @@
 / {
         firmware: firmware {
                 android {
+                        boot_devices = "soc/7824900.sdhci";
 			/delete-node/ fstab;
                         /delete-node/ vbmeta;
                 };
