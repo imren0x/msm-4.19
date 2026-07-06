@@ -29,12 +29,12 @@ config MACH_XIAOMI_VINCE
 	help
 	  Support for Xiaomi Redmi 5 Plus (vince).
 
-config MACH_XIAOMI_SAKURA
-	bool "Xiaomi Redmi 6 Pro (sakura)"
+config MACH_XIAOMI_DAISY
+	bool "Xiaomi Mi A2 (daisy)"
 	depends on ARCH_MSM8953
 	select MACH_FAMILY_XIAOMI_QRD_MSM8953
 	help
-	  Support for Xiaomi Redmi 6 Pro (sakura).
+	  Support for Xiaomi Redmi 6 Pro (daisy).
 
 config MACH_XIAOMI_TISSOT
 	bool "Xiaomi Mi a1 (tissot)"
