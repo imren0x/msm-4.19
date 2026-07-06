@@ -24,21 +24,19 @@
 	};
 };
 
+&pmi8950_vadc {
+	pcba_vadc {
+		label = "pcba_vadc";
+		reg = <VADC_P_MUX1_1_1>;
+		qcom,ratiometric;
+		qcom,hw-settle-time = <200>;
+		qcom,pre-scaling = <1 1>;
+	};
+};
+
 /* msm-pmi8950 */
 &spmi_bus {
 	qcom,pmi8950@2 {
-		pmi8950_vadc: vadc@3100 {
-			chan@10 {
-				label = "pcba_vadc";
-				reg = <0x10>;
-				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <0>; //1:1
-				qcom,calibration-type = "ratiometric";
-				qcom,scale-function = <0>;
-				qcom,hw-settle-time = <1>;
-				qcom,fast-avg-setup = <2>;
-			};
-		};
 		pmi8950_mpps: mpps {
 			mpp@a000 {
 				qcom,mode = <4>; /* AIN input */
