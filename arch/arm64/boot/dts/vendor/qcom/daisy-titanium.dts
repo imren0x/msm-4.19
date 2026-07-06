@@ -21,7 +21,7 @@
 / {
 	model = "Qualcomm Technologies, Inc. MSM8953 + PMI8950 QRD SKU3";
 	compatible = "qcom,msm8953-qrd-sku3",
-		   "qcom,msm8953-qrd", "qcom,msm8953", "qcom,qrd";
+		   "qcom,msm8953-qrd", "qcom,msm8953", "qcom,qrd", "xiaomi,daisy";
 	qcom,board-id= <0x1000b 0x09>;
 	qcom,pmic-id = <0x10016 0x020011 0x0 0x0>;
 };
