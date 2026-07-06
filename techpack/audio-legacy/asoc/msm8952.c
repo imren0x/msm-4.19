@@ -1755,7 +1755,7 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 			btn_high[4] = 500;
 			break;
 		case XIAOMI_MSM8953_MACH_VINCE:
-		case XIAOMI_MSM8953_MACH_SAKURA:
+		case XIAOMI_MSM8953_MACH_DAISY:
 			btn_low[0] = 91;
 			btn_high[0] = 91;
 			btn_low[1] = 259;
@@ -3948,7 +3948,7 @@ static int __init msm8952_machine_init(void)
 		case XIAOMI_MSM8953_MACH_YSL:
 		case XIAOMI_MSM8953_MACH_VINCE:
 		case XIAOMI_MSM8953_MACH_MARKW:
-		case XIAOMI_MSM8953_MACH_SAKURA:
+		case XIAOMI_MSM8953_MACH_DAISY:
 			mbhc_cfg.key_code[1] = KEY_MEDIA;
 			mbhc_cfg.key_code[2] = KEY_VOLUMEUP;
 			mbhc_cfg.key_code[3] = KEY_VOLUMEDOWN;

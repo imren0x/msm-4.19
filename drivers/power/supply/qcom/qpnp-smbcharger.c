@@ -6048,7 +6048,7 @@ static irqreturn_t batt_hot_handler(int irq, void *_chip)
 	u8 reg = 0;
 
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_DAISY ||
 	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
 		
 		int rc;
@@ -6080,7 +6080,7 @@ static irqreturn_t batt_cold_handler(int irq, void *_chip)
 	u8 reg = 0;
 
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_DAISY ||
 	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
 		
 		int rc;
