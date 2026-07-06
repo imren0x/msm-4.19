@@ -41,10 +41,6 @@
 #include "msm8953-mdss-panels.dtsi"
 #include "msm8953-camera-sensor-qrd.dtsi"
 
-&usb3 {
-	vbus_dwc3-supply = <&smbcharger_charger_otg>;
-};
-
 &mdss_dsi1 {
 	lab-supply = <&lab_regulator>;
 	ibb-supply = <&ibb_regulator>;
@@ -73,5 +69,4 @@
 	};
 };
 
-#include "mi8953/common/common.dtsi"
 #include "mi8953/sakura/daisy.dtsi"
