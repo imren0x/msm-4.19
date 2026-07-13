@@ -4560,116 +4560,126 @@ static enum power_supply_property fg_power_props[] = {
 };
 
 static int fg_power_get_property(struct power_supply *psy,
-				       enum power_supply_property psp,
-				       union power_supply_propval *val)
+                   enum power_supply_property psp,
+                   union power_supply_propval *val)
 {
-	struct fg_chip *chip =  power_supply_get_drvdata(psy);
-	bool vbatt_low_sts;
+    struct fg_chip *chip =  power_supply_get_drvdata(psy);
+    bool vbatt_low_sts;
 
-	switch (psp) {
-	case POWER_SUPPLY_PROP_BATTERY_TYPE:
-		if (chip->battery_missing)
-			val->strval = missing_batt_type;
-		else if (chip->fg_restarting)
-			val->strval = loading_batt_type;
-		else
-			val->strval = chip->batt_type;
-		break;
-	case POWER_SUPPLY_PROP_CAPACITY:
-		val->intval = get_prop_capacity(chip);
-		break;
-	case POWER_SUPPLY_PROP_CAPACITY_RAW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_SOC);
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW_ERROR:
-		val->intval = get_sram_prop_now(chip, FG_DATA_VINT_ERR);
-		break;
-	case POWER_SUPPLY_PROP_CURRENT_NOW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_CURRENT);
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_VOLTAGE);
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_OCV:
-		val->intval = get_sram_prop_now(chip, FG_DATA_OCV);
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
-		val->intval = chip->batt_max_voltage_uv;
-		break;
-	case POWER_SUPPLY_PROP_TEMP:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_TEMP);
-		break;
-	case POWER_SUPPLY_PROP_COOL_TEMP:
-		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_COLD);
-		break;
-	case POWER_SUPPLY_PROP_WARM_TEMP:
-		val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_HOT);
-		break;
-	case POWER_SUPPLY_PROP_RESISTANCE:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR);
-		break;
-	case POWER_SUPPLY_PROP_ESR_COUNT:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR_COUNT);
-		break;
-	case POWER_SUPPLY_PROP_CYCLE_COUNT:
-		val->intval = fg_get_cycle_count(chip);
-		break;
-	case POWER_SUPPLY_PROP_CYCLE_COUNT_ID:
-		val->intval = chip->cyc_ctr.id;
-		break;
-	case POWER_SUPPLY_PROP_RESISTANCE_ID:
-		val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ID);
-		break;
-	case POWER_SUPPLY_PROP_UPDATE_NOW:
-		val->intval = 0;
-		break;
-	case POWER_SUPPLY_PROP_VOLTAGE_MIN:
-		if (!fg_get_vbatt_status(chip, &vbatt_low_sts))
-			val->intval = (int)vbatt_low_sts;
-		else
-			val->intval = 1;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
-		val->intval = chip->nom_cap_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_FULL:
-		val->intval = chip->learning_data.learned_cc_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW:
-		val->intval = chip->learning_data.cc_uah;
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_NOW_RAW:
-		val->intval = get_sram_prop_now(chip, FG_DATA_CC_CHARGE);
-		break;
-	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
-		val->intval = fg_get_current_cc(chip);
-		break;
-	case POWER_SUPPLY_PROP_HI_POWER:
-		val->intval = !!chip->bcl_lpm_disabled;
-		break;
-	case POWER_SUPPLY_PROP_SOC_REPORTING_READY:
-		val->intval = !!chip->soc_reporting_ready;
-		break;
-	case POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE:
-		val->intval = !chip->allow_false_negative_isense;
-		break;
-	case POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION:
-		val->intval = chip->use_soft_jeita_irq;
-		break;
-	case POWER_SUPPLY_PROP_BATTERY_INFO:
-		if (chip->batt_info_id < 0 ||
-				chip->batt_info_id >= BATT_INFO_MAX)
-			return -EINVAL;
-		val->intval = chip->batt_info[chip->batt_info_id];
-		break;
-	case POWER_SUPPLY_PROP_BATTERY_INFO_ID:
-		val->intval = chip->batt_info_id;
-		break;
-	default:
-		return -EINVAL;
-	}
+    switch (psp) {
+    case POWER_SUPPLY_PROP_BATTERY_TYPE:
+        if (chip->battery_missing)
+            val->strval = missing_batt_type;
+        else if (chip->fg_restarting)
+            val->strval = loading_batt_type;
+        else
+            val->strval = chip->batt_type;
+        break;
+    case POWER_SUPPLY_PROP_CAPACITY:
+        val->intval = get_prop_capacity(chip);
+        break;
+    case POWER_SUPPLY_PROP_CAPACITY_RAW:
+        val->intval = get_sram_prop_now(chip, FG_DATA_BATT_SOC);
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_NOW_ERROR:
+        val->intval = get_sram_prop_now(chip, FG_DATA_VINT_ERR);
+        break;
+    case POWER_SUPPLY_PROP_CURRENT_NOW:
+        val->intval = get_sram_prop_now(chip, FG_DATA_CURRENT);
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_NOW:
+        val->intval = get_sram_prop_now(chip, FG_DATA_VOLTAGE);
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_OCV:
+        val->intval = get_sram_prop_now(chip, FG_DATA_OCV);
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
+        val->intval = chip->batt_max_voltage_uv;
+        break;
+    case POWER_SUPPLY_PROP_TEMP:
+        val->intval = get_sram_prop_now(chip, FG_DATA_BATT_TEMP);
+        break;
+    case POWER_SUPPLY_PROP_COOL_TEMP:
+        val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_COLD);
+        break;
+    case POWER_SUPPLY_PROP_WARM_TEMP:
+        val->intval = get_prop_jeita_temp(chip, FG_MEM_SOFT_HOT);
+        break;
+    case POWER_SUPPLY_PROP_RESISTANCE:
+        val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR);
+        break;
+    case POWER_SUPPLY_PROP_ESR_COUNT:
+        val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ESR_COUNT);
+        break;
+    case POWER_SUPPLY_PROP_CYCLE_COUNT:
+        val->intval = fg_get_cycle_count(chip);
+        break;
+    case POWER_SUPPLY_PROP_CYCLE_COUNT_ID:
+        val->intval = chip->cyc_ctr.id;
+        break;
+    case POWER_SUPPLY_PROP_RESISTANCE_ID:
+        val->intval = get_sram_prop_now(chip, FG_DATA_BATT_ID);
+        break;
+    case POWER_SUPPLY_PROP_UPDATE_NOW:
+        val->intval = 0;
+        break;
+    case POWER_SUPPLY_PROP_VOLTAGE_MIN:
+        if (!fg_get_vbatt_status(chip, &vbatt_low_sts))
+            val->intval = (int)vbatt_low_sts;
+        else
+            val->intval = 1;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+        if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY)
+            val->intval = 3080000;
+        else
+#endif
+            val->intval = chip->nom_cap_uah;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_FULL:
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+        if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY)
+            val->intval = 3080000;
+        else
+#endif
+            val->intval = chip->learning_data.learned_cc_uah;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_NOW:
+        val->intval = chip->learning_data.cc_uah;
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_NOW_RAW:
+        val->intval = get_sram_prop_now(chip, FG_DATA_CC_CHARGE);
+        break;
+    case POWER_SUPPLY_PROP_CHARGE_COUNTER:
+        val->intval = fg_get_current_cc(chip);
+        break;
+    case POWER_SUPPLY_PROP_HI_POWER:
+        val->intval = !!chip->bcl_lpm_disabled;
+        break;
+    case POWER_SUPPLY_PROP_SOC_REPORTING_READY:
+        val->intval = !!chip->soc_reporting_ready;
+        break;
+    case POWER_SUPPLY_PROP_IGNORE_FALSE_NEGATIVE_ISENSE:
+        val->intval = !chip->allow_false_negative_isense;
+        break;
+    case POWER_SUPPLY_PROP_ENABLE_JEITA_DETECTION:
+        val->intval = chip->use_soft_jeita_irq;
+        break;
+    case POWER_SUPPLY_PROP_BATTERY_INFO:
+        if (chip->batt_info_id < 0 ||
+                chip->batt_info_id >= BATT_INFO_MAX)
+            return -EINVAL;
+        val->intval = chip->batt_info[chip->batt_info_id];
+        break;
+    case POWER_SUPPLY_PROP_BATTERY_INFO_ID:
+        val->intval = chip->batt_info_id;
+        break;
+    default:
+        return -EINVAL;
+    }
 
-	return 0;
+    return 0;
 }
 
 static int fg_power_set_property(struct power_supply *psy,
