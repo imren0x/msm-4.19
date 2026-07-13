@@ -1,0 +1,59 @@
+/ {
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <20>;
+		/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+		#include "../common/batterydata/batterydata-qrd-coslight-3000mAh.dtsi"
+		#include "../common/batterydata/batterydata-qrd-scud-3000mAh.dtsi"
+		#include "../common/batterydata/batterydata-qrd-sunwoda-liwei-3000mAh.dtsi"
+	};
+};
+
+&qpnp_smbcharger {
+	compatible = "qcom,qpnp-smbcharger";
+
+    qcom,iterm-ma = <200>;
+	qcom,float-voltage-mv = <4380>;
+	qcom,resume-delta-mv = <50>;
+	qcom,charge-unknown-battery;
+	/delete-property/ qcom,autoadjust-vfloat;
+	qcom,override-usb-current;
+	qcom,fastchg-current-comp = <900>;
+	qcom,float-voltage-comp = <15>;
+    qcom,battery-data = <&qrd_batterydata>;
+    /delete-property/ qcom,chg-led-sw-controls;
+	/delete-property/ qcom,chg-led-support;
+	/delete-property/ qcom,external-typec;
+	/delete-property/ qcom,typec-psy-name;
+	qcom,thermal-mitigation = <3000 2500 2000 1000 1000 500 0>;
+    io-channels = <&pmi8950_vadc VADC_VCHG_SNS_LEGACY>;
+	io-channel-names = "vchg_sns";
+    status = "okay";
+};
+
+&qpnp_fg {
+	compatible = "qcom,qpnp-fg";
+
+    /delete-property/ qcom,resume-soc;
+	qcom,resume-soc-raw = <254>;
+	qcom,fg-iterm-ma = <300>;
+	qcom,fg-chg-iterm-ma = <200>;
+	qcom,fg-cutoff-voltage-mv = <3400>;
+	qcom,irq-volt-empty-mv = <3100>;
+	qcom,fg-use-vbat-low-empty-soc;
+	qcom,hold-soc-while-full;
+	qcom,fg-cc-cv-threshold-mv =<4370>;
+	qcom,vbat-estimate-diff-mv = <250>;
+    qcom,battery-data = <&qrd_batterydata>;
+    qcom,thermal-coefficients = [c8 86 c1 50 d3 37];
+	qcom,cold-bat-decidegc = <0>;
+	qcom,cool-bat-decidegc = <150>;
+	qcom,warm-bat-decidegc = <450>;
+    status = "okay";
+};
+
+&usb3 {
+	qcom,usbin-vadc = <&pmi8950_vadc>;
+	qcom,detect-dpdm-floating;
+	vbus_dwc3-supply = <&smbcharger_charger_otg>;
+	extcon = <&qpnp_smbcharger>;
+};
