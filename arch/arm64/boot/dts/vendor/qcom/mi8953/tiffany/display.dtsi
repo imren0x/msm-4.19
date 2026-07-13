@@ -1,0 +1,7 @@
+#include "../common/panel/dsi-panel-ft8716-fhd-video.dtsi"
+#include "../common/panel/dsi-panel-ili7807-fhd-video.dtsi"
+#include "panel/dsi-panel-otm1911-fhd-video.dtsi"
+
+&mdss_dsi0 {
+	qcom,dsi-pref-prim-pan = <&dsi_otm1911_fhd_vid>;
+};
