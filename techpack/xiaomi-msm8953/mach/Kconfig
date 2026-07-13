@@ -36,19 +36,12 @@ config MACH_XIAOMI_DAISY
 	help
 	  Support for Xiaomi Redmi 6 Pro (daisy).
 
-config MACH_XIAOMI_TISSOT
-	bool "Xiaomi Mi a1 (tissot)"
-	depends on ARCH_MSM8953
-	select MACH_FAMILY_XIAOMI_QRD_MSM8953
-	help
-	  Support for Xiaomi Mi a1 (tissot).
-
 config MACH_XIAOMI_TIFFANY
 	bool "Xiaomi Mi 5X (tiffany)"
 	depends on ARCH_MSM8953
 	select MACH_FAMILY_XIAOMI_QRD_MSM8953
 	help
-	  Support for Xiaomi Mi a1 (tissot).
+	  Support for Xiaomi Mi a1/5x.
 
 config MACH_XIAOMI_MIDO
 	bool "Xiaomi Redmi 4 (mido)"
