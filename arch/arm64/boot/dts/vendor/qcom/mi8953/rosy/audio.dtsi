@@ -12,7 +12,7 @@
 		reg-names = "qup_phys_addr";
 		reg = <0x7af8000 0x600>;
 		interrupt-names = "qup_irq";
-		interrupts = <0 302 0>;
+		interrupts = <0 302 IRQ_TYPE_LEVEL_HIGH>;
 		qcom,clk-freq-out = <400000>;
 		qcom,clk-freq-in  = <19200000>;
 		clock-names = "iface_clk", "core_clk";
@@ -33,6 +33,7 @@
 };
 
 &i2c_8 {
+	qcom,disable-dma;
 	status = "okay";
     aw87319@58{ /*AW87319 PA*/
 		compatible = "awinic,aw87319_pa";
