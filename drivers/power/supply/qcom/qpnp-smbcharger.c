@@ -7929,7 +7929,7 @@ static int smbchg_probe(struct platform_device *pdev)
 	struct power_supply_config dc_psy_cfg = {};
 
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TISSOT) {
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) {
 		smbchg_default_hvdcp_icl_ma = 2500;
 	} else {
 		smbchg_default_hvdcp_icl_ma = 1800;
