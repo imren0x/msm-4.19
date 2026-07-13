@@ -623,6 +623,8 @@ static int msm_vidc_probe_vidc_device(struct platform_device *pdev)
 	vidc_driver->capability_version =
 		msm_vidc_read_efuse_version(
 			pdev, core->resources.pf_cap_tbl, "efuse2");
+	if (vidc_driver->capability_version)
+		core->resources.target_version = 1;
 
 	rc = call_hfi_op(core->device, core_early_init,
 		core->device->hfi_device_data);
