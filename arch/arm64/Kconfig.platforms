@@ -274,6 +274,7 @@ config ARCH_MSM8953
 	depends on ARCH_QCOM
 	select CPU_FREQ_QCOM
 	select COMMON_CLK_MSM
+	select ARCH_MSM8953_SOC_SETTINGS
 	help
 	  This enables support for the MSM8953 chipset. If you do not
 	  wish to build a kernel that runs on this chipset, say 'N' here.
@@ -283,6 +284,7 @@ config ARCH_SDM450
 	depends on ARCH_QCOM
 	select CPU_FREQ_QCOM
 	select COMMON_CLK_MSM
+	select ARCH_MSM8953_SOC_SETTINGS
 	help
 	  This enables support for the sdm450 chipset. If you do not
 	  wish to build a kernel that runs on this chipset, say 'N' here.
