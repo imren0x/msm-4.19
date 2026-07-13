@@ -1,0 +1,123 @@
+&soc {
+	i2c@78b6000 {
+		spkamp@3a {/* max98927 smartpa device*/
+			compatible = "maxim,max98927L";
+			status = "okay";
+			reg = <0x3a>;
+			mono_stereo_mode = <0>;
+			interleave_mode = <0>;
+			vmon-l-slot = <1>;
+			imon-l-slot = <1>;
+			vmon-r-slot = <1>;
+			imon-r-slot = <1>;
+			maxim,98927-reset-gpio = <&tlmm 86 0>;
+		};
+	};
+	
+	cdc_ext_pa_gpios: cdc_ext_pa_pinctrl {
+        compatible = "qcom,msm-cdc-pinctrl";
+        pinctrl-names = "aud_active", "aud_sleep";
+        pinctrl-0 = <&ext_pa_power_on>;
+        pinctrl-1 = <&ext_pa_power_off>;
+    };		
+};
+
+&int_codec {
+	qcom,msm-hs-micbias-type = "internal";
+
+	qcom,msm-spk-ext-pa = <&tlmm 141 0>;
+	qcom,cdc-ext-pa-gpios = <&cdc_ext_pa_gpios>;
+
+	qcom,msm-gpios =
+		"pri_i2s",
+		"ext_pa_gpio",
+		"quin_i2s",
+		"comp_gpio";
+	qcom,pinctrl-names =
+		"all_off",
+		"pri_i2s_act",
+		"ext_pa_gpio_act",
+		"pri_i2s_ext_pa_gpio_act",
+		"quin_act",
+		"quin_pri_i2s_act",
+		"quin_ext_pa_gpio_act",
+		"quin_ext_pa_gpio_pri_i2s_act",
+		"comp_gpio_act",
+		"comp_gpio_pri_i2s_act",
+		"comp_gpio_ext_pa_gpio_act",
+		"comp_gpio_pri_i2s_ext_pa_gpio_act",
+		"comp_gpio_quin_act",
+		"comp_gpio_quin_pri_i2s_act",
+		"comp_gpio_quin_ext_pa_gpio_act",
+		"comp_gpio_quin_ext_pa_gpio_pri_i2s_act";
+
+
+	pinctrl-names =
+		"all_off",
+		"pri_i2s_act",
+		"ext_pa_gpio_act",
+		"pri_i2s_ext_pa_gpio_act",
+		"quin_act",
+		"quin_pri_i2s_act",
+		"quin_ext_pa_gpio_act",
+		"quin_ext_pa_gpio_pri_i2s_act",
+		"comp_gpio_act",
+		"comp_gpio_pri_i2s_act",
+		"comp_gpio_ext_pa_gpio_act",
+		"comp_gpio_pri_i2s_ext_pa_gpio_act",
+		"comp_gpio_quin_act",
+		"comp_gpio_quin_pri_i2s_act",
+		"comp_gpio_quin_ext_pa_gpio_act",
+		"comp_gpio_quin_ext_pa_gpio_pri_i2s_act";
+
+	pinctrl-0 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_sus &cross_conn_det_sus
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus &ext_pa_power_off>;
+	pinctrl-1 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_act  &ext_pa_power_off
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-2 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_sus &ext_pa_power_on
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-3 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_act &ext_pa_power_on
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-4 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_sus  &ext_pa_power_off
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-5 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_act &ext_pa_power_off
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-6 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_sus &ext_pa_power_on
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-7 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_sus
+		&cdc_pdm_lines_2_act &ext_pa_power_on
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-8 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_sus  &ext_pa_power_off
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-9 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_act  &ext_pa_power_off
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-10 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_sus  &ext_pa_power_on
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-11 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_act  &ext_pa_power_on
+		&pri_tlmm_lines_sus &pri_tlmm_ws_sus>;
+	pinctrl-12 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_sus  &ext_pa_power_off
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-13 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_act  &ext_pa_power_off
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-14 = <&cdc_pdm_lines_sus &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_sus  &ext_pa_power_on
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+	pinctrl-15 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_act
+		&cdc_pdm_lines_2_act  &ext_pa_power_on
+		&pri_tlmm_lines_act &pri_tlmm_ws_act>;
+
+	/delete-property/ qcom,cdc-us-euro-gpios;
+};

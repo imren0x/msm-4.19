@@ -1,0 +1,41 @@
+&focaltech_ts {
+	status = "okay";
+	
+	focaltech,alternate-i2c-addr = <0x40>;
+	focaltech,key-y-coords = <2040 2040 2040>;
+	focaltech,display-coords = <0 0 1080 1920>;
+	focaltech,panel-coords = <0 0 1080 1920>;
+	focaltech,have-key;
+	focaltech,key-number = <3>;
+	focaltech,keys = <172 139 158>;
+	focaltech,key-x-coords = <500 200 800>;
+	focaltech,ignore-id-check;
+	focaltech,charger-detect;
+};
+
+&soc {
+	i2c@78b7000 { /* BLSP1 QUP3 */
+        synaptics_dsx@20 {
+			compatible = "synaptics,dsx-i2c";
+			reg = <0x20>;
+			interrupt-parent = <&tlmm>;
+			interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+			vdd-supply = <&pm8953_l10>;
+			avdd-supply = <&pm8953_l6>;
+			synaptics,pwr-reg-name = "avdd";
+			synaptics,bus-reg-name = "vdd";
+			pinctrl-names = "pmx_ts_active", "pmx_ts_suspend";
+			pinctrl-0 = <&ts_int_active &ts_reset_active>;
+            pinctrl-1 = <&synaptic_int_suspend &synaptic_reset_suspend>;
+			synaptics,cap-button-codes = <139 172 158>;
+			synaptics,irq-gpio = <&tlmm 65 0x2008>;
+			synaptics,rst-gpio = <&tlmm 64 0x2008>;
+			synaptics,irq-on-state = <0>;
+			synaptics,power-delay-ms = <200>;
+			synaptics,reset-active-ms = <20>;
+			synaptics,reset-delay-ms = <200>;
+			synaptics,reset-on-state = <0>;
+			synaptics,ub-i2c-addr = <0x2c>;
+		};
+	};
+};
