@@ -200,6 +200,7 @@ config ARCH_MSM8953
 	select HAVE_CLK
 	select HAVE_CLK_PREPARE
 	select COMMON_CLK_MSM
+	ARCH_MSM8953_SOC_SETTINGS
 
 config ARCH_SDM450
 	bool "Enable support for SDM450"
@@ -212,6 +213,7 @@ config ARCH_SDM450
 	select HAVE_CLK
 	select HAVE_CLK_PREPARE
 	select COMMON_CLK_MSM
+	select ARCH_MSM8953_SOC_SETTINGS
 
 endmenu
 endif
