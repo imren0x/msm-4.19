@@ -958,7 +958,7 @@ static struct spi_driver gf_driver = {
 #elif defined(USE_PLATFORM_BUS)
 		static struct platform_driver gf_driver = {
 #endif
-		.driver = { .name = GF_DEV_NAME, .owner = THIS_MODULE,
+		.driver = { .name = GF_DEV_NAME "-vince", .owner = THIS_MODULE,
 #if defined(USE_SPI_BUS)
 
 #endif
