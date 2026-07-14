@@ -898,7 +898,7 @@ static struct spi_driver gf_driver = {
 static struct platform_driver gf_driver = {
 #endif
 	.driver = {
-		.name = GF_DEV_NAME,
+		.name = GF_DEV_NAME "-ysl",
 		.owner = THIS_MODULE,
 		.of_match_table = gx_match_table,
 	},
