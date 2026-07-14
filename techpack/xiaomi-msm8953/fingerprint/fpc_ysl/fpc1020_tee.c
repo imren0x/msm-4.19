@@ -740,7 +740,7 @@ MODULE_DEVICE_TABLE(of, fpc1020_of_match);
 
 static struct platform_driver fpc1020_driver = {
 	.driver = {
-		.name	= "fpc1020",
+		.name	= "fpc1020-ysl",
 		.owner	= THIS_MODULE,
 		.of_match_table = fpc1020_of_match,
 	},
