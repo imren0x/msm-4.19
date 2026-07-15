@@ -389,12 +389,17 @@ extern bool pullDownReset;
 static const bool pullDownReset = true;
 #endif
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+extern int panel_suspend_reset_flag;
+#endif
+
 int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 {
     struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
     struct mdss_panel_info *pinfo = NULL;
     int i, rc = 0;
     bool is_vince = false;
+    bool is_tiffany = false;
 
     if (pdata == NULL) {
         pr_err("%s: Invalid input data\n", __func__);
@@ -407,6 +412,10 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
     if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE)
         is_vince = true;
+#endif
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY)
+        is_tiffany = true;
 #endif
 
     pinfo = &(ctrl_pdata->panel_data.panel_info);
@@ -520,11 +529,22 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
             gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
             gpio_free(ctrl_pdata->disp_en_gpio);
         }
-        if (!is_vince || pullDownReset) {
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+        if (is_tiffany &&
+            (panel_suspend_reset_flag == 2 || panel_suspend_reset_flag == 3)) {
+            gpio_set_value((ctrl_pdata->rst_gpio), 1);
+            mdelay(10);
             gpio_set_value((ctrl_pdata->rst_gpio), 0);
-        }
+            mdelay(10);
+            gpio_set_value((ctrl_pdata->rst_gpio), 1);
+            mdelay(10);
+            gpio_set_value((ctrl_pdata->rst_gpio), 0);
+            mdelay(10);
+        } else
+#endif
+        if (!is_vince || pullDownReset)
+            gpio_set_value((ctrl_pdata->rst_gpio), 0);
         gpio_free(ctrl_pdata->rst_gpio);
-
         if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
             gpio_set_value(ctrl_pdata->lcd_mode_sel_gpio, 0);
             gpio_free(ctrl_pdata->lcd_mode_sel_gpio);
