@@ -383,141 +383,162 @@ ret:
 	return rc;
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+extern int panel_suspend_reset_flag;
+#endif
+
 int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 {
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
-	struct mdss_panel_info *pinfo = NULL;
-	int i, rc = 0;
+    struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+    struct mdss_panel_info *pinfo = NULL;
+    int i, rc = 0;
+    
+    int mach = xiaomi_msm8953_mach_get();
+    int is_tiffany = (mach == XIAOMI_MSM8953_MACH_TIFFANY);
 
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return -EINVAL;
-	}
+    if (pdata == NULL) {
+        pr_err("%s: Invalid input data\n", __func__);
+        return -EINVAL;
+    }
 
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-				panel_data);
+    ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+                panel_data);
 
-	pinfo = &(ctrl_pdata->panel_data.panel_info);
-	if ((mdss_dsi_is_right_ctrl(ctrl_pdata) &&
-		mdss_dsi_is_hw_config_split(ctrl_pdata->shared_data)) ||
-			pinfo->is_dba_panel) {
-		pr_debug("%s:%d, right ctrl gpio configuration not needed\n",
-			__func__, __LINE__);
-		return rc;
-	}
+    pinfo = &(ctrl_pdata->panel_data.panel_info);
+    if ((mdss_dsi_is_right_ctrl(ctrl_pdata) &&
+        mdss_dsi_is_hw_config_split(ctrl_pdata->shared_data)) ||
+            pinfo->is_dba_panel) {
+        pr_debug("%s:%d, right ctrl gpio configuration not needed\n",
+            __func__, __LINE__);
+        return rc;
+    }
 
-	if (!gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
-		pr_debug("%s:%d, reset line not configured\n",
-			   __func__, __LINE__);
-	}
+    if (!gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
+        pr_debug("%s:%d, reset line not configured\n",
+               __func__, __LINE__);
+    }
 
-	if (!gpio_is_valid(ctrl_pdata->rst_gpio)) {
-		pr_debug("%s:%d, reset line not configured\n",
-			   __func__, __LINE__);
-		return rc;
-	}
+    if (!gpio_is_valid(ctrl_pdata->rst_gpio)) {
+        pr_debug("%s:%d, reset line not configured\n",
+               __func__, __LINE__);
+        return rc;
+    }
 
-	pr_debug("%s: enable = %d\n", __func__, enable);
+    pr_debug("%s: enable = %d\n", __func__, enable);
 
-	if (enable) {
-		rc = mdss_dsi_request_gpios(ctrl_pdata);
-		if (rc) {
-			pr_err("gpio request failed\n");
-			return rc;
-		}
-		if (!pinfo->cont_splash_enabled) {
-			if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
-				rc = gpio_direction_output(
-					ctrl_pdata->disp_en_gpio, 1);
-				if (rc) {
-					pr_err("%s: unable to set dir for en gpio\n",
-						__func__);
-					goto exit;
-				}
-			}
+    if (enable) {
+        rc = mdss_dsi_request_gpios(ctrl_pdata);
+        if (rc) {
+            pr_err("gpio request failed\n");
+            return rc;
+        }
+        if (!pinfo->cont_splash_enabled) {
+            if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
+                rc = gpio_direction_output(
+                    ctrl_pdata->disp_en_gpio, 1);
+                if (rc) {
+                    pr_err("%s: unable to set dir for en gpio\n",
+                        __func__);
+                    goto exit;
+                }
+            }
 
-			if (pdata->panel_info.rst_seq_len) {
-				rc = gpio_direction_output(ctrl_pdata->rst_gpio,
-					pdata->panel_info.rst_seq[0]);
-				if (rc) {
-					pr_err("%s: unable to set dir for rst gpio\n",
-						__func__);
-					goto exit;
-				}
-			}
+            if (pdata->panel_info.rst_seq_len) {
+                rc = gpio_direction_output(ctrl_pdata->rst_gpio,
+                    pdata->panel_info.rst_seq[0]);
+                if (rc) {
+                    pr_err("%s: unable to set dir for rst gpio\n",
+                        __func__);
+                    goto exit;
+                }
+            }
 
-			for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
-				gpio_set_value((ctrl_pdata->rst_gpio),
-					pdata->panel_info.rst_seq[i]);
-				if (pdata->panel_info.rst_seq[++i])
-					usleep_range(pinfo->rst_seq[i] * 1000,
-						pinfo->rst_seq[i] * 1000);
-			}
+            for (i = 0; i < pdata->panel_info.rst_seq_len; ++i) {
+                gpio_set_value((ctrl_pdata->rst_gpio),
+                    pdata->panel_info.rst_seq[i]);
+                if (pdata->panel_info.rst_seq[++i])
+                    usleep_range(pinfo->rst_seq[i] * 1000,
+                        pinfo->rst_seq[i] * 1000);
+            }
 
-			if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
-				if (ctrl_pdata->avdd_en_gpio_invert) {
-					rc = gpio_direction_output(
-						ctrl_pdata->avdd_en_gpio, 0);
-				} else {
-					rc = gpio_direction_output(
-						ctrl_pdata->avdd_en_gpio, 1);
-				}
-				if (rc) {
-					pr_err("%s: unable to set dir for avdd_en gpio\n",
-						__func__);
-					goto exit;
-				}
-			}
-		}
+            if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
+                if (ctrl_pdata->avdd_en_gpio_invert) {
+                    rc = gpio_direction_output(
+                        ctrl_pdata->avdd_en_gpio, 0);
+                } else {
+                    rc = gpio_direction_output(
+                        ctrl_pdata->avdd_en_gpio, 1);
+                }
+                if (rc) {
+                    pr_err("%s: unable to set dir for avdd_en gpio\n",
+                        __func__);
+                    goto exit;
+                }
+            }
+        }
 
-		if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
-			bool out = false;
+        if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
+            bool out = false;
 
-			if ((pinfo->mode_sel_state == MODE_SEL_SINGLE_PORT) ||
-				(pinfo->mode_sel_state == MODE_GPIO_HIGH))
-				out = true;
-			else if ((pinfo->mode_sel_state == MODE_SEL_DUAL_PORT)
-				|| (pinfo->mode_sel_state == MODE_GPIO_LOW))
-				out = false;
+            if ((pinfo->mode_sel_state == MODE_SEL_SINGLE_PORT) ||
+                (pinfo->mode_sel_state == MODE_GPIO_HIGH))
+                out = true;
+            else if ((pinfo->mode_sel_state == MODE_SEL_DUAL_PORT)
+                || (pinfo->mode_sel_state == MODE_GPIO_LOW))
+                out = false;
 
-			rc = gpio_direction_output(
-					ctrl_pdata->lcd_mode_sel_gpio, out);
-			if (rc) {
-				pr_err("%s: unable to set dir for mode gpio\n",
-					__func__);
-				goto exit;
-			}
-		}
+            rc = gpio_direction_output(
+                    ctrl_pdata->lcd_mode_sel_gpio, out);
+            if (rc) {
+                pr_err("%s: unable to set dir for mode gpio\n",
+                    __func__);
+                goto exit;
+            }
+        }
 
-		if (ctrl_pdata->ctrl_state & CTRL_STATE_PANEL_INIT) {
-			pr_debug("%s: Panel Not properly turned OFF\n",
-						__func__);
-			ctrl_pdata->ctrl_state &= ~CTRL_STATE_PANEL_INIT;
-			pr_debug("%s: Reset panel done\n", __func__);
-		}
-	} else {
-		if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
-			if (ctrl_pdata->avdd_en_gpio_invert)
-				gpio_set_value((ctrl_pdata->avdd_en_gpio), 1);
-			else
-				gpio_set_value((ctrl_pdata->avdd_en_gpio), 0);
+        if (ctrl_pdata->ctrl_state & CTRL_STATE_PANEL_INIT) {
+            pr_debug("%s: Panel Not properly turned OFF\n",
+                        __func__);
+            ctrl_pdata->ctrl_state &= ~CTRL_STATE_PANEL_INIT;
+            pr_debug("%s: Reset panel done\n", __func__);
+        }
+    } else {
+        if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
+            if (ctrl_pdata->avdd_en_gpio_invert)
+                gpio_set_value((ctrl_pdata->avdd_en_gpio), 1);
+            else
+                gpio_set_value((ctrl_pdata->avdd_en_gpio), 0);
 
-			gpio_free(ctrl_pdata->avdd_en_gpio);
-		}
-		if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
-			gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
-			gpio_free(ctrl_pdata->disp_en_gpio);
-		}
-		gpio_set_value((ctrl_pdata->rst_gpio), 0);
-		gpio_free(ctrl_pdata->rst_gpio);
-		if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
-			gpio_set_value(ctrl_pdata->lcd_mode_sel_gpio, 0);
-			gpio_free(ctrl_pdata->lcd_mode_sel_gpio);
-		}
-	}
+            gpio_free(ctrl_pdata->avdd_en_gpio);
+        }
+        if (gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
+            gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
+            gpio_free(ctrl_pdata->disp_en_gpio);
+        }
+
+        if ((is_tiffany) && 
+            (panel_suspend_reset_flag == 2 || panel_suspend_reset_flag == 3)) {
+            gpio_set_value((ctrl_pdata->rst_gpio), 1);
+            mdelay(10);
+            gpio_set_value((ctrl_pdata->rst_gpio), 0);
+            mdelay(10);
+            gpio_set_value((ctrl_pdata->rst_gpio), 1);
+            mdelay(10);
+            gpio_set_value((ctrl_pdata->rst_gpio), 0);
+            mdelay(10);
+        } else {
+            gpio_set_value((ctrl_pdata->rst_gpio), 0);
+        }
+
+        gpio_free(ctrl_pdata->rst_gpio);
+        if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
+            gpio_set_value(ctrl_pdata->lcd_mode_sel_gpio, 0);
+            gpio_free(ctrl_pdata->lcd_mode_sel_gpio);
+        }
+    }
 
 exit:
-	return rc;
+    return rc;
 }
 
 /**
