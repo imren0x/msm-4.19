@@ -3368,109 +3368,134 @@ int msm8952_init_wsa_switch_supply(struct platform_device *pdev,
 }
 
 static struct snd_soc_card *msm8952_populate_sndcard_dailinks(
-				struct device *dev, int snd_card_val)
+                struct device *dev, int snd_card_val)
 {
-	struct snd_soc_card *card = &bear_card;
-	struct snd_soc_dai_link *dailink;
-	int i, len1;
+    struct snd_soc_card *card = &bear_card;
+    struct snd_soc_dai_link *dailink;
+    int i, len1;
 
-	card->name = dev_name(dev);
-	len1 = ARRAY_SIZE(msm8952_dai);
-	if (of_property_read_bool(dev->of_node,
-		"qcom,use-legacy-voice-cpu-dais")) {
-		dev_info(dev, "%s(): Use legacy voice cpu dais\n",
-				__func__);
-		for (i = 0; i < len1; i++) {
-			switch (msm8952_dai[i].id) {
-				case MSM_FRONTEND_DAI_CS_VOICE:
-					msm8952_dai[i].cpu_dai_name = "CS-VOICE";
-					break;
-				case MSM_FRONTEND_DAI_VOICE2:
-					msm8952_dai[i].cpu_dai_name = "Voice2";
-					break;
-				case MSM_FRONTEND_DAI_VOLTE:
-					msm8952_dai[i].cpu_dai_name = "VoLTE";
-					break;
-				case MSM_FRONTEND_DAI_VOWLAN:
-					msm8952_dai[i].cpu_dai_name = "VoWLAN";
-					break;
-				default:
-					break;
-			}
-		}
-	}
+    card->name = dev_name(dev);
+    len1 = ARRAY_SIZE(msm8952_dai);
+    if (of_property_read_bool(dev->of_node,
+        "qcom,use-legacy-voice-cpu-dais")) {
+        dev_info(dev, "%s(): Use legacy voice cpu dais\n",
+                __func__);
+        for (i = 0; i < len1; i++) {
+            switch (msm8952_dai[i].id) {
+                case MSM_FRONTEND_DAI_CS_VOICE:
+                    msm8952_dai[i].cpu_dai_name = "CS-VOICE";
+                    break;
+                case MSM_FRONTEND_DAI_VOICE2:
+                    msm8952_dai[i].cpu_dai_name = "Voice2";
+                    break;
+                case MSM_FRONTEND_DAI_VOLTE:
+                    msm8952_dai[i].cpu_dai_name = "VoLTE";
+                    break;
+                case MSM_FRONTEND_DAI_VOWLAN:
+                    msm8952_dai[i].cpu_dai_name = "VoWLAN";
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
-		for (i = 0; i < len1; i++) {
-			switch (msm8952_dai[i].id) {
-			case MSM_BACKEND_DAI_QUINARY_MI2S_TX:
-				msm8952_dai[i].codec_dai_name = "tas2557 ASI1";
-				msm8952_dai[i].codec_name = "tas2557.2-004c";
-				break;
-			default:
-				break;
-			}
-		}
-		{
-			int j;
-			for (j = 0; j < ARRAY_SIZE(msm8952_quin_dai_link); j++) {
-				switch (msm8952_quin_dai_link[j].id) {
-				case MSM_BACKEND_DAI_QUINARY_MI2S_RX:
-					msm8952_quin_dai_link[j].codec_dai_name = "tas2557 ASI1";
-					msm8952_quin_dai_link[j].codec_name = "tas2557.2-004c";
-					break;
-				default:
-					break;
-				}
-			}
-		}
-	}
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+        for (i = 0; i < len1; i++) {
+            switch (msm8952_dai[i].id) {
+            case MSM_BACKEND_DAI_QUINARY_MI2S_TX:
+                msm8952_dai[i].codec_dai_name = "tas2557 ASI1";
+                msm8952_dai[i].codec_name = "tas2557.2-004c";
+                break;
+            default:
+                break;
+            }
+        }
+        {
+            int j;
+            for (j = 0; j < ARRAY_SIZE(msm8952_quin_dai_link); j++) {
+                switch (msm8952_quin_dai_link[j].id) {
+                case MSM_BACKEND_DAI_QUINARY_MI2S_RX:
+                    msm8952_quin_dai_link[j].codec_dai_name = "tas2557 ASI1";
+                    msm8952_quin_dai_link[j].codec_name = "tas2557.2-004c";
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    } else if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) {
+        for (i = 0; i < len1; i++) {
+            switch (msm8952_dai[i].id) {
+            case MSM_BACKEND_DAI_QUINARY_MI2S_TX:
+                msm8952_dai[i].codec_dai_name = "max98927-aif1";
+                msm8952_dai[i].codec_name = "max98927";
+                break;
+            default:
+                break;
+            }
+        }
+        {
+            int j;
+            for (j = 0; j < ARRAY_SIZE(msm8952_quin_dai_link); j++) {
+                switch (msm8952_quin_dai_link[j].id) {
+                case MSM_BACKEND_DAI_QUINARY_MI2S_RX:
+                    msm8952_quin_dai_link[j].codec_dai_name = "max98927-aif1";
+                    msm8952_quin_dai_link[j].codec_name = "max98927";
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
 #endif
-	memcpy(msm8952_dai_links, msm8952_dai, sizeof(msm8952_dai));
-	dailink = msm8952_dai_links;
+    memcpy(msm8952_dai_links, msm8952_dai, sizeof(msm8952_dai));
+    dailink = msm8952_dai_links;
 
-	if (snd_card_val == INT_SND_CARD) {
-		memcpy(dailink + len1, msm_int_be_dai, sizeof(msm_int_be_dai));
-		len1 += ARRAY_SIZE(msm_int_be_dai);
-	} else {
-		memcpy(dailink + len1, msm_int_dig_be_dai,
-			sizeof(msm_int_dig_be_dai));
-		len1 += ARRAY_SIZE(msm_int_dig_be_dai);
-	}
+    if (snd_card_val == INT_SND_CARD) {
+        memcpy(dailink + len1, msm_int_be_dai, sizeof(msm_int_be_dai));
+        len1 += ARRAY_SIZE(msm_int_be_dai);
+    } else {
+        memcpy(dailink + len1, msm_int_dig_be_dai,
+            sizeof(msm_int_dig_be_dai));
+        len1 += ARRAY_SIZE(msm_int_dig_be_dai);
+    }
 
-	if (of_property_read_bool(dev->of_node,
-				"qcom,hdmi-dba-codec-rx")) {
-		dev_dbg(dev, "%s(): hdmi audio support present\n",
-				__func__);
-		memcpy(dailink + len1, msm8952_hdmi_dba_dai_link,
-				sizeof(msm8952_hdmi_dba_dai_link));
-		len1 += ARRAY_SIZE(msm8952_hdmi_dba_dai_link);
-	} else {
-		dev_dbg(dev, "%s(): No hdmi dba present, add quin dai\n",
-				__func__);
-		memcpy(dailink + len1, msm8952_quin_dai_link,
-				sizeof(msm8952_quin_dai_link));
-		len1 += ARRAY_SIZE(msm8952_quin_dai_link);
-	}
-	if (of_property_read_bool(dev->of_node,
-				"qcom,split-a2dp")) {
-		dev_dbg(dev, "%s(): split a2dp support present\n",
-				__func__);
-		memcpy(dailink + len1, msm8952_split_a2dp_dai_link,
-				sizeof(msm8952_split_a2dp_dai_link));
-		len1 += ARRAY_SIZE(msm8952_split_a2dp_dai_link);
-	}
+    if (of_property_read_bool(dev->of_node,
+                "qcom,hdmi-dba-codec-rx")) {
+        dev_dbg(dev, "%s(): hdmi audio support present\n",
+                __func__);
+        memcpy(dailink + len1, msm8952_hdmi_dba_dai_link,
+                sizeof(msm8952_hdmi_dba_dai_link));
+        len1 += ARRAY_SIZE(msm8952_hdmi_dba_dai_link);
+    } else {
+        dev_dbg(dev, "%s(): No hdmi dba present, add quin dai\n",
+                __func__);
+        memcpy(dailink + len1, msm8952_quin_dai_link,
+                sizeof(msm8952_quin_dai_link));
+        len1 += ARRAY_SIZE(msm8952_quin_dai_link);
+    }
+    
+    if (of_property_read_bool(dev->of_node,
+                "qcom,split-a2dp")) {
+        dev_dbg(dev, "%s(): split a2dp support present\n",
+                __func__);
+        memcpy(dailink + len1, msm8952_split_a2dp_dai_link,
+                sizeof(msm8952_split_a2dp_dai_link));
+        len1 += ARRAY_SIZE(msm8952_split_a2dp_dai_link);
+    }
 
-	if (of_property_read_bool(dev->of_node,
-				"ext_pa_tfa98xx")) {
-		memcpy(dailink + len1, msm_tfa98xx_dig_be_dai_link,
-			sizeof(msm_tfa98xx_dig_be_dai_link));
-		len1 += ARRAY_SIZE(msm_tfa98xx_dig_be_dai_link);
-	}
+    if (of_property_read_bool(dev->of_node,
+                "ext_pa_tfa98xx")) {
+        memcpy(dailink + len1, msm_tfa98xx_dig_be_dai_link,
+            sizeof(msm_tfa98xx_dig_be_dai_link));
+        len1 += ARRAY_SIZE(msm_tfa98xx_dig_be_dai_link);
+    }
 
-	card->dai_link = dailink;
-	card->num_links = len1;
-	return card;
+    card->dai_link = dailink;
+    card->num_links = len1;
+    return card;
 }
 
 static const struct of_device_id msm8952_asoc_machine_of_match[]  = {
