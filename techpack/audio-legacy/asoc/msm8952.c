@@ -67,6 +67,12 @@ static int msm8952_wsa_switch_event(struct snd_soc_dapm_widget *w,
 			      struct snd_kcontrol *kcontrol, int event);
 static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 			  struct snd_kcontrol *kcontrol, int event);
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+int ext_pa_gpio = 0;
+int ext_pa_status = 0;
+#endif
+
 /*
  * Android L spec
  * Need to report LINEIN
@@ -375,6 +381,7 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 			struct msm_asoc_mach_data *pdata)
 {
 	const char *spk_ext_pa = "qcom,msm-spk-ext-pa";
+	int mach = xiaomi_msm8953_mach_get();
 
 	pr_debug("%s:Enter\n", __func__);
 
@@ -390,6 +397,10 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 				__func__, pdata->spk_ext_pa_gpio);
 			return -EINVAL;
 		}
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+		if (mach == XIAOMI_MSM8953_MACH_TIFFANY)
+            ext_pa_gpio = pdata->spk_ext_pa_gpio;
+#endif
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
 		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
             gpio_direction_output(pdata->spk_ext_pa_gpio, 0);
@@ -402,20 +413,31 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 {
 	struct snd_soc_card *card = component->card;
     struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
-    int is_mido = (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO);
+    int ret = 0;
+	int pa_mode = EXT_PA_MODE;
+	int mach = xiaomi_msm8953_mach_get();
+	int is_mido = (mach == XIAOMI_MSM8953_MACH_MIDO);
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+	int is_tiffany = (mach == XIAOMI_MSM8953_MACH_TIFFANY);
+#endif
 
-    if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
-        pr_err("%s: Invalid gpio: %d\n", __func__,
-            pdata->spk_ext_pa_gpio);
-        return false;
-    }
+	if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
+		pr_err("%s: Invalid gpio: %d\n", __func__,
+			pdata->spk_ext_pa_gpio);
+		return -EINVAL;
+	}
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+	if (is_tiffany) {
+		ext_pa_status = enable;
+	}
+#endif
 
     pr_debug("%s: %s external speaker PA\n", __func__,
         enable ? "Enable" : "Disable");
 
     if (enable) {
-        if (is_mido) {
-			int pa_mode = EXT_PA_MODE;
+		if (is_mido) {
             while (pa_mode > 0) {
                 gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 0);
                 udelay(2);
@@ -424,7 +446,6 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
                 pa_mode--;
             }
         } else {
-			int ret;
             ret = msm_cdc_pinctrl_select_active_state(pdata->spk_ext_pa_gpio_p);
             if (ret) {
                 pr_err("%s: gpio set cannot be activated %s\n",
@@ -434,17 +455,17 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
             gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
         }
     } else {
-        gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
-        
-        if (!is_mido) {
-			int ret;
-            ret = msm_cdc_pinctrl_select_sleep_state(pdata->spk_ext_pa_gpio_p);
-            if (ret) {
-                pr_err("%s: gpio set cannot be de-activated %s\n",
-                        __func__, "ext_spk_gpio");
-                return ret;
-            }
-        }
+		gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
+
+		if (!is_mido) {
+			ret = msm_cdc_pinctrl_select_sleep_state(
+				pdata->spk_ext_pa_gpio_p);
+			if (ret) {
+				pr_err("%s: gpio set cannot be de-activated %s\n",
+					__func__, "ext_spk_gpio");
+				return ret;
+			}
+		}
     }
     return 0;
 }
@@ -3628,8 +3649,14 @@ parse_mclk_freq:
 			__func__, spk_ext_pa);
 	}
 
-	pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
-							spk_ext_pa, 0);
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) {
+		pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+					"qcom,cdc-ext-pa-gpios", 0);
+	} else {
+		pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+					spk_ext_pa, 0);
+	}
+
 	ret = is_us_eu_switch_gpio_support(pdev, pdata);
 	if (ret < 0) {
 		pr_err("%s: failed to is_us_eu_switch_gpio_support %d\n",
