@@ -60,6 +60,11 @@ config MACH_XIAOMI_YSL
 	help
 	  Support for Xiaomi Redmi S2 / Y2 (ysl).
 
+config SND_SOC_MAX98927
+	bool  "Maxim Audio MAX98927"
+	help
+	  Support for the Xiaomi Redmi 6 Pro & Mi-A1/A2-lite/5X platform.
+
 config SND_SOC_TAS2557
 	bool  "Texas Audio TAS2557"
 	help
