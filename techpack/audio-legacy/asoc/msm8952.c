@@ -1772,6 +1772,7 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 			btn_high[4] = 500;
 			break;
 		case XIAOMI_MSM8953_MACH_VINCE:
+		case XIAOMI_MSM8953_MACH_TIFFANY:
 		case XIAOMI_MSM8953_MACH_DAISY:
 			btn_low[0] = 91;
 			btn_high[0] = 91;
@@ -3761,7 +3762,7 @@ parse_mclk_freq:
         pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
                                 spk_ext_pa, 0);
     }
-	
+
 	ret = is_us_eu_switch_gpio_support(pdev, pdata);
 	if (ret < 0) {
 		pr_err("%s: failed to is_us_eu_switch_gpio_support %d\n",
