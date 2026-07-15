@@ -1755,6 +1755,7 @@ static void *def_msm8952_wcd_mbhc_cal(void)
 			btn_high[4] = 500;
 			break;
 		case XIAOMI_MSM8953_MACH_VINCE:
+		case XIAOMI_MSM8953_MACH_TIFFANY:
 		case XIAOMI_MSM8953_MACH_DAISY:
 			btn_low[0] = 91;
 			btn_high[0] = 91;
