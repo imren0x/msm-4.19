@@ -87,6 +87,11 @@ extern unsigned char AW87319_Audio_Speaker(void);
 extern unsigned char AW87319_Audio_OFF(void);
 #endif
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+int ext_pa_gpio = 0;
+int ext_pa_status = 0;
+#endif
+
 /*
  * Android L spec
  * Need to report LINEIN
@@ -396,6 +401,7 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 			struct msm_asoc_mach_data *pdata)
 {
 	const char *spk_ext_pa = "qcom,msm-spk-ext-pa";
+	int mach = xiaomi_msm8953_mach_get();
 
 	pr_debug("%s:Enter\n", __func__);
 
@@ -411,6 +417,10 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 				__func__, pdata->spk_ext_pa_gpio);
 			return -EINVAL;
 		}
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY)
+            ext_pa_gpio = pdata->spk_ext_pa_gpio;
+#endif
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
 		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
             gpio_direction_output(pdata->spk_ext_pa_gpio, 0);
@@ -428,6 +438,7 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
     int mach = xiaomi_msm8953_mach_get();
     int is_mido = (mach == XIAOMI_MSM8953_MACH_MIDO);
     int is_rosy = (mach == XIAOMI_MSM8953_MACH_ROSY);
+	int is_tiffany = (mach == XIAOMI_MSM8953_MACH_TIFFANY);
 
     if (!is_rosy) {
         if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
@@ -436,6 +447,12 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
             return false;
         }
     }
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_TIFFANY)
+	if (is_tiffany) {
+        ext_pa_status = enable;
+    }
+#endif
 
     pr_debug("%s: %s external speaker PA\n", __func__,
         enable ? "Enable" : "Disable");
@@ -3737,8 +3754,14 @@ parse_mclk_freq:
 			__func__, spk_ext_pa);
 	}
 
-	pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
-							spk_ext_pa, 0);
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY)
+        pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+                                "qcom,cdc-ext-pa-gpios", 0);
+    } else {
+        pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+                                spk_ext_pa, 0);
+    }
+	
 	ret = is_us_eu_switch_gpio_support(pdev, pdata);
 	if (ret < 0) {
 		pr_err("%s: failed to is_us_eu_switch_gpio_support %d\n",
