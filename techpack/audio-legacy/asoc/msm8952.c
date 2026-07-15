@@ -3779,8 +3779,14 @@ parse_mclk_freq:
 			__func__, spk_ext_pa);
 	}
 
-	pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
-							spk_ext_pa, 0);
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) {
+        pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+                                "qcom,cdc-ext-pa-gpios", 0);
+	} else {
+        pdata->spk_ext_pa_gpio_p = of_parse_phandle(pdev->dev.of_node,
+                                spk_ext_pa, 0);
+    }
+
 	ret = is_us_eu_switch_gpio_support(pdev, pdata);
 	if (ret < 0) {
 		pr_err("%s: failed to is_us_eu_switch_gpio_support %d\n",
