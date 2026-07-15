@@ -193,6 +193,10 @@ ifdef CONFIG_MACH_XIAOMI_ROSY
     AW87319_OBJS += aw87319.o
 endif
 
+ifdef CONFIG_SND_SOC_MAX98927
+        MAX98927_OBJS += max98927.o
+endif
+
 ifdef CONFIG_SND_SOC_MSM_STUB
 	STUB_OBJS += msm_stub.o
 endif
@@ -295,6 +299,9 @@ wsa881x_analog_dlkm-y := $(WSA881X_ANALOG_OBJS)
 
 obj-$(CONFIG_MACH_XIAOMI_ROSY) += aw87319_dlkm.o
 aw87319_dlkm-y := $(AW87319_OBJS)
+
+obj-$(CONFIG_SND_SOC_MAX98927) += max98927_dlkm.o
+max98927_dlkm-y := $(MAX98927_OBJS)
 
 obj-$(CONFIG_SND_SOC_MSM_STUB) += stub_dlkm.o
 stub_dlkm-y := $(STUB_OBJS)
