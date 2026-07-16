@@ -16,12 +16,6 @@
 #include <linux/msm-bus.h>
 #include <linux/pm_qos.h>
 #include <linux/dma-buf.h>
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
-#include <xiaomi-msm8953/mach.h>
-#endif
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-#include <linux/delay.h>
-#endif
 
 #include "mdss.h"
 #include "mdss_panel.h"
@@ -340,14 +334,14 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev,
 	}
 
 	for (i = DSI_CORE_PM; !rc && (i < DSI_MAX_PM); i++) {
-		rc = msm_mdss_config_vreg(&pdev->dev,
+		rc = msm_dss_config_vreg(&pdev->dev,
 			sdata->power_data[i].vreg_config,
 			sdata->power_data[i].num_vreg, 1);
 		if (rc) {
 			pr_err("%s: failed to init vregs for %s\n",
 				__func__, __mdss_dsi_pm_name(i));
 			for (j = i-1; j >= DSI_CORE_PM; j--) {
-				msm_mdss_config_vreg(&pdev->dev,
+				msm_dss_config_vreg(&pdev->dev,
 				sdata->power_data[j].vreg_config,
 				sdata->power_data[j].num_vreg, 0);
 			}
@@ -357,7 +351,7 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev,
 	return rc;
 }
 
-int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
+static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 {
 	int ret = 0;
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
@@ -380,7 +374,7 @@ int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
 		pr_debug("reset disable: pinctrl not enabled\n");
 
-	ret = msm_mdss_enable_vreg(
+	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 0);
 	if (ret)
@@ -404,7 +398,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	ret = msm_mdss_enable_vreg(
+	ret = msm_dss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
 	if (ret) {
@@ -497,7 +491,7 @@ static int mdss_dsi_panel_power_ctrl(struct mdss_panel_data *pdata,
 }
 
 void mdss_dsi_put_dt_vreg_data(struct device *dev,
-	struct mdss_module_power *module_power)
+	struct dss_module_power *module_power)
 {
 	if (!module_power) {
 		pr_err("%s: invalid input\n", __func__);
@@ -508,7 +502,7 @@ void mdss_dsi_put_dt_vreg_data(struct device *dev,
 }
 
 int mdss_dsi_get_dt_vreg_data(struct device *dev,
-	struct device_node *of_node, struct mdss_module_power *mp,
+	struct device_node *of_node, struct dss_module_power *mp,
 	enum dsi_pm_type module)
 {
 	int i = 0, rc = 0;
@@ -550,7 +544,7 @@ int mdss_dsi_get_dt_vreg_data(struct device *dev,
 		pr_debug("%s: vreg found. count=%d\n", __func__, mp->num_vreg);
 	}
 
-	mp->vreg_config = devm_kzalloc(dev, sizeof(struct mdss_vreg) *
+	mp->vreg_config = devm_kzalloc(dev, sizeof(struct dss_vreg) *
 		mp->num_vreg, GFP_KERNEL);
 	if (!mp->vreg_config) {
 		rc = -ENOMEM;
@@ -3810,7 +3804,7 @@ static void mdss_dsi_res_deinit(struct platform_device *pdev)
 		goto res_release;
 
 	for (i = (DSI_MAX_PM - 1); i >= DSI_CORE_PM; i--) {
-		if (msm_mdss_config_vreg(&pdev->dev,
+		if (msm_dss_config_vreg(&pdev->dev,
 				sdata->power_data[i].vreg_config,
 				sdata->power_data[i].num_vreg, 1) < 0)
 			pr_err("%s: failed to de-init vregs for %s\n",
@@ -4172,7 +4166,7 @@ static int mdss_dsi_ctrl_remove(struct platform_device *pdev)
 
 	mdss_dsi_pm_qos_remove_request(ctrl_pdata->shared_data);
 
-	if (msm_mdss_config_vreg(&pdev->dev,
+	if (msm_dss_config_vreg(&pdev->dev,
 			ctrl_pdata->panel_power_data.vreg_config,
 			ctrl_pdata->panel_power_data.num_vreg, 1) < 0)
 		pr_err("%s: failed to de-init vregs for %s\n",
@@ -4180,9 +4174,9 @@ static int mdss_dsi_ctrl_remove(struct platform_device *pdev)
 	mdss_dsi_put_dt_vreg_data(&pdev->dev, &ctrl_pdata->panel_power_data);
 
 	mfd = platform_get_drvdata(pdev);
-	msm_mdss_iounmap(&ctrl_pdata->mmss_misc_io);
-	msm_mdss_iounmap(&ctrl_pdata->phy_io);
-	msm_mdss_iounmap(&ctrl_pdata->ctrl_io);
+	msm_dss_iounmap(&ctrl_pdata->mmss_misc_io);
+	msm_dss_iounmap(&ctrl_pdata->phy_io);
+	msm_dss_iounmap(&ctrl_pdata->ctrl_io);
 	mdss_dsi_debugfs_cleanup(ctrl_pdata);
 
 	if (ctrl_pdata->workq)
@@ -4225,7 +4219,7 @@ int mdss_dsi_retrieve_ctrl_resources(struct platform_device *pdev, int mode,
 		return -EPERM;
 	}
 
-	rc = msm_mdss_ioremap_byname(pdev, &ctrl->ctrl_io, "dsi_ctrl");
+	rc = msm_dss_ioremap_byname(pdev, &ctrl->ctrl_io, "dsi_ctrl");
 	if (rc) {
 		pr_err("%s:%d unable to remap dsi ctrl resources\n",
 			       __func__, __LINE__);
@@ -4235,14 +4229,14 @@ int mdss_dsi_retrieve_ctrl_resources(struct platform_device *pdev, int mode,
 	ctrl->ctrl_base = ctrl->ctrl_io.base;
 	ctrl->reg_size = ctrl->ctrl_io.len;
 
-	rc = msm_mdss_ioremap_byname(pdev, &ctrl->phy_io, "dsi_phy");
+	rc = msm_dss_ioremap_byname(pdev, &ctrl->phy_io, "dsi_phy");
 	if (rc) {
 		pr_err("%s:%d unable to remap dsi phy resources\n",
 			       __func__, __LINE__);
 		return rc;
 	}
 
-	rc = msm_mdss_ioremap_byname(pdev, &ctrl->phy_regulator_io,
+	rc = msm_dss_ioremap_byname(pdev, &ctrl->phy_regulator_io,
 			"dsi_phy_regulator");
 	if (rc)
 		pr_debug("%s:%d unable to remap dsi phy regulator resources\n",
@@ -4256,7 +4250,7 @@ int mdss_dsi_retrieve_ctrl_resources(struct platform_device *pdev, int mode,
 		__func__, ctrl->ctrl_base, ctrl->reg_size, ctrl->phy_io.base,
 		ctrl->phy_io.len);
 
-	rc = msm_mdss_ioremap_byname(pdev, &ctrl->mmss_misc_io,
+	rc = msm_dss_ioremap_byname(pdev, &ctrl->mmss_misc_io,
 		"mmss_misc_phys");
 	if (rc) {
 		pr_debug("%s:%d mmss_misc IO remap failed\n",
@@ -4479,55 +4473,6 @@ static int mdss_dsi_parse_ctrl_params(struct platform_device *ctrl_pdev,
 
 }
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-u32 te_count;
-static irqreturn_t te_interrupt(int irq, void *data)
-{
-	disable_irq_nosync(irq);
-	te_count++;
-	enable_irq(irq);
-
-	return IRQ_HANDLED;
-}
-
-int init_te_irq(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
-{
-	int rc = -1;
-	int irq;
-
-	if (gpio_is_valid(ctrl_pdata->disp_te_gpio)) {
-		rc = gpio_request(ctrl_pdata->disp_te_gpio, "te-gpio");
-		if (rc < 0) {
-			pr_err("%s: gpio_request fail rc=%d\n", __func__, rc);
-			return rc ;
-		}
-
-		rc = gpio_direction_input(ctrl_pdata->disp_te_gpio);
-		if (rc < 0) {
-			pr_err("%s: gpio_direction_input fail rc=%d\n",
-				__func__, rc);
-			return rc ;
-		}
-
-		irq = gpio_to_irq(ctrl_pdata->disp_te_gpio);
-		pr_debug("%s:liujia irq = %d\n", __func__, irq);
-		rc = request_threaded_irq(irq, te_interrupt, NULL,
-			IRQF_TRIGGER_RISING|IRQF_ONESHOT,
-			"te-irq", ctrl_pdata);
-		if (rc < 0) {
-			pr_err("%s: request_irq fail rc=%d\n", __func__, rc);
-			return rc ;
-		}
-	} else {
-		 pr_err("%s:liujia irq gpio not provided\n", __func__);
-		 return rc;
-	}
-
-	return 0;
-}
-#endif
-
 static int mdss_dsi_parse_gpio_params(struct platform_device *ctrl_pdev,
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
@@ -4662,7 +4607,7 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 		return rc;
 	}
 
-	rc = msm_mdss_config_vreg(&ctrl_pdev->dev,
+	rc = msm_dss_config_vreg(&ctrl_pdev->dev,
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
 	if (rc) {
@@ -4704,15 +4649,6 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	if (ctrl_pdata->status_mode == ESD_REG ||
 			ctrl_pdata->status_mode == ESD_REG_NT35596)
 		ctrl_pdata->check_status = mdss_dsi_reg_status_check;
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-	else if ((xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-		  xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) && 
-		 ctrl_pdata->status_mode == ESD_TE_NT35596) {
-		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
-		init_te_irq(ctrl_pdata);
-	}
-#endif
 	else if (ctrl_pdata->status_mode == ESD_BTA)
 		ctrl_pdata->check_status = mdss_dsi_bta_status_check;
 
@@ -4755,7 +4691,7 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	sdata = ctrl_pdata->shared_data;
 
 	if (pinfo->ulps_suspend_enabled) {
-		rc = msm_mdss_enable_vreg(
+		rc = msm_dss_enable_vreg(
 			sdata->power_data[DSI_PHY_PM].vreg_config,
 			sdata->power_data[DSI_PHY_PM].num_vreg, 1);
 		if (rc) {

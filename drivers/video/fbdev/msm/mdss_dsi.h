@@ -16,9 +16,6 @@
 #include "mdss_panel.h"
 #include "mdss_dsi_cmd.h"
 #include "mdss_dsi_clk.h"
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
-#include <xiaomi-msm8953/mach.h>
-#endif
 
 #define MMSS_SERDES_BASE_PHY 0x04f01000 /* mmss (De)Serializer CFG */
 
@@ -104,10 +101,6 @@ enum dsi_panel_status_mode {
 	ESD_BTA,
 	ESD_REG,
 	ESD_REG_NT35596,
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-	ESD_TE_NT35596,
-#endif
 	ESD_TE,
 	ESD_MAX,
 };
@@ -244,11 +237,6 @@ extern struct device dsi_dev;
 extern u32 dsi_irq;
 extern struct mdss_dsi_ctrl_pdata *ctrl_list[];
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-extern bool synaptics_gesture_func_on;
-extern bool synaptics_gesture_func_on_lansi;
-#endif
-
 enum {
 	DSI_CTRL_0,
 	DSI_CTRL_1,
@@ -295,7 +283,7 @@ struct dsi_shared_data {
 	struct clk *pixel1_parent;
 
 	/* DSI core regulators */
-	struct mdss_module_power power_data[DSI_MAX_PM];
+	struct dss_module_power power_data[DSI_MAX_PM];
 
 	/* Shared mutex for DSI PHY regulator */
 	struct mutex phy_reg_lock;
@@ -433,10 +421,10 @@ struct mdss_dsi_ctrl_pdata {
 	void (*switch_mode)(struct mdss_panel_data *pdata, int mode);
 	struct mdss_panel_data panel_data;
 	unsigned char *ctrl_base;
-	struct mdss_io_data ctrl_io;
-	struct mdss_io_data mmss_misc_io;
-	struct mdss_io_data phy_io;
-	struct mdss_io_data phy_regulator_io;
+	struct dss_io_data ctrl_io;
+	struct dss_io_data mmss_misc_io;
+	struct dss_io_data phy_io;
+	struct dss_io_data phy_regulator_io;
 	int reg_size;
 	u32 flags;
 	struct clk *byte_clk;
@@ -494,8 +482,8 @@ struct mdss_dsi_ctrl_pdata {
 	u32 byte_clk_rate_bkp;
 	u32 esc_clk_rate_hz;
 	bool refresh_clk_rate; /* flag to recalculate clk_rate */
-	struct mdss_module_power panel_power_data;
-	struct mdss_module_power power_data[DSI_MAX_PM]; /* for 8x10 */
+	struct dss_module_power panel_power_data;
+	struct dss_module_power power_data[DSI_MAX_PM]; /* for 8x10 */
 	u32 dsi_irq_mask;
 	struct mdss_hw *dsi_hw;
 	struct mdss_intf_recovery *recovery;
@@ -691,10 +679,6 @@ int mdss_dsi_cmdlist_commit(struct mdss_dsi_ctrl_pdata *ctrl, int from_mdp);
 void mdss_dsi_cmdlist_kickoff(int intf);
 int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
 int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
-int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
-#endif
 bool __mdss_dsi_clk_enabled(struct mdss_dsi_ctrl_pdata *ctrl, u8 clk_type);
 void mdss_dsi_ctrl_setup(struct mdss_dsi_ctrl_pdata *ctrl);
 bool mdss_dsi_dln0_phy_err(struct mdss_dsi_ctrl_pdata *ctrl, bool print_en);
@@ -734,10 +718,10 @@ void mdss_dsi_ctrl_phy_reset(struct mdss_dsi_ctrl_pdata *ctrl);
 
 void mdss_dsi_debug_bus_init(struct mdss_dsi_data *sdata);
 int mdss_dsi_get_dt_vreg_data(struct device *dev,
-	struct device_node *of_node, struct mdss_module_power *mp,
+	struct device_node *of_node, struct dss_module_power *mp,
 	enum dsi_pm_type module);
 void mdss_dsi_put_dt_vreg_data(struct device *dev,
-	struct mdss_module_power *module_power);
+	struct dss_module_power *module_power);
 
 static inline const char *__mdss_dsi_pm_name(enum dsi_pm_type module)
 {
