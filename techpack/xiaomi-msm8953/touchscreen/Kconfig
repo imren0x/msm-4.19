@@ -1,6 +1,7 @@
 source "techpack/xiaomi-msm8953/touchscreen/focaltech_touch/Kconfig"
 source "techpack/xiaomi-msm8953/touchscreen/td4310_e7/Kconfig"
 source "techpack/xiaomi-msm8953/touchscreen/td4310_lansi_e7/Kconfig"
+source "techpack/xiaomi-msm8953/touchscreen/synaptics_dsx/Kconfig"
 source "techpack/xiaomi-msm8953/touchscreen/nt36xxx/Kconfig"
 source "techpack/xiaomi-msm8953/touchscreen/gt9xx/Kconfig"
 
