@@ -27,8 +27,8 @@
 #include <linux/pm_qos.h>
 #include <linux/mdss_io_util.h>
 #include <linux/dma-buf.h>
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_TITANIUM)
-#include <xiaomi-titanium/mach.h>
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+#include <xiaomi-msm8953/mach.h>
 #endif
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
 #include <linux/delay.h>
