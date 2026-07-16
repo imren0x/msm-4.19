@@ -653,14 +653,14 @@ static struct synaptics_rmi4_exp_fn proximity_module = {
 
 static int __init rmi4_proximity_module_init(void)
 {
-	synaptics_rmi4_new_function(&proximity_module, true);
+	synaptics_rmi4_new_function_tiffany(&proximity_module, true);
 
 	return 0;
 }
 
 static void __exit rmi4_proximity_module_exit(void)
 {
-	synaptics_rmi4_new_function(&proximity_module, false);
+	synaptics_rmi4_new_function_tiffany(&proximity_module, false);
 
 	wait_for_completion(&prox_remove_complete);
 }

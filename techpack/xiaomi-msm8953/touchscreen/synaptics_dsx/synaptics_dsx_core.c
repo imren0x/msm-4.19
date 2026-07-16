@@ -4523,7 +4523,7 @@ static void synaptics_rmi4_exp_fn_work(struct work_struct *work)
 	mutex_unlock(&rmi4_data->rmi4_exp_init_mutex);
 }
 
-void synaptics_rmi4_new_function(struct synaptics_rmi4_exp_fn *exp_fn,
+void synaptics_rmi4_new_function_tiffany(struct synaptics_rmi4_exp_fn *exp_fn,
 		bool insert)
 {
 	struct synaptics_rmi4_exp_fhandler *exp_fhandler;
@@ -4565,7 +4565,7 @@ exit:
 				msecs_to_jiffies(EXP_FN_WORK_DELAY_MS));
 	}
 }
-EXPORT_SYMBOL(synaptics_rmi4_new_function);
+EXPORT_SYMBOL(synaptics_rmi4_new_function_tiffany);
 
 static int synaptics_rmi4_probe(struct platform_device *pdev)
 {
@@ -5362,7 +5362,7 @@ static int __init synaptics_rmi4_init(void)
 {
 	int retval;
 
-	retval = synaptics_rmi4_bus_init();
+	retval = synaptics_rmi4_bus_init_tiffany();
 	if (retval)
 		return retval;
 
@@ -5373,7 +5373,7 @@ static void __exit synaptics_rmi4_exit(void)
 {
 	platform_driver_unregister(&synaptics_rmi4_driver);
 
-	synaptics_rmi4_bus_exit();
+	synaptics_rmi4_bus_exit_tiffany();
 }
 
 late_initcall(synaptics_rmi4_init);

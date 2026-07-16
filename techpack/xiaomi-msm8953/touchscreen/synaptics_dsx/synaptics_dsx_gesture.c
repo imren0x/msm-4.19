@@ -2271,14 +2271,14 @@ static struct synaptics_rmi4_exp_fn gesture_module = {
 
 static int __init rmi4_gesture_module_init(void)
 {
-	synaptics_rmi4_new_function(&gesture_module, true);
+	synaptics_rmi4_new_function_tiffany(&gesture_module, true);
 
 	return 0;
 }
 
 static void __exit rmi4_gesture_module_exit(void)
 {
-	synaptics_rmi4_new_function(&gesture_module, false);
+	synaptics_rmi4_new_function_tiffany(&gesture_module, false);
 
 	wait_for_completion(&udg_remove_complete);
 }

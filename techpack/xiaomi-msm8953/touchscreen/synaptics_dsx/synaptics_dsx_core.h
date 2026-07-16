@@ -493,14 +493,14 @@ struct synaptics_rmi4_exp_fn {
 			unsigned char intr_mask);
 };
 
-int synaptics_rmi4_bus_init(void);
+int synaptics_rmi4_bus_init_tiffany(void);
 
-void synaptics_rmi4_bus_exit(void);
+void synaptics_rmi4_bus_exit_tiffany(void);
 
-void synaptics_rmi4_new_function(struct synaptics_rmi4_exp_fn *exp_fn_module,
+void synaptics_rmi4_new_function_tiffany(struct synaptics_rmi4_exp_fn *exp_fn_module,
 		bool insert);
 
-int synaptics_fw_updater(const unsigned char *fw_data);
+int synaptics_fw_updater_tiffany(const unsigned char *fw_data);
 
 static inline int synaptics_rmi4_reg_read(
 		struct synaptics_rmi4_data *rmi4_data,

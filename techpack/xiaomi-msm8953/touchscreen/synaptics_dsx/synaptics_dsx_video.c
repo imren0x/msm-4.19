@@ -383,14 +383,14 @@ static struct synaptics_rmi4_exp_fn video_module = {
 
 static int __init rmi4_video_module_init(void)
 {
-	synaptics_rmi4_new_function(&video_module, true);
+	synaptics_rmi4_new_function_tiffany(&video_module, true);
 
 	return 0;
 }
 
 static void __exit rmi4_video_module_exit(void)
 {
-	synaptics_rmi4_new_function(&video_module, false);
+	synaptics_rmi4_new_function_tiffany(&video_module, false);
 
 	wait_for_completion(&video_remove_complete);
 }

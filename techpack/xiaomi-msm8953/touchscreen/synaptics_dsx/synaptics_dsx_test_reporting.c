@@ -1466,7 +1466,7 @@ static struct synaptics_rmi4_f54_handle *f54;
 static struct synaptics_rmi4_f55_handle *f55;
 static struct synaptics_rmi4_f21_handle *f21;
 
-DECLARE_COMPLETION(test_remove_complete);
+DECLARE_COMPLETION(test_remove_complete_tiffany);
 
 static bool test_report_type_valid(enum f54_report_types report_type)
 {
@@ -5204,7 +5204,7 @@ static void synaptics_rmi4_test_remove(struct synaptics_rmi4_data *rmi4_data)
 	f54 = NULL;
 
 exit:
-	complete(&test_remove_complete);
+	complete(&test_remove_complete_tiffany);
 }
 
 static void synaptics_rmi4_test_reset(struct synaptics_rmi4_data *rmi4_data)
@@ -5314,16 +5314,16 @@ static struct synaptics_rmi4_exp_fn test_module = {
 
 static int __init rmi4_test_module_init(void)
 {
-	synaptics_rmi4_new_function(&test_module, true);
+	synaptics_rmi4_new_function_tiffany(&test_module, true);
 
 	return 0;
 }
 
 static void __exit rmi4_test_module_exit(void)
 {
-	synaptics_rmi4_new_function(&test_module, false);
+	synaptics_rmi4_new_function_tiffany(&test_module, false);
 
-	wait_for_completion(&test_remove_complete);
+	wait_for_completion(&test_remove_complete_tiffany);
 }
 
 module_init(rmi4_test_module_init);
