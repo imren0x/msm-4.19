@@ -677,13 +677,13 @@ static struct spi_driver synaptics_rmi4_spi_driver = {
 	.id_table = synaptics_rmi4_id_table,
 };
 
-int synaptics_rmi4_bus_init(void)
+int synaptics_rmi4_bus_init_tiffany(void)
 {
 	return spi_register_driver(&synaptics_rmi4_spi_driver);
 }
-EXPORT_SYMBOL(synaptics_rmi4_bus_init);
+EXPORT_SYMBOL(synaptics_rmi4_bus_init_tiffany);
 
-void synaptics_rmi4_bus_exit(void)
+void synaptics_rmi4_bus_exit_tiffany(void)
 {
 	kfree(buf);
 
@@ -691,7 +691,7 @@ void synaptics_rmi4_bus_exit(void)
 
 	spi_unregister_driver(&synaptics_rmi4_spi_driver);
 }
-EXPORT_SYMBOL(synaptics_rmi4_bus_exit);
+EXPORT_SYMBOL(synaptics_rmi4_bus_exit_tiffany);
 
 MODULE_AUTHOR("Synaptics, Inc.");
 MODULE_DESCRIPTION("Synaptics DSX SPI Bus Support Module");

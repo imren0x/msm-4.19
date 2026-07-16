@@ -586,14 +586,14 @@ static struct synaptics_rmi4_exp_fn active_pen_module = {
 
 static int __init rmi4_active_pen_module_init(void)
 {
-	synaptics_rmi4_new_function(&active_pen_module, true);
+	synaptics_rmi4_new_function_tiffany(&active_pen_module, true);
 
 	return 0;
 }
 
 static void __exit rmi4_active_pen_module_exit(void)
 {
-	synaptics_rmi4_new_function(&active_pen_module, false);
+	synaptics_rmi4_new_function_tiffany(&active_pen_module, false);
 
 	wait_for_completion(&apen_remove_complete);
 }

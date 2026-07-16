@@ -158,7 +158,7 @@ static struct class *rmidev_device_class;
 
 static struct rmidev_handle *rmidev;
 
-DECLARE_COMPLETION(rmidev_remove_complete);
+DECLARE_COMPLETION(rmidev_remove_complete_tiffany);
 
 static irqreturn_t rmidev_sysfs_irq(int irq, void *data)
 {
@@ -1037,7 +1037,7 @@ static void rmidev_remove_device(struct synaptics_rmi4_data *rmi4_data)
 	rmidev = NULL;
 
 exit:
-	complete(&rmidev_remove_complete);
+	complete(&rmidev_remove_complete_tiffany);
 }
 
 static struct synaptics_rmi4_exp_fn rmidev_module = {
@@ -1055,16 +1055,16 @@ static struct synaptics_rmi4_exp_fn rmidev_module = {
 
 static int __init rmidev_module_init(void)
 {
-	synaptics_rmi4_new_function(&rmidev_module, true);
+	synaptics_rmi4_new_function_tiffany(&rmidev_module, true);
 
 	return 0;
 }
 
 static void __exit rmidev_module_exit(void)
 {
-	synaptics_rmi4_new_function(&rmidev_module, false);
+	synaptics_rmi4_new_function_tiffany(&rmidev_module, false);
 
-	wait_for_completion(&rmidev_remove_complete);
+	wait_for_completion(&rmidev_remove_complete_tiffany);
 }
 
 module_init(rmidev_module_init);
