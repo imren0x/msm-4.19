@@ -1878,7 +1878,7 @@
 			tx-fifo-resize;
 			snps,usb3-u1u2-disable;
 			snps,is-utmi-l1-suspend;
-			snps,usb2-l1-disable;
+			snps,usb2-l1-disable; /* Missing on K4.19 */
 			snps,hird-threshold = /bits/ 8 <0x0>;
 			maximum-speed = "super-speed";
 		};
