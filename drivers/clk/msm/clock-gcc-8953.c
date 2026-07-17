@@ -320,10 +320,19 @@ static struct rcg_clk csi1_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_csi2_clk_src[] = {
+	F( 100000000,    gpll0_main_div2,    4,    0,     0),
+	F( 200000000,              gpll0,    4,    0,     0),
+	F( 310000000,     gpll2_out_main,    3,    0,     0),
+	F( 400000000,              gpll0,    2,    0,     0),
+	F( 465000000,     gpll2_out_main,    2,    0,     0),
+	F_END
+};
+
 static struct rcg_clk csi2_clk_src = {
 	.cmd_rcgr_reg = CSI2_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_csi1_clk_src,
+	.freq_tbl = ftbl_csi2_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -360,21 +369,6 @@ static struct rcg_clk vfe0_clk_src = {
 		VDD_DIG_FMAX_MAP4(LOW_SVS, 100000000, SVS, 200000000, SVS_PLUS,
 				310000000, NOM, 465000000),
 		CLK_INIT(vfe0_clk_src.c),
-	},
-};
-
-static struct rcg_clk vfe1_clk_src = {
-	.cmd_rcgr_reg = VFE1_CMD_RCGR,
-	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_vfe0_clk_src,
-	.current_freq = &rcg_dummy_freq,
-	.base = &virt_bases[GCC_BASE],
-	.c = {
-		.dbg_name = "vfe1_clk_src",
-		.ops = &clk_ops_rcg,
-		VDD_DIG_FMAX_MAP4(LOW_SVS, 100000000, SVS, 200000000, SVS_PLUS,
-				310000000, NOM, 465000000),
-		CLK_INIT(vfe1_clk_src.c),
 	},
 };
 
@@ -660,6 +654,34 @@ static struct rcg_clk usb30_master_clk_src = {
 		.ops = &clk_ops_rcg_mnd,
 		VDD_DIG_FMAX_MAP2(LOW_SVS, 80000000, NOM, 133330000),
 		CLK_INIT(usb30_master_clk_src.c),
+	},
+};
+
+static struct clk_freq_tbl ftbl_vfe1_clk_src[] = {
+	F(  50000000, gpll0_main_div2_mm,    8,    0,     0),
+	F( 100000000, gpll0_main_div2_mm,    4,    0,     0),
+	F( 133330000,              gpll0,    6,    0,     0),
+	F( 160000000,              gpll0,    5,    0,     0),
+	F( 200000000,              gpll0,    4,    0,     0),
+	F( 266670000,              gpll0,    3,    0,     0),
+	F( 310000000,              gpll2,    3,    0,     0),
+	F( 400000000,              gpll0,    2,    0,     0),
+	F( 465000000,              gpll2,    2,    0,     0),
+	F_END
+};
+
+static struct rcg_clk vfe1_clk_src = {
+	.cmd_rcgr_reg = VFE1_CMD_RCGR,
+	.set_rate = set_rate_hid,
+	.freq_tbl = ftbl_vfe1_clk_src,
+	.current_freq = &rcg_dummy_freq,
+	.base = &virt_bases[GCC_BASE],
+	.c = {
+		.dbg_name = "vfe1_clk_src",
+		.ops = &clk_ops_rcg,
+		VDD_DIG_FMAX_MAP4(LOW_SVS, 100000000, SVS, 200000000, SVS_PLUS,
+				310000000, NOM, 465000000),
+		CLK_INIT(vfe1_clk_src.c),
 	},
 };
 
@@ -1082,10 +1104,19 @@ static struct rcg_clk csi0p_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_csi1p_clk_src[] = {
+	F(  66670000, gpll0_main_div2_mm,    6,    0,     0),
+	F( 133330000,              gpll0,    6,    0,     0),
+	F( 200000000,              gpll0,    4,    0,     0),
+	F( 266670000,              gpll0,    3,    0,     0),
+	F( 310000000,              gpll2,    3,    0,     0),
+	F_END
+};
+
 static struct rcg_clk csi1p_clk_src = {
 	.cmd_rcgr_reg = CSI1P_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_csi0p_clk_src,
+	.freq_tbl = ftbl_csi1p_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1097,10 +1128,19 @@ static struct rcg_clk csi1p_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_csi2p_clk_src[] = {
+	F(  66670000, gpll0_main_div2_mm,    6,    0,     0),
+	F( 133330000,              gpll0,    6,    0,     0),
+	F( 200000000,              gpll0,    4,    0,     0),
+	F( 266670000,              gpll0,    3,    0,     0),
+	F( 310000000,              gpll2,    3,    0,     0),
+	F_END
+};
+
 static struct rcg_clk csi2p_clk_src = {
 	.cmd_rcgr_reg = CSI2P_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_csi0p_clk_src,
+	.freq_tbl = ftbl_csi2p_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1135,10 +1175,18 @@ static struct rcg_clk camss_gp0_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_camss_gp1_clk_src[] = {
+	F(  50000000, gpll0_main_div2,    8,    0,     0),
+	F( 100000000,           gpll0,    8,    0,     0),
+	F( 200000000,           gpll0,    4,    0,     0),
+	F( 266670000,           gpll0,    3,    0,     0),
+	F_END
+};
+
 static struct rcg_clk camss_gp1_clk_src = {
 	.cmd_rcgr_reg = CAMSS_GP1_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_camss_gp0_clk_src,
+	.freq_tbl = ftbl_camss_gp1_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1173,10 +1221,18 @@ static struct rcg_clk mclk0_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_mclk1_clk_src[] = {
+	F(  24000000, gpll6_main_div2,    1,    2,    45),
+	F(  33330000, gpll0_main_div2,   12,    0,     0),
+	F(  36610000, gpll6,		  1,    2,    59),
+	F(  66667000,           gpll0,   12,    0,     0),
+	F_END
+};
+
 static struct rcg_clk mclk1_clk_src = {
 	.cmd_rcgr_reg = MCLK1_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_mclk0_clk_src,
+	.freq_tbl = ftbl_mclk1_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1187,10 +1243,18 @@ static struct rcg_clk mclk1_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_mclk2_clk_src[] = {
+	F(  24000000, gpll6_main_div2,    1,    2,    45),
+	F(  33330000, gpll0_main_div2,   12,    0,     0),
+	F(  36610000, gpll6,		  1,    2,    59),
+	F(  66667000,           gpll0,   12,    0,     0),
+	F_END
+};
+
 static struct rcg_clk mclk2_clk_src = {
 	.cmd_rcgr_reg = MCLK2_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_mclk0_clk_src,
+	.freq_tbl = ftbl_mclk2_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1201,10 +1265,18 @@ static struct rcg_clk mclk2_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_mclk3_clk_src[] = {
+	F(  24000000, gpll6_main_div2,    1,    2,    45),
+	F(  33330000, gpll0_main_div2,   12,    0,     0),
+	F(  36610000, gpll6,		  1,    2,    59),
+	F(  66667000,           gpll0,   12,    0,     0),
+	F_END
+};
+
 static struct rcg_clk mclk3_clk_src = {
 	.cmd_rcgr_reg = MCLK3_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_mclk0_clk_src,
+	.freq_tbl = ftbl_mclk3_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1237,10 +1309,17 @@ static struct rcg_clk csi0phytimer_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_csi1phytimer_clk_src[] = {
+	F( 100000000, gpll0_main_div2,    4,    0,     0),
+	F( 200000000,           gpll0,    4,    0,     0),
+	F( 266670000,           gpll0,    3,    0,     0),
+	F_END
+};
+
 static struct rcg_clk csi1phytimer_clk_src = {
 	.cmd_rcgr_reg = CSI1PHYTIMER_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_csi0phytimer_clk_src,
+	.freq_tbl = ftbl_csi1phytimer_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1252,10 +1331,17 @@ static struct rcg_clk csi1phytimer_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_csi2phytimer_clk_src[] = {
+	F( 100000000, gpll0_main_div2,    4,    0,     0),
+	F( 200000000,           gpll0,    4,    0,     0),
+	F( 266670000,           gpll0,    3,    0,     0),
+	F_END
+};
+
 static struct rcg_clk csi2phytimer_clk_src = {
 	.cmd_rcgr_reg = CSI2PHYTIMER_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_csi0phytimer_clk_src,
+	.freq_tbl = ftbl_csi2phytimer_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1310,10 +1396,15 @@ static struct rcg_clk gp1_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_gp2_clk_src[] = {
+	F(  19200000,             xo,    1,    0,     0),
+	F_END
+};
+
 static struct rcg_clk gp2_clk_src = {
 	.cmd_rcgr_reg = GP2_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_gp1_clk_src,
+	.freq_tbl = ftbl_gp2_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1325,10 +1416,15 @@ static struct rcg_clk gp2_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_gp3_clk_src[] = {
+	F(  19200000,             xo,    1,    0,     0),
+	F_END
+};
+
 static struct rcg_clk gp3_clk_src = {
 	.cmd_rcgr_reg = GP3_CMD_RCGR,
 	.set_rate = set_rate_mnd,
-	.freq_tbl = ftbl_gp1_clk_src,
+	.freq_tbl = ftbl_gp3_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {
@@ -1435,10 +1531,15 @@ static struct rcg_clk esc0_clk_src = {
 	},
 };
 
+static struct clk_freq_tbl ftbl_esc1_clk_src[] = {
+	F(  19200000,             xo,    1,    0,     0),
+	F_END
+};
+
 static struct rcg_clk esc1_clk_src = {
 	.cmd_rcgr_reg = ESC1_CMD_RCGR,
 	.set_rate = set_rate_hid,
-	.freq_tbl = ftbl_esc0_clk_src,
+	.freq_tbl = ftbl_esc1_clk_src,
 	.current_freq = &rcg_dummy_freq,
 	.base = &virt_bases[GCC_BASE],
 	.c = {

@@ -17,3 +17,4 @@ config MSM_CLK_CONTROLLER_V2
 	   device tree.
 
 source "drivers/clk/msm/mdss/Kconfig"
+
