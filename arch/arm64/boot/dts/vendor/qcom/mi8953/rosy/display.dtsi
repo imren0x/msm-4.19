@@ -24,10 +24,6 @@
 	};
 };
 
-&dsi_r69006_1080p_cmd {
-	qcom,esd-check-enabled;
-};
-
 &mdss_dsi0 {
     qcom,dsi-pref-prim-pan = <&dsi_ft8613_ebbg_5p7_720p_video>;
 	qcom,dsi-pref-sub-pan = <&dsi_ft8006m_boe_5p7_720p_video>;
@@ -96,12 +92,4 @@
 		qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 		qcom,qpnp-ibb-init-lcd-voltage = <5800000>;
 		qcom,qpnp-lab-init-lcd-voltage = <5800000>;
-};
-
-&dsi_r69006_1080p_cmd {
-		qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
-};
-
-&dsi_r69006_1080p_video {
-		qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
 };
