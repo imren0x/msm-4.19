@@ -1308,7 +1308,8 @@ int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 }
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)  || \
+	IS_ENABLED(CONFIG_MACH_XIAOMI_DAISY)
 extern u32 te_count;
 static u32 te_count_old = 1;
 int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
