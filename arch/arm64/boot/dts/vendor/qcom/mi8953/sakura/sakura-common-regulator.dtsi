@@ -7,10 +7,21 @@
 		};
 	};
 
+	rpm-regulator-ldoa6 {
+		pm8953_l6: regulator-l6 {
+            regulator-always-on;
+		};
+	};
+
+	rpm-regulator-ldoa10 {
+		pm8953_l10: regulator-l10 {
+            regulator-always-on;
+		};
+	};
+
 	rpm-regulator-ldoa17 {
 		pm8953_l17: regulator-l17 {
-			regulator-min-microvolt = <2750000>;
-			qcom,init-voltage = <2800000>;
+			regulator-always-on;
 		};
 	};
 
