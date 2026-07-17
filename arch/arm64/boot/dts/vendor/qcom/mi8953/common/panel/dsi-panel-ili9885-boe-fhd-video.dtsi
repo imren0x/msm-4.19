@@ -69,7 +69,7 @@
 				06 01 00 01 05 00 01 0F
 				06 01 00 01 05 00 01 E5
 				06 01 00 01 05 00 01 D5];
-		qcom,mdss-dsi-panel-status-command-mode = "dsi_lp_mode";
+		qcom,mdss-dsi-panel-status-command-state = "dsi_lp_mode";
 		qcom,mdss-dsi-panel-status-check-mode = "TE_check_NT35596";
 		qcom,mdss-dsi-panel-status-read-length = <1 1 4 5>;
 		qcom,mdss-dsi-panel-status-valid-params = <1 1 4 5>;
