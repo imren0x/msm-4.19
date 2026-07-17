@@ -105,7 +105,8 @@ enum dsi_panel_status_mode {
 	ESD_REG,
 	ESD_REG_NT35596,
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)  || \
+	IS_ENABLED(CONFIG_MACH_XIAOMI_DAISY)
 	ESD_TE_NT35596,
 #endif
 	ESD_TE,
@@ -692,7 +693,8 @@ void mdss_dsi_cmdlist_kickoff(int intf);
 int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
 int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl);
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)  || \
+	IS_ENABLED(CONFIG_MACH_XIAOMI_DAISY)
 int mdss_dsi_TE_NT35596_check(struct mdss_dsi_ctrl_pdata *ctrl);
 #endif
 bool __mdss_dsi_clk_enabled(struct mdss_dsi_ctrl_pdata *ctrl, u8 clk_type);
