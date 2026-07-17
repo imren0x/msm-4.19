@@ -58,7 +58,7 @@
 				];
 		qcom,mdss-dsi-panel-status-read-length = <3 3>;
 		qcom,mdss-dsi-panel-status-valid-params = <3 3>;
-		qcom,mdss-dsi-panel-status-command-mode = "dsi_hs_mode";
+		qcom,mdss-dsi-panel-status-command-state = "dsi_hs_mode";
 		qcom,mdss-dsi-panel-status-check-mode = "TE_check_NT35596";
 		qcom,mdss-dsi-panel-status-value = <0x80 0x73 0x04 0x80 0x01 0x82>;
 
