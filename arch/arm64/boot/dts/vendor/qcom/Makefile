@@ -536,6 +536,7 @@ sdm632-qrd-overlay.dtbo-base := sdm632.dtb \
 else
 ifeq ($(CONFIG_MACH_XIAOMI_MSM8953),y)
 dtb-$(CONFIG_MACH_XIAOMI_DAISY) += daisy-titanium.dtb
+dtb-$(CONFIG_MACH_XIAOMI_SAKURA) += sakura-titanium.dtb
 dtb-$(CONFIG_MACH_XIAOMI_TIFFANY) += tiffany-titanium.dtb
 dtb-$(CONFIG_MACH_XIAOMI_ROSY) += rosy-titanium.dtb
 dtb-$(CONFIG_MACH_XIAOMI_VINCE) += vince-titanium.dtb

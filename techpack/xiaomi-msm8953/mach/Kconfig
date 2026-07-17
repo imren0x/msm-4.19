@@ -36,6 +36,13 @@ config MACH_XIAOMI_DAISY
 	help
 	  Support for Xiaomi Redmi 6 Pro (daisy).
 
+config MACH_XIAOMI_SAKURA
+	bool "Xiaomi Redmi 6 Pro (sakura)"
+	depends on ARCH_MSM8953
+	select MACH_FAMILY_XIAOMI_QRD_MSM8953
+	help
+	  Support for Xiaomi Redmi 6 Pro (sakura).
+
 config MACH_XIAOMI_TIFFANY
 	bool "Xiaomi Mi 5X (tiffany)"
 	depends on ARCH_MSM8953
