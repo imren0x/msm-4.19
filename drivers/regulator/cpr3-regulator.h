@@ -914,8 +914,6 @@ void cprh_adjust_voltages_for_apm(struct cpr3_regulator *vreg);
 void cprh_adjust_voltages_for_mem_acc(struct cpr3_regulator *vreg);
 int cpr3_adjust_target_quotients(struct cpr3_regulator *vreg,
 			int *fuse_volt_adjust);
-int cpr3_parse_fuse_combo_map(struct cpr3_regulator *vreg, u64 *fuse_val,
-			int fuse_count);
 
 #else
 
@@ -1098,12 +1096,6 @@ static inline int cpr3_adjust_target_quotients(struct cpr3_regulator *vreg,
 			int *fuse_volt_adjust)
 {
 	return 0;
-}
-
-static int cpr3_parse_fuse_combo_map(struct cpr3_regulator *vreg, u64 *fuse_val,
-			int fuse_count)
-{
-	return -EPERM;
 }
 
 #endif /* CONFIG_REGULATOR_CPR3 */
