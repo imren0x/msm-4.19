@@ -58,7 +58,7 @@
 			reg = <0x0>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <1024>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_0>;
 			#cooling-cells = <2>;
 			L2_0: l2-cache {
@@ -79,7 +79,7 @@
 			enable-method = "psci";
 			reg = <0x1>;
 			capacity-dmips-mhz = <1024>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_0>;
 			#cooling-cells = <2>;
 			L1_I_1: l1-icache {
@@ -96,7 +96,7 @@
 			enable-method = "psci";
 			reg = <0x2>;
 			capacity-dmips-mhz = <1024>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_0>;
 			#cooling-cells = <2>;
 			L1_I_2: l1-icache {
@@ -113,7 +113,7 @@
 			enable-method = "psci";
 			reg = <0x3>;
 			capacity-dmips-mhz = <1024>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_0>;
 			#cooling-cells = <2>;
 			L1_I_3: l1-icache {
@@ -130,7 +130,7 @@
 			enable-method = "psci";
 			reg = <0x100>;
 			capacity-dmips-mhz = <1126>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_1>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_1>;
 			#cooling-cells = <2>;
 			L2_1: l2-cache {
@@ -151,7 +151,7 @@
 			enable-method = "psci";
 			reg = <0x101>;
 			capacity-dmips-mhz = <1126>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_1>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_1>;
 			#cooling-cells = <2>;
 			L1_I_101: l1-icache {
@@ -168,7 +168,7 @@
 			enable-method = "psci";
 			reg = <0x102>;
 			capacity-dmips-mhz = <1126>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_1>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_1>;
 			#cooling-cells = <2>;
 			L1_I_102: l1-icache {
@@ -185,7 +185,7 @@
 			enable-method = "psci";
 			reg = <0x103>;
 			capacity-dmips-mhz = <1126>;
-			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_1>;
+			sched-energy-costs = <&CPU_COST_0>;
 			next-level-cache = <&L2_1>;
 			#cooling-cells = <2>;
 			L1_I_103: l1-icache {
@@ -217,53 +217,6 @@
 				2208000  44
 				2304000  54
 				2400000  65
-			>;
-			idle-cost-data = <
-				4 3 2 1
-			>;
-		};
-		CLUSTER_COST_0: cluster-cost0 {
-			busy-cost-data = <
-				 652800   69
-				 883200   72
-				1036800   74
-				1248000   77
-				1401600   80
-				1536000   90
-				1689600  100
-				1804800  110
-				1843200  120
-				1958400  130
-				2016000  140
-				2150400  150
-				2208000  160
-				2304000  170
-				2400000  180
-			>;
-			idle-cost-data = <
-				4 3 2 1
-			>;
-		};
-		CLUSTER_COST_1: cluster-cost1 {
-			busy-cost-data = <
-				 652800    5
-				 883200    8
-				1036800   10
-				1248000   13
-				1401600   16
-				1536000   85
-				1689600   95
-				1804800  105
-				1843200  115
-				1958400  125
-				2016000  135
-				2150400  145
-				2208000  155
-				2304000  165
-				2400000  175
-			>;
-			idle-cost-data = <
-				4 3 2 1
 			>;
 		};
 	};
