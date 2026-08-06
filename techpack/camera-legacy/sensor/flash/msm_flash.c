@@ -178,7 +178,7 @@ int32_t msm_flashlight_create_classdev(struct platform_device *pdev,
 }
 #endif
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 static int msm_torch_led_num;
 #endif
 
@@ -617,7 +617,7 @@ static int32_t msm_flash_init(
 			return rc;
 		}
 	}
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
 		flash_ctrl->func_tbl->camera_flash_off(flash_ctrl, NULL);
 	}
