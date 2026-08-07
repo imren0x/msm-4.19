@@ -39,6 +39,12 @@ static struct mdss_dsi_data *mdss_dsi_res;
 #define DSI_DISABLE_PC_LATENCY 100
 #define DSI_ENABLE_PC_LATENCY PM_QOS_DEFAULT_VALUE
 
+#ifdef CONFIG_MACH_XIAOMI_VINCE
+struct mdss_dsi_ctrl_pdata *change_par_ctrl;
+
+bool vspn_power_state = false;
+#endif
+
 static struct pm_qos_request mdss_dsi_pm_qos_request;
 
 void mdss_dump_dsi_debug_bus(u32 bus_dump_flag,
@@ -362,87 +368,118 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev,
 
 int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 {
-	int ret = 0;
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+    int ret = 0;
+    struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		ret = -EINVAL;
-		goto end;
-	}
+    if (pdata == NULL) {
+        pr_err("%s: Invalid input data\n", __func__);
+        ret = -EINVAL;
+        goto end;
+    }
 
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-				panel_data);
+    ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+                panel_data);
 
-	ret = mdss_dsi_panel_reset(pdata, 0);
-	if (ret) {
-		pr_warn("%s: Panel reset failed. rc=%d\n", __func__, ret);
-		ret = 0;
-	}
+    ret = mdss_dsi_panel_reset(pdata, 0);
+    if (ret) {
+        pr_warn("%s: Panel reset failed. rc=%d\n", __func__, ret);
+        ret = 0;
+    }
 
-	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
-		pr_debug("reset disable: pinctrl not enabled\n");
+    usleep_range(1000, 1000);
+
+    if (mdss_dsi_pinctrl_set_state(ctrl_pdata, false))
+        pr_debug("reset disable: pinctrl not enabled\n");
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
-		if (panel_suspend_reset_flag == 2)
-			msleep(1);
-		else if (panel_suspend_reset_flag == 3)
-			msleep(4);
-	}
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+        if (panel_suspend_reset_flag == 2)
+            msleep(1);
+        else if (panel_suspend_reset_flag == 3)
+            msleep(4);
+    }
 #endif
 
-	ret = msm_mdss_enable_vreg(
-		ctrl_pdata->panel_power_data.vreg_config,
-		ctrl_pdata->panel_power_data.num_vreg, 0);
-	if (ret)
-		pr_err("%s: failed to disable vregs for %s\n",
-			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+        if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi)) {
+            if (vspn_power_state) {
+                ret = msm_mdss_enable_vreg(
+                    ctrl_pdata->panel_power_data.vreg_config,
+                    ctrl_pdata->panel_power_data.num_vreg, 0);
+                if (ret)
+                    pr_err("%s: failed to disable vregs for %s\n",
+                        __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+                vspn_power_state = false;
+            }
+        }
+    } else {
+        ret = msm_mdss_enable_vreg(
+            ctrl_pdata->panel_power_data.vreg_config,
+            ctrl_pdata->panel_power_data.num_vreg, 0);
+        if (ret)
+            pr_err("%s: failed to disable vregs for %s\n",
+                __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+    }
+#else
+    ret = msm_mdss_enable_vreg(
+        ctrl_pdata->panel_power_data.vreg_config,
+        ctrl_pdata->panel_power_data.num_vreg, 0);
+    if (ret)
+        pr_err("%s: failed to disable vregs for %s\n",
+            __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+#endif
 
 end:
-	return ret;
+    return ret;
 }
 
 static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 {
-	int ret = 0;
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+    int ret = 0;
+    struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+    bool is_vince = false;
 
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return -EINVAL;
-	}
+    if (pdata == NULL) {
+        pr_err("%s: Invalid input data\n", __func__);
+        return -EINVAL;
+    }
 
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-				panel_data);
+    ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+                panel_data);
 
-	ret = msm_mdss_enable_vreg(
-		ctrl_pdata->panel_power_data.vreg_config,
-		ctrl_pdata->panel_power_data.num_vreg, 1);
-	if (ret) {
-		pr_err("%s: failed to enable vregs for %s\n",
-			__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
-		return ret;
-	}
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE)
+        is_vince = true;
+#endif
 
-	/*
-	 * If continuous splash screen feature is enabled, then we need to
-	 * request all the GPIOs that have already been configured in the
-	 * bootloader. This needs to be done irresepective of whether
-	 * the lp11_init flag is set or not.
-	 */
-	if (pdata->panel_info.cont_splash_enabled ||
-		!pdata->panel_info.mipi.lp11_init) {
-		if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
-			pr_debug("reset enable: pinctrl not enabled\n");
+    if (!is_vince || !vspn_power_state) {
+        ret = msm_mdss_enable_vreg(
+            ctrl_pdata->panel_power_data.vreg_config,
+            ctrl_pdata->panel_power_data.num_vreg, 1);
+        if (ret) {
+            pr_err("%s: failed to enable vregs for %s\n",
+                __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+            return ret;
+        }
 
-		ret = mdss_dsi_panel_reset(pdata, 1);
-		if (ret)
-			pr_err("%s: Panel reset failed. rc=%d\n",
-					__func__, ret);
-	}
+        if (is_vince) {
+            vspn_power_state = true;
+        }
+    }
 
-	return ret;
+    if (pdata->panel_info.cont_splash_enabled ||
+        !pdata->panel_info.mipi.lp11_init) {
+        if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
+            pr_debug("reset enable: pinctrl not enabled\n");
+
+        ret = mdss_dsi_panel_reset(pdata, 1);
+        if (ret)
+            pr_err("%s: Panel reset failed. rc=%d\n",
+                    __func__, ret);
+    }
+
+    return ret;
 }
 
 static int mdss_dsi_panel_power_lp(struct mdss_panel_data *pdata, int enable)
@@ -3580,6 +3617,7 @@ static int mdss_dsi_ctrl_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
+	change_par_ctrl = ctrl_pdata;
 	platform_set_drvdata(pdev, ctrl_pdata);
 
 	util = mdss_get_util_intf();
@@ -3825,6 +3863,8 @@ static void mdss_dsi_res_deinit(struct platform_device *pdev)
 			}
 		}
 	}
+
+	change_par_ctrl = NULL;
 
 	sdata = dsi_res->shared_data;
 	if (!sdata)
