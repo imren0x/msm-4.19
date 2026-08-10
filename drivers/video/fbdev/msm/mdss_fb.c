@@ -1298,6 +1298,9 @@ static int mdss_fb_init_panel_modes(struct msm_fb_data_type *mfd,
 	return 0;
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+static int ffbm_first_close_bl;
+#endif
 static int mdss_fb_probe(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd = NULL;
@@ -1388,6 +1391,14 @@ static int mdss_fb_probe(struct platform_device *pdev)
 	fbi_list[fbi_list_index++] = fbi;
 
 	platform_set_drvdata(pdev, mfd);
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+	if (strnstr(saved_command_line, "androidboot.mode=ffbm-01",
+			strlen(saved_command_line))) {
+		ffbm_first_close_bl = true;
+		pr_err("We are in ffbm-01 mode!\n");
+	}
+#endif
 
 	rc = mdss_fb_register(mfd);
 	if (rc)
@@ -1847,6 +1858,12 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 		 */
 		if (mfd->bl_level_scaled == temp) {
 			mfd->bl_level = bkl_lvl;
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+		if ((0 == temp) && (ffbm_first_close_bl == true)) {
+			pdata->set_backlight(pdata, temp);
+			ffbm_first_close_bl = false;
+		}
+#endif
 		} else {
 			if (mfd->bl_level != bkl_lvl)
 				bl_notify_needed = true;
