@@ -7,7 +7,7 @@
 		    focaltech,ic-type = <>; // Unknown
 		    reg = <0x38>;
 		    interrupt-parent = <&tlmm>;
-		    interrupts = <65 0x2>;
+		    interrupts = <65 0x2008>;
 
             status = "disabled";
 
@@ -113,7 +113,7 @@
 			compatible = "novatek,NVT-ts_vince";
 			reg = <0x62>;
 			interrupt-parent = <&tlmm>;
-			interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+			interrupts = <65 0x2008>;
 
             status = "disabled";
 

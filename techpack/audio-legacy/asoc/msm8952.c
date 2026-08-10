@@ -402,8 +402,6 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 {
 	struct snd_soc_card *card = component->card;
     struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
-    int ret = 0;
-	int pa_mode = EXT_PA_MODE;
     int is_mido = (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO);
 
     if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
@@ -417,6 +415,7 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 
     if (enable) {
         if (is_mido) {
+			int pa_mode = EXT_PA_MODE;
             while (pa_mode > 0) {
                 gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 0);
                 udelay(2);
@@ -425,6 +424,7 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
                 pa_mode--;
             }
         } else {
+			int ret;
             ret = msm_cdc_pinctrl_select_active_state(pdata->spk_ext_pa_gpio_p);
             if (ret) {
                 pr_err("%s: gpio set cannot be activated %s\n",
@@ -437,6 +437,7 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
         gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
         
         if (!is_mido) {
+			int ret;
             ret = msm_cdc_pinctrl_select_sleep_state(pdata->spk_ext_pa_gpio_p);
             if (ret) {
                 pr_err("%s: gpio set cannot be de-activated %s\n",
