@@ -1252,6 +1252,16 @@ int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	int ret = 0;
 	struct mdss_dsi_ctrl_pdata *sctrl_pdata = NULL;
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+    if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+        struct NVT_CSOT_ESD *nvt_csot_esd_status = get_nvt_csot_esd_status();
+        if (nvt_csot_esd_status == NULL) {
+            pr_err("%s: Invalid nvt_csot_esd_status\n", __func__);
+            return 0;
+        }
+    }
+#endif
+
 	if (ctrl_pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
 		return 0;
