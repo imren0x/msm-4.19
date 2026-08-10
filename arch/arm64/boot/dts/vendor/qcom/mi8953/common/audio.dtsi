@@ -4,7 +4,7 @@
 
 &soc {
 	int_codec: sound {
-		status = "ok";
+		status = "okay";
 		qcom,audio-routing =
 			"RX_BIAS", "MCLK",
 			"SPK_RX_BIAS", "MCLK",

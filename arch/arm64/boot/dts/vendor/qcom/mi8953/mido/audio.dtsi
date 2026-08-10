@@ -1,5 +1,5 @@
 &int_codec {
-	status = "ok";
+	status = "okay";
 	qcom,msm-hs-micbias-type = "internal";
 	qcom,msm-spk-ext-pa = <&tlmm 96 0>;
 };
