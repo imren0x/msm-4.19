@@ -16,7 +16,6 @@
 #include <dt-bindings/spmi/spmi.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/regulator/qcom,rpm-smd-regulator.h>
-#include <dt-bindings/clock/msm-clocks-8953.h>
 #include <dt-bindings/msm/msm-bus-ids.h>
 
 #define MHZ_TO_MBPS(mhz, w) ((mhz * 1000000 * w) / (1024 * 1024))
@@ -119,13 +118,13 @@
 			alloc-ranges = <0 0x00000000 0 0xffffffff>;
 			reusable;
 			alignment = <0 0x400000>;
-			size = <0 0x800000>;
+			size = <0 0x400000>;
 		};
 
 		adsp_mem: adsp_region@0 {
 			compatible = "shared-dma-pool";
 			reusable;
-			size = <0 0x800000>;
+			size = <0 0x400000>;
 		};
 
 		dfps_data_mem: dfps_data_mem@90000000 {
@@ -254,13 +253,6 @@
 		interrupt-controller;
 		interrupt-parent = <&intc>;
 		#interrupt-cells = <2>;
-	};
-
-	qcom,msm-gladiator@b1c0000 {
-		compatible = "qcom,msm-gladiator";
-		reg = <0x0b1c0000 0x4000>;
-		reg-names = "gladiator_base";
-		interrupts = <0 22 0>;
 	};
 
 	timer {
@@ -1880,6 +1872,9 @@
 			snps,is-utmi-l1-suspend;
 			snps,usb2-l1-disable; /* Missing on K4.19 */
 			snps,hird-threshold = /bits/ 8 <0x0>;
+			dr_mode = "otg";
+			linux,sysdev_is_parent;
+			usb-core-id = <0>;
 			maximum-speed = "super-speed";
 		};
 
