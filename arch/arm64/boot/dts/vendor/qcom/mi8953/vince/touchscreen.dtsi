@@ -1,7 +1,3 @@
-&novatek_ts {
-	status = "okay";
-};
-
 &soc { 
 	i2c@78b7000 { /* BLSP1 QUP3 */
 		status = "okay";
@@ -11,7 +7,7 @@
 			compatible = "td4310-vince-i2c";
 			reg = <0x20>;
 			interrupt-parent = <&tlmm>;
-			interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+			interrupts = <65 0x2008>;
 			vdd-supply = <&pm8953_l10>;
 			avdd-supply = <&pm8953_l6>;
 			synaptics,pwr-reg-name = "avdd";
@@ -34,7 +30,7 @@
 			compatible = "td4310-vince_lansi-i2c";
 			reg = <0x70>;
 			interrupt-parent = <&tlmm>;
-			interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+			interrupts = <65 0x2008>;
 			vdd-supply = <&pm8953_l10>;
 			avdd-supply = <&pm8953_l6>;
 			synaptics,pwr-reg-name = "avdd";
@@ -53,4 +49,8 @@
 			synaptics,ub-i2c-addr = <0x2c>;
 		};
 	};
+};
+
+&novatek_ts {
+	status = "okay";
 };

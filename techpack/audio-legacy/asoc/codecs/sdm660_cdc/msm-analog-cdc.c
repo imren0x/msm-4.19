@@ -25,12 +25,14 @@
 #include "sdm660-cdc-irq.h"
 #include "msm-analog-cdc-regmap.h"
 #include <asoc/wcd-mbhc-v2-api.h>
+#include "../../msm8952.h"
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 #include <xiaomi-msm8953/mach.h>
 #endif
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 #include <linux/gpio.h>
 #include "../../spk_ext_pa_mtp.h"
-#include "../../msm8952.h"
+#endif
 
 #define DRV_NAME "pmic_analog_codec"
 #define SDM660_CDC_RATES (SNDRV_PCM_RATE_8000 | SNDRV_PCM_RATE_16000 |\

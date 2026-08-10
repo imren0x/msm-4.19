@@ -48,5 +48,5 @@
 };
 
 &msm_digital_codec {
-	status = "ok";
+	status = "okay";
 };
