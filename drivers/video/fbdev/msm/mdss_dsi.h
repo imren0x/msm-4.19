@@ -762,6 +762,14 @@ static inline const char *__mdss_dsi_pm_supply_node_name(
 	}
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+struct NVT_CSOT_ESD{
+	bool nova_csot_panel;
+	bool ESD_TE_status;
+};
+struct NVT_CSOT_ESD *get_nvt_csot_esd_status(void);
+#endif
+
 static inline u32 mdss_dsi_get_hw_config(struct dsi_shared_data *sdata)
 {
 	return sdata->hw_config;
