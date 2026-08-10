@@ -39,8 +39,22 @@ static struct mdss_dsi_data *mdss_dsi_res;
 #define DSI_DISABLE_PC_LATENCY 100
 #define DSI_ENABLE_PC_LATENCY PM_QOS_DEFAULT_VALUE
 
-#ifdef CONFIG_MACH_XIAOMI_VINCE
+#ifdef CONFIG_ENABLE_PM_TP_SUSPEND_RESUME
+/*A flag to indicate ffbm mode or not*/
+bool lcm_ffbm_mode = 0;
+#endif
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
 struct mdss_dsi_ctrl_pdata *change_par_ctrl;
+
+static struct NVT_CSOT_ESD nvt_csot_esd = {
+	.nova_csot_panel = false,
+	.ESD_TE_status = false
+};
+
+struct NVT_CSOT_ESD *get_nvt_csot_esd_status(void){
+	return &nvt_csot_esd;
+}
 
 bool vspn_power_state = false;
 #endif
@@ -366,6 +380,70 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev,
 	return rc;
 }
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+static int nova_esd_2fingers_rst(struct mdss_panel_data *pdata){
+	int ret = 0;
+	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+	if (pdata == NULL) {
+		pr_err("%s: Invalid input data\n", __func__);
+		ret = -EINVAL;
+		goto end;
+	}
+	printk("[zmc] %s\n",__func__);
+	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+				panel_data);
+	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
+		pr_debug("reset enable: pinctrl not enabled\n");
+	ret = mdss_dsi_panel_reset(pdata, 1);
+	if (ret)
+		pr_err("%s: Panel reset failed. rc=%d\n",
+				__func__, ret);
+	ret = mdss_dsi_panel_reset(pdata, 0);
+	msleep(30);
+	if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
+		pr_debug("reset enable: pinctrl not enabled\n");
+	ret = mdss_dsi_panel_reset(pdata, 1);
+	if (ret)
+		pr_err("%s: Panel reset failed. rc=%d\n",
+				__func__, ret);
+		ret = mdss_dsi_panel_reset(pdata, 0);
+end:
+	return ret;
+}
+static int nova_esd_recovery(struct mdss_panel_data *pdata){
+	int ret = 0;
+	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
+	/*Add by HQ-zmc [Date: 2017-12-18 11:16:00]*/
+	struct NVT_CSOT_ESD *nvt_csot_esd_status = get_nvt_csot_esd_status();
+	if (nvt_csot_esd_status->ESD_TE_status){
+		if (pdata == NULL) {
+			pr_err("%s: Invalid input data\n", __func__);
+			ret = -EINVAL;
+			goto end;
+		}
+		ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
+					panel_data);
+		printk("[zmc] %s: vspn_power_state = %d\n",__func__,vspn_power_state);
+		ret = msm_mdss_enable_vreg(
+					ctrl_pdata->panel_power_data.vreg_config,
+					ctrl_pdata->panel_power_data.num_vreg, 0);
+			if (ret)
+				pr_err("%s: failed to disable vregs for %s\n",
+					__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+		vspn_power_state = false;
+		printk("[zmc] nova_csot_panel delay 1000ms");
+		msleep(50);
+		ret = nova_esd_2fingers_rst(pdata);
+		msleep(500);
+		ret = nova_esd_2fingers_rst(pdata);
+		msleep(10);
+		nvt_csot_esd_status->ESD_TE_status = false;
+	}
+end:
+	return ret;
+}
+#endif
+
 int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 {
     int ret = 0;
@@ -402,17 +480,24 @@ int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
     if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+		struct NVT_CSOT_ESD *nvt_csot_esd_status = get_nvt_csot_esd_status();
         if ((!synaptics_gesture_func_on) || (!synaptics_gesture_func_on_lansi)) {
-            if (vspn_power_state) {
-                ret = msm_mdss_enable_vreg(
-                    ctrl_pdata->panel_power_data.vreg_config,
-                    ctrl_pdata->panel_power_data.num_vreg, 0);
-                if (ret)
-                    pr_err("%s: failed to disable vregs for %s\n",
-                        __func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
-                vspn_power_state = false;
-            }
-        }
+			if (nvt_csot_esd_status->nova_csot_panel && nvt_csot_esd_status->ESD_TE_status){
+				ret = nova_esd_recovery(pdata);
+			} else {
+            	if (vspn_power_state) {
+                	ret = msm_mdss_enable_vreg(
+                    	ctrl_pdata->panel_power_data.vreg_config,
+                    	ctrl_pdata->panel_power_data.num_vreg, 0);
+                	if (ret)
+                    	pr_err("%s: failed to disable vregs for %s\n",
+                        	__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+                	vspn_power_state = false;
+            	}
+        	}
+		} else if (nvt_csot_esd_status->nova_csot_panel && nvt_csot_esd_status->ESD_TE_status) {
+			ret = nova_esd_recovery(pdata);
+		}
     } else {
         ret = msm_mdss_enable_vreg(
             ctrl_pdata->panel_power_data.vreg_config,
@@ -3224,6 +3309,9 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 			 __func__, __LINE__);
 		goto end;
 	} else {
+#ifdef CONFIG_ENABLE_PM_TP_SUSPEND_RESUME
+		lcm_ffbm_mode = strnstr(panel_cfg, "ffbm", len);
+#endif
 		/* check if any override parameters are set */
 		pinfo->sim_panel_mode = 0;
 		override_cfg = strnstr(panel_cfg, "#" OVERRIDE_CFG, len);
@@ -3280,6 +3368,15 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 #endif
 		if (!strcmp(panel_name, NONE_PANEL))
 			goto exit;
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+			struct NVT_CSOT_ESD *nvt_csot_esd_status = get_nvt_csot_esd_status();
+			if (!strcmp(panel_name, "qcom,mdss_dsi_nt36672_csot_fhdplus_video_e7")){
+				nvt_csot_esd_status->nova_csot_panel = true;
+			}
+		}
+#endif
 
 		mdss_node = of_parse_phandle(pdev->dev.of_node,
 			"qcom,mdss-mdp", 0);
