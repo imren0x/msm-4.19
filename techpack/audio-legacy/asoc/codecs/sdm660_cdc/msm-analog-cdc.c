@@ -2384,7 +2384,8 @@ static int msm_anlg_cdc_codec_enable_spk_pa(struct snd_soc_dapm_widget *w,
 					       DIG_CDC_EVENT_RX3_MUTE_OFF);
 		snd_soc_component_update_bits(component, w->reg, 0x80, 0x80);
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL ||
+	    	xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
 			pdata->pa_is_on = 0;
 			pr_debug("At %d In (%s), will run msm_spk_ext_pa_ctrl, true\n", __LINE__, __FUNCTION__);
 			schedule_delayed_work(&pdata->pa_gpio_work, msecs_to_jiffies(40));
@@ -2393,7 +2394,8 @@ static int msm_anlg_cdc_codec_enable_spk_pa(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL ||
+	    	xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
 			cancel_delayed_work_sync(&pdata->pa_gpio_work);
 			msm_spk_ext_pa_ctrl(pdata, true);
 			pr_debug("At %d In (%s), close pa, spk_ext_pa_gpio_lc=%d\n", __LINE__, __FUNCTION__, gpio_get_value(pdata->spk_ext_pa_gpio_lc));
@@ -3396,7 +3398,8 @@ static int msm_anlg_cdc_codec_enable_lo_pa(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
 			cancel_delayed_work_sync(&pdata->pa_gpio_work);
 			msm_spk_ext_pa_ctrl(pdata, true);
 			pr_debug("At %d In (%s), close pa, spk_ext_pa_gpio_lc=%d\n", __LINE__, __FUNCTION__, gpio_get_value(pdata->spk_ext_pa_gpio_lc));

@@ -390,10 +390,6 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 				__func__, pdata->spk_ext_pa_gpio);
 			return -EINVAL;
 		}
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
-		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
-            gpio_direction_output(pdata->spk_ext_pa_gpio, 0);
-#endif
 	}
 	return 0;
 }
@@ -401,52 +397,38 @@ int is_ext_spk_gpio_support(struct platform_device *pdev,
 static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 {
 	struct snd_soc_card *card = component->card;
-    struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
-    int is_mido = (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO);
+	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
+	int ret;
 
-    if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
-        pr_err("%s: Invalid gpio: %d\n", __func__,
-            pdata->spk_ext_pa_gpio);
-        return false;
-    }
+	if (!gpio_is_valid(pdata->spk_ext_pa_gpio)) {
+		pr_err("%s: Invalid gpio: %d\n", __func__,
+			pdata->spk_ext_pa_gpio);
+		return false;
+	}
 
-    pr_debug("%s: %s external speaker PA\n", __func__,
-        enable ? "Enable" : "Disable");
+	pr_debug("%s: %s external speaker PA\n", __func__,
+		enable ? "Enable" : "Disable");
 
-    if (enable) {
-        if (is_mido) {
-			int pa_mode = EXT_PA_MODE;
-            while (pa_mode > 0) {
-                gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, 0);
-                udelay(2);
-                gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
-                udelay(2);
-                pa_mode--;
-            }
-        } else {
-			int ret;
-            ret = msm_cdc_pinctrl_select_active_state(pdata->spk_ext_pa_gpio_p);
-            if (ret) {
-                pr_err("%s: gpio set cannot be activated %s\n",
-                        __func__, "ext_spk_gpio");
-                return ret;
-            }
-            gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
-        }
-    } else {
-        gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
-        
-        if (!is_mido) {
-			int ret;
-            ret = msm_cdc_pinctrl_select_sleep_state(pdata->spk_ext_pa_gpio_p);
-            if (ret) {
-                pr_err("%s: gpio set cannot be de-activated %s\n",
-                        __func__, "ext_spk_gpio");
-                return ret;
-            }
-        }
-    }
-    return 0;
+	if (enable) {
+		ret =  msm_cdc_pinctrl_select_active_state(
+					pdata->spk_ext_pa_gpio_p);
+		if (ret) {
+			pr_err("%s: gpio set cannot be de-activated %s\n",
+					__func__, "ext_spk_gpio");
+			return ret;
+		}
+		gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
+	} else {
+		gpio_set_value_cansleep(pdata->spk_ext_pa_gpio, enable);
+		ret = msm_cdc_pinctrl_select_sleep_state(
+				pdata->spk_ext_pa_gpio_p);
+		if (ret) {
+			pr_err("%s: gpio set cannot be de-activated %s\n",
+					__func__, "ext_spk_gpio");
+			return ret;
+		}
+	}
+	return 0;
 }
 
 static bool msm8952_swap_gnd_mic(struct snd_soc_component *component,
@@ -3702,9 +3684,9 @@ parse_mclk_freq:
 	/* Initialize loopback mode to false */
 	pdata->lb_mode = false;
 	msm8952_dt_parse_cap_info(pdev, pdata);
-
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
 		ret = msm_setup_spk_ext_pa(pdev, pdata);
 		if (ret)
 			pr_debug("%s, msm_setup_spk_ext_pa error!\n", __func__);
@@ -3719,7 +3701,8 @@ parse_mclk_freq:
 	/* initialize timer */
 	INIT_DELAYED_WORK(&pdata->disable_int_mclk0_work, msm8952_disable_mclk);
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
 		INIT_DELAYED_WORK(&pdata->pa_gpio_work, msm_spk_ext_pa_delayed);
 #endif
 	mutex_init(&pdata->cdc_int_mclk0_mutex);
