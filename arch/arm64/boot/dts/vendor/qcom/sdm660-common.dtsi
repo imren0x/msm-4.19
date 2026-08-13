@@ -1,3 +1,15 @@
+/* Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
 &soc {
 	ufsphy1: ufsphy@1da7000 {
 		compatible = "qcom,ufs-phy-qmp-v3-660";
@@ -7,7 +19,7 @@
 		clock-names = "ref_clk_src",
 			"ref_clk",
 			"ref_aux_clk";
-		clocks = <&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
+		clocks = <&clock_rpmcc RPM_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_CLKREF_CLK>,
 			<&clock_gcc GCC_UFS_PHY_AUX_CLK>;
 		status = "disabled";
@@ -60,11 +72,11 @@
 
 	ufs1: ufshc@1da4000 {
 		compatible = "qcom,ufshc";
-		reg = <0x1da4000 0x3000>, <0x1db0000 0x8000>;
-		reg-names = "ufs_mem", "ufs_ice";
-		interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+		reg = <0x1da4000 0x3000>;
+		interrupts = <0 265 0>;
 		phys = <&ufsphy1>;
 		phy-names = "ufsphy";
+		ufs-qcom-crypto = <&ufs_ice>;
 
 		clock-names =
 			"core_clk",
@@ -81,7 +93,7 @@
 			<&clock_gcc GCC_UFS_AHB_CLK>,
 			<&clock_gcc GCC_UFS_UNIPRO_CORE_CLK>,
 			<&clock_gcc GCC_UFS_ICE_CORE_CLK>,
-			<&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
+			<&clock_rpmcc RPM_LN_BB_CLK1>,
 			<&clock_gcc GCC_UFS_TX_SYMBOL_0_CLK>,
 			<&clock_gcc GCC_UFS_RX_SYMBOL_0_CLK>;
 		freq-table-hz =
@@ -139,14 +151,12 @@
 		#size-cells = <1>;
 		ranges;
 
-		interrupts = <GIC_SPI 347 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 243 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 180 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <0 347 0>, <0 243 0>, <0 180 0>;
 		interrupt-names = "hs_phy_irq", "ss_phy_irq", "pwr_event_irq";
 
 		USB3_GDSC-supply = <&gdsc_usb30>;
-		dpdm-supply = <&qusb_phy0>;
 
+		qcom,usb-dbm = <&dbm_1p5>;
 		qcom,msm-bus,name = "usb3";
 		qcom,msm-bus,num-cases = <2>;
 		qcom,msm-bus,num-paths = <1>;
@@ -181,28 +191,22 @@
 			compatible = "snps,dwc3";
 			reg = <0x0a800000 0xc8d0>;
 			interrupt-parent = <&intc>;
-			interrupts = <GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+			interrupts = <0 131 0>;
 			usb-phy = <&qusb_phy0>, <&ssphy>;
 			tx-fifo-resize;
 			snps,usb3-u1u2-disable;
+			snps,nominal-elastic-buffer;
 			snps,disable-clk-gating;
 			snps,has-lpm-erratum;
 			snps,is-utmi-l1-suspend;
 			snps,hird-threshold = /bits/ 8 <0x0>;
-			dr_mode = "otg";
-			linux,sysdev_is_parent;
-			snps,dis_u2_susphy_quirk;
-			snps,dis_enblslpm_quirk;
-			snps,usb3_lpm_capable;
-			usb-core-id = <0>;
-			maximum-speed = "super-speed";
 		};
 
 		qcom,usbbam@a904000 {
 			compatible = "qcom,usb-bam-msm";
 			reg = <0x0a904000 0x17000>;
 			interrupt-parent = <&intc>;
-			interrupts = <GIC_SPI 132 IRQ_TYPE_LEVEL_HIGH>;
+			interrupts = <0 132 0>;
 
 			qcom,bam-type = <0>;
 			qcom,usb-bam-fifo-baseaddr = <0x146bb000>;
@@ -291,7 +295,7 @@
 		qcom,phy-clk-scheme = "cml";
 		qcom,major-rev = <1>;
 
-		clocks = <&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
+		clocks = <&clock_rpmcc RPM_LN_BB_CLK1>,
 			<&clock_gcc GCC_RX0_USB2_CLKREF_CLK>,
 			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>;
 
@@ -302,7 +306,7 @@
 	};
 
 	ssphy: ssphy@c010000 {
-		compatible = "qcom,usb-ssphy-qmp-usb3-or-dp";
+		compatible = "qcom,usb-ssphy-qmp-v2";
 		reg = <0xc010000 0xe18>,
 			<0x01fcb244 0x4>,
 			<0x01fcb248 0x4>;
@@ -433,7 +437,7 @@
 		clocks = <&clock_gcc GCC_USB3_PHY_AUX_CLK>,
 			<&clock_gcc GCC_USB3_PHY_PIPE_CLK>,
 			<&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>,
-			<&clock_rpmcc RPM_SMD_LN_BB_CLK1>,
+			<&clock_rpmcc RPM_LN_BB_CLK1>,
 			<&clock_gcc GCC_USB3_CLKREF_CLK>;
 
 		clock-names = "aux_clk", "pipe_clk", "cfg_ahb_clk",
@@ -447,9 +451,14 @@
 	usb_audio_qmi_dev {
 		compatible = "qcom,usb-audio-qmi-dev";
 		iommus = <&lpass_q6_smmu 6>;
-		qcom,iommu-dma = "disabled";
 		qcom,usb-audio-stream-id = <6>;
 		qcom,usb-audio-intr-num = <2>;
+	};
+
+	dbm_1p5: dbm@a8f8000 {
+		compatible = "qcom,usb-dbm-1p5";
+		reg = <0xa8f8000 0x300>;
+		qcom,reset-ep-after-lpm-resume;
 	};
 
        usb2s: hsusb@c200000 {
@@ -462,8 +471,7 @@
 		#size-cells = <1>;
 		ranges;
 
-		interrupts = <GIC_SPI 348 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <0 348 0>, <0 144 0>;
 		interrupt-names = "hs_phy_irq", "pwr_event_irq";
 
 		qcom,msm-bus,name = "usb-hs";
@@ -491,16 +499,13 @@
 			compatible = "snps,dwc3";
 			reg = <0x0c200000 0xc8d0>;
 			interrupt-parent = <&intc>;
-			interrupts = <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>;
+			interrupts = <0 143 0>;
 			usb-phy = <&qusb_phy1>, <&usb_nop_phy>;
 			maximum-speed = "high-speed";
+			snps,nominal-elastic-buffer;
 			snps,is-utmi-l1-suspend;
 			snps,hird-threshold = /bits/ 8 <0x0>;
 			dr_mode = "host";
-			linux,sysdev_is_parent;
-			snps,dis_enblslpm_quirk;
-			snps,dis_u2_susphy_quirk;
-			usb-core-id = <1>;
 		};
 	};
 
@@ -531,7 +536,7 @@
 
 		clocks = <&clock_gcc GCC_USB_PHY_CFG_AHB2PHY_CLK>,
 			<&clock_gcc GCC_RX1_USB2_CLKREF_CLK>,
-			<&clock_rpmcc RPM_SMD_LN_BB_CLK1>;
+			<&clock_rpmcc RPM_LN_BB_CLK1>;
 		clock-names = "cfg_ahb_clk", "ref_clk", "ref_clk_src";
 
 		resets = <&clock_gcc GCC_QUSB2PHY_SEC_BCR>;
@@ -543,17 +548,16 @@
 	};
 
 	sdhc_1: sdhci@c0c4000 {
-		compatible = "qcom,sdhci-msm-v5", "qcom,sdhci-msm-cqe";
-		reg = <0xc0c4000 0x1000>, <0xc0c5000 0x1000>,
-				<0xc0c8000 0x8000>;
-		reg-names = "hc_mem", "cqhci_mem", "cqhci_ice";
+		compatible = "qcom,sdhci-msm-v5";
+		reg = <0xc0c4000 0x1000>, <0xc0c5000 0x1000>;
+		reg-names = "hc_mem", "cmdq_mem";
 
-		interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
-				<GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <0 110 0>, <0 112 0>;
 		interrupt-names = "hc_irq", "pwr_irq";
 
 		qcom,bus-width = <8>;
 		qcom,large-address-bus;
+		sdhc-msm-crypto = <&sdcc1_ice>;
 
 		qcom,devfreq,freq-table = <50000000 200000000>;
 
@@ -619,8 +623,7 @@
 		reg = <0xc084000 0x1000>;
 		reg-names = "hc_mem";
 
-		interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
-			<GIC_SPI 221 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <0 125 0>, <0 221 0>;
 		interrupt-names = "hc_irq", "pwr_irq";
 
 		qcom,bus-width = <4>;
