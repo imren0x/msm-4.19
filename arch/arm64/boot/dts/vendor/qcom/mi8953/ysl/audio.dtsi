@@ -27,5 +27,6 @@
 		&cdc_pdm_lines_2_sus>;
 	pinctrl-3 = <&cdc_pdm_lines_act &cdc_pdm_comp_lines_act
 		&cdc_pdm_lines_2_act>;
-	qcom,spk_ext_pa = <&tlmm 139 0x0>;
+	qcom,spk_ext_pa = <&tlmm 139 0>;
+	qcom,ext-pa-mode = <2>;
 };
