@@ -1874,8 +1874,11 @@
 			snps,hird-threshold = /bits/ 8 <0x0>;
 			dr_mode = "otg";
 			linux,sysdev_is_parent;
+			snps,dis_u2_susphy_quirk;
+			snps,dis_enblslpm_quirk;
+			snps,usb3_lpm_capable;
 			usb-core-id = <0>;
-			maximum-speed = "super-speed";
+			maximum-speed = "high-speed";
 		};
 
 		qcom,usbbam@7104000 {
