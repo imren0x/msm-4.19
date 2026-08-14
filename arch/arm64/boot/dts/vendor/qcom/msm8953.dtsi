@@ -1823,6 +1823,11 @@
 			<0x0007e000 0x400>;
 		reg-names = "core_base",
 			"ahb2phy_base";
+
+		iommus = <&apps_smmu 0x0120 0x0>;
+		qcom,iommu-dma = "atomic";
+		qcom,iommu-dma-addr-pool = <0x50000000 0x60000000>;
+
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
