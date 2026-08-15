@@ -257,8 +257,11 @@ static long msm_ispif_cmd_ext(struct v4l2_subdev *sd,
 		pcdata.size = pcdata64->size;
 		pcdata.data = pcdata64->data;
 	}
-	if (pcdata.size != sizeof(struct msm_ispif_param_data_ext)) {
-		pr_err("%s: payload size mismatch\n", __func__);
+	if (pcdata.size > sizeof(struct msm_ispif_param_data_ext) ||
+		pcdata.size < sizeof(struct msm_ispif_param_data)) {
+		pr_err("%s: payload size mismatch: received %u, max %zu\n",
+			__func__, pcdata.size,
+			sizeof(struct msm_ispif_param_data_ext));
 		return -EINVAL;
 	}
 
