@@ -167,7 +167,7 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom2: qcom,eeprom@2 {
@@ -326,7 +326,7 @@
 		clocks = <&clock_gcc clk_mclk1_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk1_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom4: qcom,eeprom@4 {
@@ -413,7 +413,7 @@
 		clocks = <&clock_gcc clk_mclk1_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk1_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom5: qcom,eeprom@5 {
@@ -500,7 +500,7 @@
 		clocks = <&clock_gcc clk_mclk1_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk1_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom6: qcom,eeprom@6 {
@@ -588,7 +588,7 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom7: qcom,eeprom@7 {
@@ -676,7 +676,7 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom8: qcom,eeprom@8 {
@@ -764,7 +764,7 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	eeprom9: qcom,eeprom@9 {
@@ -852,16 +852,18 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	qcom,camera@0 {
 		qcom,eeprom-src = <&eeprom0 &eeprom1 &eeprom2 &eeprom6 &eeprom7 &eeprom8>;
-		/delete-property/ cam_vaf-supply;
-		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana";
-		qcom,cam-vreg-min-voltage = <1200000 0 2800000>;
-		qcom,cam-vreg-max-voltage = <1200000 0 2800000>;
-		qcom,cam-vreg-op-mode = <200000 0 80000>;
+		cam_vaf-supply = <&pm8953_l17>;
+		cam_vana-supply = <&pm8953_l22>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana", "cam_vaf";
+		qcom,cam-vreg-min-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-max-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-op-mode = <200000 0 80000 100000>;
+		pinctrl-names = "cam_default", "cam_suspend";
 		pinctrl-0 = <&cam_sensor_mclk0_default
 				&cam_sensor_rear_default>;
 		pinctrl-1 = <&cam_sensor_mclk0_sleep
@@ -878,7 +880,7 @@
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk0_clk>;
 		clock-names = "cam_src_clk", "cam_clk";
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 	
 	qcom,camera@1 {
@@ -888,11 +890,12 @@
 		qcom,actuator-src = <&actuator0>;
 		qcom,led-flash-src = <&led_flash0>;
 		cam_vdig-supply = <&pm8953_l2>;
-		/delete-property/ cam_vaf-supply;
-		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana";
-		qcom,cam-vreg-min-voltage = <1200000 0 2800000>;
-		qcom,cam-vreg-max-voltage = <1200000 0 2800000>;
-		qcom,cam-vreg-op-mode = <200000 0 80000>;
+		cam_vaf-supply = <&pm8953_l17>;
+		cam_vana-supply = <&pm8953_l22>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana", "cam_vaf";
+		qcom,cam-vreg-min-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-max-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-op-mode = <200000 0 80000 100000>;
 		pinctrl-0 = <&cam_sensor_mclk0_default
 				&cam_sensor_rear_default>;
 		pinctrl-1 = <&cam_sensor_mclk0_sleep
@@ -907,10 +910,15 @@
 		status = "okay";
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk0_clk>;
-		qcom,clock-rates = <19200000 0>;
+		qcom,clock-rates = <24000000 0>;
 	};
 
 	qcom,camera@2 {
 		qcom,eeprom-src = <&eeprom3 &eeprom4 &eeprom5>;
+		cam_vaf-supply = <&pm8953_l17>;
+		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana", "cam_vaf";
+		qcom,cam-vreg-min-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-max-voltage = <1200000 0 2800000 2850000>;
+		qcom,cam-vreg-op-mode = <105000 0 80000 100000>;
 	};
 };
