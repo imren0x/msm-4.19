@@ -84,7 +84,7 @@
 
 		qcom,initial-pwrlevel = <0>;
 
-		qcom,idle-timeout = <80>; //msecs
+		qcom,idle-timeout = <64>; //msecs
 		qcom,deep-nap-timeout = <100>; //msecs
 		qcom,strtstp-sleepwake;
 
@@ -129,8 +129,8 @@
 		vdd-supply = <&gdsc_oxili_gx>;
 
 		/* CPU latency parameter */
-		qcom,pm-qos-active-latency = <213>;
-		qcom,pm-qos-wakeup-latency = <213>;
+		qcom,pm-qos-active-latency = <50>;
+		qcom,pm-qos-wakeup-latency = <50>;
 
 		/* Quirks */
 		qcom,gpu-quirk-two-pass-use-wfi;
