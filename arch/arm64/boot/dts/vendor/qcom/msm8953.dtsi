@@ -1880,7 +1880,13 @@
 			snps,is-utmi-l1-suspend;
 			snps,usb2-l1-disable; /* Missing on K4.19 */
 			snps,hird-threshold = /bits/ 8 <0x0>;
-			maximum-speed = "super-speed";
+			dr_mode = "otg";
+			linux,sysdev_is_parent;
+			snps,dis_u2_susphy_quirk;
+			snps,dis_enblslpm_quirk;
+			snps,usb3_lpm_capable;
+			usb-core-id = <0>;
+			maximum-speed = "high-speed";
 		};
 
 		qcom,usbbam@7104000 {
