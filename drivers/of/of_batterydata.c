@@ -369,18 +369,49 @@ struct device_node *of_batterydata_get_best_profile(
 		}
 	}
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	/* Fallback for 3rd party batteries on Xiaomi devices */
+	if (best_node == NULL && batt_type == NULL) {
+		for_each_child_of_node(batterydata_container_node, node) {
+			rc = of_batterydata_read_batt_id_kohm(node,
+							"qcom,batt-id-kohm",
+							&batt_ids);
+			if (rc)
+				continue;
+			for (i = 0; i < batt_ids.num; i++) {
+				if (batt_ids.kohm[i] == 82) {
+					best_node = node;
+					best_id_kohm = batt_ids.kohm[i];
+					break;
+				}
+			}
+			if (best_node)
+				break;
+		}
+	}
+#endif
+
 	if (best_node == NULL) {
 		pr_err("No battery data found\n");
 		return best_node;
 	}
 
 	/* check that profile id is in range of the measured batt_id */
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	if (!batt_type && best_id_kohm == 82)
+		goto skip_range_check;
+#endif
+
 	if (abs(best_id_kohm - batt_id_kohm) >
 			((best_id_kohm * id_range_pct) / 100)) {
 		pr_err("out of range: profile id %d batt id %d pct %d\n",
 			best_id_kohm, batt_id_kohm, id_range_pct);
 		return NULL;
 	}
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+skip_range_check:
+#endif
 
 	rc = of_property_read_string(best_node, "qcom,battery-type",
 							&battery_type);
@@ -444,18 +475,48 @@ struct device_node *of_batterydata_get_best_aged_profile(
 		}
 	}
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	/* Fallback for 3rd party batteries on Xiaomi devices */
+	if (best_node == NULL && battery_type == NULL) {
+		for_each_available_child_of_node(batterydata_container_node, node) {
+			rc = of_batterydata_read_batt_id_kohm(node,
+							"qcom,batt-id-kohm", &batt_ids);
+			if (rc)
+				continue;
+			for (i = 0; i < batt_ids.num; i++) {
+				if (batt_ids.kohm[i] == 82) {
+					best_node = node;
+					best_id_kohm = batt_ids.kohm[i];
+					break;
+				}
+			}
+			if (best_node)
+				break;
+		}
+	}
+#endif
+
 	if (best_node == NULL) {
 		pr_err("No battery data found\n");
 		return best_node;
 	}
 
 	/* check that profile id is in range of the measured batt_id */
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	if (!battery_type && best_id_kohm == 82)
+		goto skip_range_check;
+#endif
+
 	if (abs(best_id_kohm - batt_id_kohm) >
 			((best_id_kohm * id_range_pct) / 100)) {
 		pr_err("out of range: profile id %d batt id %d pct %d\n",
 			best_id_kohm, batt_id_kohm, id_range_pct);
 		return NULL;
 	}
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+skip_range_check:
+#endif
 
 	rc = of_property_read_string(best_node, "qcom,battery-type",
 							&battery_type);
