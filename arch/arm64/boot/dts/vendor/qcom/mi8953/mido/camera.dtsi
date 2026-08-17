@@ -11,6 +11,16 @@
  * GNU General Public License for more details.
  */
 
+&vfe0 {
+	max-clk-nominal = <540000000>;
+	max-clk-turbo = <540000000>;
+}
+
+&vfe1 {
+	max-clk-nominal = <540000000>;
+	max-clk-turbo = <540000000>;
+}
+
 &cci {
 	actuator0: qcom,actuator@0 {
 		cell-index = <0>;
