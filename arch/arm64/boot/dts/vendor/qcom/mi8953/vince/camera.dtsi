@@ -1,4 +1,15 @@
 /* msm8953-camera-sensor-qrd */
+
+&vfe0 {
+	max-clk-nominal = <540000000>;
+	max-clk-turbo = <540000000>;
+};
+
+&vfe1 {
+	max-clk-nominal = <540000000>;
+	max-clk-turbo = <540000000>;
+};
+
 &soc {
        led_flash0: qcom,camera-flash {
                 cell-index = <0>;
