@@ -19,6 +19,7 @@
 #include "msm8953-pmi8950.dtsi"
 #include "msm8953-qrd-sku3.dtsi"
 #include "msm8953-mdss-panels.dtsi"
+#include "msm8953-oc-gpu.dtsi"
 
 #include "mi8953/common/common.dtsi"
 #include "mi8953/vince/vince.dtsi"
