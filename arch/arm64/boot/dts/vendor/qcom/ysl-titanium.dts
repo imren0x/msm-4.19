@@ -17,6 +17,7 @@
 #include "pmi8940.dtsi"
 #include "msm8953-mtp.dtsi"
 #include "msm8953-pmi8940.dtsi"
+#include "msm8953-oc-gpu.dtsi"
 
 #include "mi8953/common/common.dtsi"
 #include "mi8953/ysl/ysl.dtsi"
