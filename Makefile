@@ -721,10 +721,13 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, int-in-bool-context)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
-KBUILD_CFLAGS   += -Os
+KBUILD_CFLAGS   += -pipe -Os
 else
-KBUILD_CFLAGS   += -O2
+KBUILD_CFLAGS   += -pipe -O3
 endif
+
+KBUILD_CFLAGS += -mcpu=cortex-a53+crc+crypto
+KBUILD_AFLAGS += -mcpu=cortex-a53+crc+crypto
 
 ifdef CONFIG_CC_WERROR
 KBUILD_CFLAGS  += -Werror
