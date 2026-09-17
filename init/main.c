@@ -558,14 +558,12 @@ static void __init mm_init(void)
 	pti_init();
 }
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 int fpsensor=1;
-#endif
 asmlinkage __visible void __init start_kernel(void)
 {
 	char *command_line;
 	char *after_dashes;
-	char *p = NULL;
+	char *ysl =NULL;
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
@@ -597,8 +595,8 @@ asmlinkage __visible void __init start_kernel(void)
 	pr_notice("Kernel command line: %s\n", boot_command_line);
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
-		p = strstr(boot_command_line, "androidboot.fpsensor=fpc");
-		if (p)
+		ysl = strstr(boot_command_line, "androidboot.fpsensor=fpc");
+		if (ysl)
 			fpsensor = 1; // fpc1020
 		else
 			fpsensor = 2; // gf3208
