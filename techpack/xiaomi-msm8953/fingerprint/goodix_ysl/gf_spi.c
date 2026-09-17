@@ -906,7 +906,9 @@ static struct platform_driver gf_driver = {
 	.remove = gf_remove,
 };
 
-static int __init gf_init(void)
+static bool gf_init_finished = false;
+
+int xiaomi_msm8953_fingerprint_goodix_ysl_init(void)
 {
 	int status;
 
@@ -949,10 +951,11 @@ static int __init gf_init(void)
 	pr_info("status = 0x%x\n", status);
 	return 0;
 }
-module_init(gf_init);
 
 static void __exit gf_exit(void)
 {
+	if (!gf_init_finished)
+		return;
 #ifdef GF_NETLINK_ENABLE
 	ysl_netlink_exit();
 #endif

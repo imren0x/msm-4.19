@@ -59,7 +59,7 @@ struct gf_key {
 	uint32_t value; /* key down = 1, key up = 0 */
 };
 
-struct gf_key_map {
+struct vince_gf_key_map {
 	char *name;
 	unsigned short val;
 };

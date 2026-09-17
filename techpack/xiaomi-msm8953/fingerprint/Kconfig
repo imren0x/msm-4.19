@@ -5,3 +5,8 @@ source "techpack/xiaomi-msm8953/fingerprint/goodix/Kconfig"
 source "techpack/xiaomi-msm8953/fingerprint/goodix_ysl/Kconfig"
 source "techpack/xiaomi-msm8953/fingerprint/goodix_rosy/Kconfig"
 source "techpack/xiaomi-msm8953/fingerprint/goodix_vince/Kconfig"
+
+config FINGERPRINT_MI8953
+ 	bool "control interface for Xiaomi MSM8953 fingerprint"
+ 	help
+ 	  Say Y here to enable control interface for Xiaomi MSM8953 fingerprint
