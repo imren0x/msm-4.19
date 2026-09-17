@@ -1,6 +1,6 @@
 &soc {
 	goodix_fp {
-		compatible = "goodix,fingerprint";
+		compatible = "goodix,fingerprint-mido";
 		spi-max-frequency = <1000000>;
 		input-device-name = "gf3208";
 		interrupt-parent = <&tlmm>;
@@ -25,7 +25,7 @@
 	};
 
 	fpc1020 {
-		compatible = "fpc,fpc1020";
+		compatible = "fpc,fpc1020-mido";
 		spi-max-frequency = <1000000>;
 		input-device-name = "fpc1020";
 		interrupt-parent = <&tlmm>;
