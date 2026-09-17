@@ -55,7 +55,7 @@
 #include <linux/platform_device.h>
 #endif
 
-#define GF_SPIDEV_NAME     "goodix,fingerprint"
+#define GF_SPIDEV_NAME     "goodix,fingerprint-mido"
 /*device name after register in charater*/
 #define GF_DEV_NAME            "goodix_fp"
 #define	GF_INPUT_NAME	    "gf3208"	/*"goodix_fp" */
@@ -66,7 +66,7 @@
 #define N_SPI_MINORS		32	/* ... up to 256 */
 
 
-static struct gf_key_map key_map[] = {
+struct mido_gf_key_map key_map[] = {
 	  {  "POWER",  KEY_POWER  },
 	  {  "HOME" ,  KEY_HOME   },
 	  {  "MENU" ,  KEY_MENU   },
@@ -821,7 +821,7 @@ static struct spi_driver gf_driver = {
 static struct platform_driver gf_driver = {
 #endif
 	.driver = {
-		   .name = GF_DEV_NAME,
+		   .name = GF_DEV_NAME "-mido",
 		   .owner = THIS_MODULE,
 #if defined(USE_SPI_BUS)
 
@@ -834,7 +834,9 @@ static struct platform_driver gf_driver = {
 	.resume = gf_resume,
 };
 
-static int __init gf_init(void)
+static bool gf_init_finished = false;
+
+int xiaomi_msm8953_fingerprint_goodix_mido_init(void)
 {
 	int status;
 	FUNC_ENTRY();
@@ -875,15 +877,15 @@ static int __init gf_init(void)
 #endif
 	pr_info(" status = 0x%x\n", status);
 	FUNC_EXIT();
-
+	gf_init_finished = true;
 	pr_warn("--------gf_init end---OK.--------\n");
 	return 0;
 }
 
-module_init(gf_init);
-
 static void __exit gf_exit(void)
 {
+	if (!gf_init_finished)
+		return;
 	FUNC_ENTRY();
 #ifdef GF_NETLINK_ENABLE
 	netlink_exit();

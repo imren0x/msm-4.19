@@ -18,7 +18,7 @@ struct gf_key {
 };
 
 
-struct gf_key_map {
+struct mido_gf_key_map {
     char *name;
     unsigned short val;
 };

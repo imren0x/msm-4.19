@@ -82,7 +82,7 @@
 #define GF_DOUBLE_CLICK_KEY  115
 #define GF_LONG_PRESS_KEY  217
 
-static struct gf_key_map key_map[] = { { "POWER", KEY_POWER }, { "HOME", KEY_HOME }, {
+struct vince_gf_key_map vince_key_map[] = { { "POWER", KEY_POWER }, { "HOME", KEY_HOME }, {
 		"MENU", KEY_MENU }, { "BACK", KEY_BACK }, { "UP", KEY_UP }, { "DOWN",
 KEY_DOWN }, { "LEFT", KEY_LEFT }, { "RIGHT", KEY_RIGHT }, { "FORCE",
 KEY_F9 }, { "CLICK", KEY_F19 }, };
@@ -554,7 +554,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 #if defined(GF_NETLINK_ENABLE)
 	struct gf_dev *gf_dev = &gf;
 	char temp = GF_NET_EVENT_IRQ;
-	__pm_wakeup_event(fp_wakelock, msecs_to_jiffies(WAKELOCK_HOLD_TIME));
+	__pm_wakeup_event(fp_wakelock, 1000);
 	vince_sendnlmsg(&temp);
 	if ((gf_dev->wait_finger_down == true) && (gf_dev->device_available == 1) && (gf_dev->fb_black == 1)) {
 		gf_dev->wait_finger_down = false;
@@ -714,8 +714,8 @@ static void gf_reg_key_kernel(struct gf_dev *gf_dev)
 	int i;
 
 	set_bit(EV_KEY, gf_dev->input->evbit);
-	for (i = 0; i < ARRAY_SIZE(key_map); i++) {
-		set_bit(key_map[i].val, gf_dev->input->keybit);
+	for (i = 0; i < ARRAY_SIZE(vince_key_map); i++) {
+		set_bit(vince_key_map[i].val, gf_dev->input->keybit);
 	}
 
 		set_bit(KEY_SELECT, gf_dev->input->keybit);
@@ -965,7 +965,9 @@ static struct spi_driver gf_driver = {
 				.of_match_table = gx_match_table, }, .probe = gf_probe,
 		.remove = gf_remove, .suspend = gf_suspend, .resume = gf_resume, };
 
-static int __init gf_init(void)
+static bool gf_init_finished = false;
+
+int xiaomi_msm8953_fingerprint_goodix_vince_init(void)
 {
 	int status;
 
@@ -1004,10 +1006,10 @@ static int __init gf_init(void)
 	return 0;
 }
 
-module_init(gf_init);
-
 static void __exit gf_exit(void)
 {
+	if (!gf_init_finished)
+		return;
 #ifdef GF_NETLINK_ENABLE
 	vince_netlink_exit();
 #endif

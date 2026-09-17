@@ -748,7 +748,7 @@ static struct platform_driver fpc1020_driver = {
 	.remove	= fpc1020_remove,
 };
 
-static int __init fpc1020_init(void)
+int xiaomi_msm8953_fingerprint_fpc_ysl_init(void)
 {
 	int rc = platform_driver_register(&fpc1020_driver);
 
@@ -766,7 +766,6 @@ static void __exit fpc1020_exit(void)
 	platform_driver_unregister(&fpc1020_driver);
 }
 
-module_init(fpc1020_init);
 module_exit(fpc1020_exit);
 
 MODULE_LICENSE("GPL v2");

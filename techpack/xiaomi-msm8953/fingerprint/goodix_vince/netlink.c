@@ -12,10 +12,8 @@
 int stringlength(char *s);
 void vince_sendnlmsg(char *message);
 
-static int pid;
-static int err;
-static struct sock *nl_sk = NULL;
-static int flag = 0;
+int vince_pid;
+struct sock *vince_nl_sk = NULL;
 
 struct gf_uk_channel {
     int channel_id;
@@ -32,16 +30,13 @@ void vince_sendnlmsg(char *message)
     int slen = 0;
     int ret = 0;
     
-    if (!message || !nl_sk || !pid) {
+    if (!message || !vince_nl_sk || !vince_pid) {
         return;
     }
-    
     skb_1 = alloc_skb(len, GFP_KERNEL);
     if (!skb_1) {
-        printk(KERN_ERR "my_net_link:alloc_skb_1 error\n");
-        return;
-    }
-    
+		printk(KERN_ERR "my_net_link:alloc_skb_1 error\n");
+	}
     slen = strlen(message);
     nlh = nlmsg_put(skb_1, 0, 0, 0, MAX_MSGSIZE, 0);
 
@@ -51,13 +46,13 @@ void vince_sendnlmsg(char *message)
     message[slen] = '\0';
     memcpy(NLMSG_DATA(nlh), message, slen+1);
 
-    ret = netlink_unicast(nl_sk, skb_1, pid, MSG_DONTWAIT);
+    ret = netlink_unicast(vince_nl_sk, skb_1, vince_pid, MSG_DONTWAIT);
     if (!ret) {
         printk("send msg from kernel to usespace failed ret 0x%x \n", ret);
     }
 }
 
-static void nl_data_ready(struct sk_buff *__skb)
+void vince_nl_data_ready(struct sk_buff *__skb)
 {
     struct sk_buff *skb;
     struct nlmsghdr *nlh;
@@ -68,10 +63,10 @@ static void nl_data_ready(struct sk_buff *__skb)
         nlh = nlmsg_hdr(skb);
 
         memcpy(str, NLMSG_DATA(nlh), sizeof(str));
-        pid = nlh->nlmsg_pid;
+        vince_pid = nlh->nlmsg_pid;
 
-        if (pid)
-            printk("Message pid %d received:%s\n", pid, str);
+        if (vince_pid)
+            printk("Message pid %d received:%s\n", vince_pid, str);
         kfree_skb(skb);
     }
 }
@@ -83,13 +78,13 @@ int vince_netlink_init(void)
 
     netlink_cfg.groups = 0;
     netlink_cfg.flags = 0;
-    netlink_cfg.input = nl_data_ready;
+    netlink_cfg.input = vince_nl_data_ready;
     netlink_cfg.cb_mutex = NULL;
 
-    nl_sk = netlink_kernel_create(&init_net, NETLINK_TEST,
+    vince_nl_sk = netlink_kernel_create(&init_net, NETLINK_TEST,
             &netlink_cfg);
 
-    if (!nl_sk) {
+    if (!vince_nl_sk) {
         printk(KERN_ERR "my_net_link: create netlink socket error.\n");
         return 1;
     }
@@ -99,9 +94,9 @@ int vince_netlink_init(void)
 
 void vince_netlink_exit(void)
 {
-    if (nl_sk != NULL) {
-        netlink_kernel_release(nl_sk);
-        nl_sk = NULL;
+    if (vince_nl_sk != NULL) {
+        netlink_kernel_release(vince_nl_sk);
+        vince_nl_sk = NULL;
     }
 
     printk("my_net_link: self module exited\n");

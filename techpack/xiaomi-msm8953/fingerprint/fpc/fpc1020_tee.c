@@ -459,8 +459,7 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 	smp_rmb();
 
 	if (fpc1020->wakeup_enabled) {
-		__pm_wakeup_event(fpc1020->ttw_wl,
-					msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+		__pm_wakeup_event(fpc1020->ttw_wl, FPC_TTW_HOLD_TIME);
 	}
 
 	sysfs_notify(&fpc1020->dev->kobj, NULL, dev_attr_irq.attr.name);
@@ -621,14 +620,14 @@ static const struct dev_pm_ops fpc1020_pm_ops = {
 #endif
 
 static struct of_device_id fpc1020_of_match[] = {
-	{ .compatible = "fpc,fpc1020", },
+	{ .compatible = "fpc,fpc1020-mido", },
 	{}
 };
 MODULE_DEVICE_TABLE(of, fpc1020_of_match);
 
 static struct platform_driver fpc1020_driver = {
 	.driver = {
-		.name	= "fpc1020",
+		.name	= "fpc1020-mido",
 		.owner	= THIS_MODULE,
 		.of_match_table = fpc1020_of_match,
 #ifdef LINUX_CONTROL_SPI_CLK
@@ -639,7 +638,7 @@ static struct platform_driver fpc1020_driver = {
 	.remove		= fpc1020_remove,
 };
 
-static int __init fpc1020_init(void)
+int xiaomi_msm8953_fingerprint_fpc_mido_init(void)
 {
 	int rc = platform_driver_register(&fpc1020_driver);
 	if (!rc)
@@ -655,7 +654,6 @@ static void __exit fpc1020_exit(void)
 	platform_driver_unregister(&fpc1020_driver);
 }
 
-module_init(fpc1020_init);
 module_exit(fpc1020_exit);
 
 MODULE_LICENSE("GPL v2");
