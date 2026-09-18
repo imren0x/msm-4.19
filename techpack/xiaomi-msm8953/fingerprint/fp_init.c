@@ -32,7 +32,7 @@ static int __init xiaomi_msm8953_fingerprint_init(void)
 		xiaomi_msm8953_fingerprint_goodix_rosy_init();
 	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE)
-		xiaomi_msm8953_fingerprint_fpc_vince_init();
+		xiaomi_msm8953_fingerprint_goodix_vince_init();
 	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
 		xiaomi_msm8953_fingerprint_goodix_ysl_init();
