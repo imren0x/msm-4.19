@@ -15,35 +15,27 @@ extern int xiaomi_msm8953_fingerprint_goodix_ysl_init(void);
 
 static int __init xiaomi_msm8953_fingerprint_init(void)
 {
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
 		xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
 		xiaomi_msm8953_fingerprint_fpc_mido_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY)
 		xiaomi_msm8953_fingerprint_fpc_rosy_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
 		xiaomi_msm8953_fingerprint_fpc_ysl_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
 		xiaomi_msm8953_fingerprint_goodix_mido_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY)
 		xiaomi_msm8953_fingerprint_goodix_rosy_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE)
 		xiaomi_msm8953_fingerprint_fpc_vince_init();
-#endif
-if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+	
 	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
 		xiaomi_msm8953_fingerprint_goodix_ysl_init();
-#endif
 
 	return 0;
 }
