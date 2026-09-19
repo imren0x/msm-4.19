@@ -15,9 +15,8 @@
 
 #define NETLINK_TEST 25
 #define MAX_MSGSIZE 32
-
 static int pid = -1;
-static struct sock *nl_sk;
+struct sock *ysl_nl_sk;
 
 int ysl_sendnlmsg(char *msg)
 {
@@ -26,7 +25,7 @@ int ysl_sendnlmsg(char *msg)
 	int len = NLMSG_SPACE(MAX_MSGSIZE);
 	int ret = 0;
 
-	if (!msg || !nl_sk || !pid)
+	if (!msg || !ysl_nl_sk || !pid)
 		return -ENODEV;
 
 	skb = alloc_skb(len, GFP_ATOMIC);
@@ -45,14 +44,14 @@ int ysl_sendnlmsg(char *msg)
 	memcpy(NLMSG_DATA(nlh), msg, sizeof(char));
 	pr_debug("send message: %d\n", *(char *)NLMSG_DATA(nlh));
 
-	ret = netlink_unicast(nl_sk, skb, pid, MSG_DONTWAIT);
+	ret = netlink_unicast(ysl_nl_sk, skb, pid, MSG_DONTWAIT);
 	if (ret > 0)
 		ret = 0;
 
 	return ret;
 }
 
-static void nl_data_ready(struct sk_buff *__skb)
+void ysl_nl_data_ready(struct sk_buff *__skb)
 {
 	struct sk_buff *skb;
 	struct nlmsghdr *nlh;
@@ -79,13 +78,13 @@ int ysl_netlink_init(void)
 
 	netlink_cfg.groups = 0;
 	netlink_cfg.flags = 0;
-	netlink_cfg.input = nl_data_ready;
+	netlink_cfg.input = ysl_nl_data_ready;
 	netlink_cfg.cb_mutex = NULL;
 
-	nl_sk = netlink_kernel_create(&init_net, NETLINK_TEST,
+	ysl_nl_sk = netlink_kernel_create(&init_net, NETLINK_TEST,
 			&netlink_cfg);
 
-	if (!nl_sk) {
+	if (!ysl_nl_sk) {
 		pr_err("create netlink socket error\n");
 		return 1;
 	}
@@ -95,9 +94,9 @@ int ysl_netlink_init(void)
 
 void ysl_netlink_exit(void)
 {
-	if (nl_sk != NULL) {
-		netlink_kernel_release(nl_sk);
-		nl_sk = NULL;
+	if (ysl_nl_sk != NULL) {
+		netlink_kernel_release(ysl_nl_sk);
+		ysl_nl_sk = NULL;
 	}
 
 	pr_info("self module exited\n");
