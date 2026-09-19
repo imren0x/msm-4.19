@@ -58,7 +58,6 @@
 
 #define tyt_debug printk("tyt %s:%d\n", __func__, __LINE__)
 static struct proc_dir_entry *proc_entry;
-extern int fpsensor;
 
 static const char * const pctl_names[] = {
 	"fpc1020_reset_reset",
@@ -589,8 +588,8 @@ static int fpc1020_probe(struct platform_device *pdev)
 	size_t i;
 	int irqf;
 	struct device_node *np = dev->of_node;
-	struct fpc1020_data *fpc1020 = devm_kzalloc(dev, sizeof(*fpc1020),
-			GFP_KERNEL);
+	struct fpc1020_data *fpc1020;
+	fpc1020 = devm_kzalloc(dev, sizeof(*fpc1020), GFP_KERNEL);
 
 	if (!fpc1020) {
 		dev_err(dev,
@@ -598,11 +597,6 @@ static int fpc1020_probe(struct platform_device *pdev)
 		rc = -ENOMEM;
 		goto exit;
 	}
-
-	if(fpsensor != 1){
-                 pr_err("Macle fpc1020_probe failed as fpsensor=%d(1=fp)\n", fpsensor);
-                 return -1;
-         }
 
 
 	fpc1020->dev = dev;
