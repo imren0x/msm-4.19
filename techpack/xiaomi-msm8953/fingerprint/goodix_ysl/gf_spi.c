@@ -81,7 +81,6 @@ static DEFINE_MUTEX(device_list_lock);
 static struct wakeup_source *fp_wakelock;
 static struct gf_dev gf;
 
-extern int fpsensor;
 static struct proc_dir_entry *proc_entry;
 
 #if 0
@@ -916,11 +915,6 @@ int xiaomi_msm8953_fingerprint_goodix_ysl_init(void)
 	 * that will key udev/mdev to add/remove /dev nodes.  Last, register
 	 * the driver which manages those device numbers.
 	 */
-	if(fpsensor != 2){
-    	pr_err("Macle gf_init failed as fpsensor=%d(2=gx)\n", fpsensor);
-        return -1;
-        }
-
 	BUILD_BUG_ON(N_SPI_MINORS > 256);
 	status = register_chrdev(SPIDEV_MAJOR, CHRD_DRIVER_NAME, &gf_fops);
 	if (status < 0) {
