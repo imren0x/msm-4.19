@@ -1458,14 +1458,17 @@ static void sdm660_tx_mute_update_callback(struct work_struct *work)
 }
 
 #ifdef CONFIG_SOUND_CONTROL
-struct snd_soc_codec *sound_control_codec_ptr;
+static struct snd_soc_component *sound_control_codec_ptr;
 
 static ssize_t headphone_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	return snprintf(buf, PAGE_SIZE, "%d %d\n",
-		snd_soc_read(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX1_VOL_CTL_B2_CTL),
-		snd_soc_read(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX2_VOL_CTL_B2_CTL)
+		snd_soc_component_read32(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX1_VOL_CTL_B2_CTL),
+		snd_soc_component_read32(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX2_VOL_CTL_B2_CTL)
 	);
 }
 
@@ -1475,6 +1478,9 @@ static ssize_t headphone_gain_store(struct kobject *kobj,
 
 	int input_l, input_r;
 
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	sscanf(buf, "%d %d", &input_l, &input_r);
 
 	if (input_l < -84 || input_l > 20)
@@ -1483,8 +1489,8 @@ static ssize_t headphone_gain_store(struct kobject *kobj,
 	if (input_r < -84 || input_r > 20)
 		input_r = 0;
 
-	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX1_VOL_CTL_B2_CTL, input_l);
-	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX2_VOL_CTL_B2_CTL, input_r);
+	snd_soc_component_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX1_VOL_CTL_B2_CTL, input_l);
+	snd_soc_component_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX2_VOL_CTL_B2_CTL, input_r);
 
 	return count;
 }
@@ -1497,8 +1503,11 @@ static struct kobj_attribute headphone_gain_attribute =
 static ssize_t mic_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	return snprintf(buf, PAGE_SIZE, "%d\n",
-		snd_soc_read(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN));
+		snd_soc_component_read32(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN));
 }
 
 static ssize_t mic_gain_store(struct kobject *kobj,
@@ -1506,12 +1515,15 @@ static ssize_t mic_gain_store(struct kobject *kobj,
 {
 	int input;
 
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	sscanf(buf, "%d", &input);
 
 	if (input < -10 || input > 20)
 		input = 0;
 
-	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN, input);
+	snd_soc_component_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN, input);
 
 	return count;
 }
@@ -1524,8 +1536,11 @@ static struct kobj_attribute mic_gain_attribute =
 static ssize_t speaker_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	return snprintf(buf, PAGE_SIZE, "%d\n",
-		snd_soc_read(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX3_VOL_CTL_B2_CTL));
+		snd_soc_component_read32(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX3_VOL_CTL_B2_CTL));
 }
 
 static ssize_t speaker_gain_store(struct kobject *kobj,
@@ -1533,12 +1548,15 @@ static ssize_t speaker_gain_store(struct kobject *kobj,
 {
 	int input;
 
+	if (!sound_control_codec_ptr)
+		return -ENODEV;
+
 	sscanf(buf, "%d", &input);
 
 	if (input < -10 || input > 20)
 		input = 0;
 
-	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX3_VOL_CTL_B2_CTL, input);
+	snd_soc_component_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_RX3_VOL_CTL_B2_CTL, input);
 
 	return count;
 }
@@ -1570,7 +1588,7 @@ static int msm_dig_cdc_soc_probe(struct snd_soc_component *component)
 	int i, ret;
 
 #ifdef CONFIG_SOUND_CONTROL
-	sound_control_codec_ptr = codec;
+	sound_control_codec_ptr = component;
 #endif
 
 	msm_dig_cdc->component = component;
@@ -2643,11 +2661,10 @@ static int msm_dig_cdc_probe(struct platform_device *pdev)
 	sound_control_kobj = kobject_create_and_add("sound_control", kernel_kobj);
 	if (sound_control_kobj == NULL) {
 		pr_warn("%s kobject create failed!\n", __func__);
-        }
-
-	ret = sysfs_create_group(sound_control_kobj, &sound_control_attr_group);
-	if (ret) {
-		pr_warn("%s sysfs file create failed!\n", __func__);
+	} else {
+		ret = sysfs_create_group(sound_control_kobj, &sound_control_attr_group);
+		if (ret)
+			pr_warn("%s sysfs file create failed!\n", __func__);
 	}
 #endif
 	msm_dig_cdc->dig_base = ioremap(dig_cdc_addr,
@@ -2684,6 +2701,15 @@ rtn:
 static int msm_dig_cdc_remove(struct platform_device *pdev)
 {
 	struct msm_dig_priv *msm_cdc = dev_get_drvdata(&pdev->dev);
+
+#ifdef CONFIG_SOUND_CONTROL
+	if (sound_control_kobj) {
+		sysfs_remove_group(sound_control_kobj, &sound_control_attr_group);
+		kobject_put(sound_control_kobj);
+		sound_control_kobj = NULL;
+	}
+	sound_control_codec_ptr = NULL;
+#endif
 
 	snd_soc_unregister_component(&pdev->dev);
 	msm_digital_cdc_disable_supplies(msm_cdc);
