@@ -595,6 +595,8 @@ static void msm_vfe40_read_irq_status_and_clear(struct vfe_device *vfe_dev,
 	if (*irq_status1 & (1 << 0)) {
 		vfe_dev->error_info.camif_status =
 		legacy_n_msm_camera_io_r(vfe_dev->vfe_base + 0x31C);
+		legacy_n_msm_camera_io_w(0x7, vfe_dev->vfe_base + 0x2F4);
+		legacy_n_msm_camera_io_w_mb(1, vfe_dev->vfe_base + 0x24);
 		msm_vfe40_config_irq(vfe_dev, 0, (1 << 0), MSM_ISP_IRQ_DISABLE);
 	}
 
