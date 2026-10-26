@@ -52,5 +52,11 @@ obj-$(CONFIG_USB_DWC3_KEYSTONE)		+= dwc3-keystone.o
 obj-$(CONFIG_USB_DWC3_OF_SIMPLE)	+= dwc3-of-simple.o
 obj-$(CONFIG_USB_DWC3_ST)		+= dwc3-st.o
 obj-$(CONFIG_USB_DWC3_QCOM)		+= dwc3-qcom.o
-obj-$(CONFIG_USB_DWC3_MSM)		+= dwc3-msm.o dbm.o
-obj-$(CONFIG_USB_DWC3_MSM_LEGACY)		+= dwc3-msm_legacy.o dbm.o
+obj-$(CONFIG_USB_DWC3_MSM)		+= dwc3-msm.o
+obj-$(CONFIG_USB_DWC3_MSM_LEGACY)		+= dwc3-msm_legacy.o
+obj-$(CONFIG_USB_DWC3_MSM_DUAL)		+= dwc3-msm-api.o dbm.o
+
+ifneq ($(CONFIG_USB_DWC3_MSM_DUAL),y)
+obj-$(CONFIG_USB_DWC3_MSM)		+= dbm.o
+obj-$(CONFIG_USB_DWC3_MSM_LEGACY)	+= dbm.o
+endif

@@ -47,6 +47,14 @@
 #include "debug.h"
 #include "xhci.h"
 
+#ifdef CONFIG_USB_DWC3_MSM_DUAL
+#define msm_data_fifo_config dwc3_msm_new_data_fifo_config
+#define msm_dwc3_reset_dbm_ep dwc3_msm_new_reset_dbm_ep
+#define msm_ep_config dwc3_msm_new_ep_config
+#define msm_ep_unconfig dwc3_msm_new_ep_unconfig
+#define msm_dwc3_reset_ep_after_lpm dwc3_msm_new_reset_ep_after_lpm
+#endif
+
 static bool bc12_compliance;
 module_param(bc12_compliance, bool, 0644);
 MODULE_PARM_DESC(bc12_compliance, "Disable sending dp pulse for CDP");

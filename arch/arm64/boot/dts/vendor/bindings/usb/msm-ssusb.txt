@@ -1,7 +1,8 @@
 MSM SuperSpeed USB3.0 SoC controller
 
 Required properties :
-- compatible : should be "qcom,dwc-usb3-msm"
+- compatible : should be "qcom,dwc-usb3-msm" or
+	"qcom,dwc-usb3-msm-legacy"
  - reg: Address and length of the register set for the device
    Required regs are:
 	"core_base" : usb controller register set

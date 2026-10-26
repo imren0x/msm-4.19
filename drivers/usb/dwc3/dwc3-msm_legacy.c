@@ -61,6 +61,14 @@
 #include "../../misc/vxr7200.h"
 #endif
 
+#ifdef CONFIG_USB_DWC3_MSM_DUAL
+#define msm_data_fifo_config dwc3_msm_legacy_data_fifo_config
+#define msm_dwc3_reset_dbm_ep dwc3_msm_legacy_reset_dbm_ep
+#define msm_ep_config dwc3_msm_legacy_ep_config
+#define msm_ep_unconfig dwc3_msm_legacy_ep_unconfig
+#define msm_dwc3_reset_ep_after_lpm dwc3_msm_legacy_reset_ep_after_lpm
+#endif
+
 
 #define SDP_CONNETION_CHECK_TIME 10000 /* in ms */
 
@@ -4753,7 +4761,7 @@ static const struct dev_pm_ops dwc3_msm_dev_pm_ops = {
 
 static const struct of_device_id of_dwc3_matach[] = {
 	{
-		.compatible = "qcom,dwc-usb3-msm",
+		.compatible = "qcom,dwc-usb3-msm-legacy",
 	},
 	{ },
 };
@@ -4763,7 +4771,7 @@ static struct platform_driver dwc3_msm_driver = {
 	.probe		= dwc3_msm_probe,
 	.remove		= dwc3_msm_remove,
 	.driver		= {
-		.name	= "msm-dwc3",
+		.name	= "msm-dwc3-legacy",
 		.pm	= &dwc3_msm_dev_pm_ops,
 		.of_match_table	= of_dwc3_matach,
 	},
