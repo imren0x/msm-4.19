@@ -16,9 +16,6 @@
 	/delete-property/ qcom,rparasitic-uohm;
 	qcom,rparasitics-uohm = <100000>;
 	qcom,charge-unknown-battery;
-	/delete-property/ qcom,parallel-usb-min-current-ma;
-	/delete-property/ qcom,parallel-usb-9v-min-current-ma;
-	/delete-property/ qcom,parallel-allowed-lowering-ma;
 	qcom,override-usb-current;
 	qcom,fastchg-current-comp = <1200>;
 	qcom,float-voltage-comp = <15>;
@@ -29,6 +26,7 @@
 	io-channels = <&pmi8940_vadc VADC_VCHG_SNS_LEGACY>;
 	io-channel-names = "vchg_sns";
 	status = "okay";
+};
 
 &qpnp_fg {
 	compatible = "qcom,qpnp-fg";
