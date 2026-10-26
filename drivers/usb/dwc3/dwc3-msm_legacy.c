@@ -2233,10 +2233,11 @@ static void dwc3_msm_power_collapse_por(struct dwc3_msm *mdwc)
 	dwc3_msm_write_reg_field(mdwc->base, PWR_EVNT_IRQ_MASK_REG,
 				PWR_EVNT_POWERDOWN_IN_P3_MASK, 1);
 
-	if (mdwc->drd_state == DRD_STATE_HOST) {
+	if (mdwc->in_host_mode) {
 		dev_dbg(mdwc->dev, "%s: set the core in host mode\n",
 							__func__);
 		dwc3_set_prtcap(dwc, DWC3_GCTL_PRTCAP_HOST);
+		dwc3_en_sleep_mode(dwc);
 	}
 }
 
@@ -4100,6 +4101,7 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		}
 
 		dwc3_set_prtcap(dwc, DWC3_GCTL_PRTCAP_HOST);
+		dwc3_en_sleep_mode(dwc);
 
 		mdwc->host_nb.notifier_call = dwc3_msm_host_notifier;
 		usb_register_notify(&mdwc->host_nb);
@@ -4250,6 +4252,7 @@ static int dwc3_otg_start_peripheral(struct dwc3_msm *mdwc, int on)
 		dwc3_msm_block_reset(mdwc, false);
 
 		dwc3_set_prtcap(dwc, DWC3_GCTL_PRTCAP_DEVICE);
+		dwc3_dis_sleep_mode(dwc);
 		mdwc->in_device_mode = true;
 		usb_gadget_vbus_connect(&dwc->gadget);
 #ifdef CONFIG_SMP
