@@ -2236,7 +2236,7 @@ static void dwc3_msm_power_collapse_por(struct dwc3_msm *mdwc)
 	if (mdwc->drd_state == DRD_STATE_HOST) {
 		dev_dbg(mdwc->dev, "%s: set the core in host mode\n",
 							__func__);
-		dwc3_set_mode(dwc, DWC3_GCTL_PRTCAP_HOST);
+		dwc3_set_prtcap(dwc, DWC3_GCTL_PRTCAP_HOST);
 	}
 }
 
@@ -4099,7 +4099,7 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 			return ret;
 		}
 
-		dwc3_set_mode(dwc, DWC3_GCTL_PRTCAP_HOST);
+		dwc3_set_prtcap(dwc, DWC3_GCTL_PRTCAP_HOST);
 
 		mdwc->host_nb.notifier_call = dwc3_msm_host_notifier;
 		usb_register_notify(&mdwc->host_nb);
