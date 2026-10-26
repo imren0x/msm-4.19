@@ -6,3 +6,55 @@
         	#include "../common/batterydata/batterydata-share-3000mah.dtsi"
 	};
 };
+
+&qpnp_smbcharger {
+	compatible = "qcom,qpnp-smbcharger";
+
+	qcom,iterm-ma = <200>;
+	qcom,float-voltage-mv = <4380>;
+	qcom,resume-delta-mv = <50>;
+	/delete-property/ qcom,rparasitic-uohm;
+	qcom,rparasitics-uohm = <100000>;
+	qcom,charge-unknown-battery;
+	/delete-property/ qcom,parallel-usb-min-current-ma;
+	/delete-property/ qcom,parallel-usb-9v-min-current-ma;
+	/delete-property/ qcom,parallel-allowed-lowering-ma;
+	qcom,override-usb-current;
+	qcom,fastchg-current-comp = <1200>;
+	qcom,float-voltage-comp = <15>;
+	/delete-property/ qcom,autoadjust-vfloat;
+	qcom,battery-data = <&mtp_batterydata>;
+	/delete-property/ qcom,external-typec;
+	/delete-property/ qcom,typec-psy-name;
+	io-channels = <&pmi8940_vadc VADC_VCHG_SNS_LEGACY>;
+	io-channel-names = "vchg_sns";
+	status = "okay";
+
+&qpnp_fg {
+	compatible = "qcom,qpnp-fg";
+
+	/delete-property/ qcom,resume-soc;
+	qcom,resume-soc-raw = <254>;
+	qcom,fg-iterm-ma = <300>;
+	qcom,fg-chg-iterm-ma = <200>;
+	qcom,fg-cutoff-voltage-mv = <3400>;
+	qcom,hold-soc-while-full;
+	qcom,fg-cc-cv-threshold-mv =<4370>;
+	qcom,vbat-estimate-diff-mv = <200>;
+	qcom,battery-data = <&mtp_batterydata>;
+	qcom,thermal-coefficients = [C8 86 C1 50 D3 37];/*R=10K B25/85 = 3435*/
+	qcom,hot-bat-decidegc = <600>;
+	qcom,cold-bat-decidegc = <0>;
+	qcom,cool-bat-decidegc = <150>;
+	qcom,warm-bat-decidegc = <450>;
+	qcom,bad-battery-detection-enable;
+	status = "okay";
+};
+
+&usb3 {
+	compatible = "qcom,dwc-usb3-msm-legacy";
+	qcom,usbin-vadc = <&pmi8940_vadc>;
+	qcom,detect-dpdm-floating;
+	vbus_dwc3-supply = <&smbcharger_charger_otg>;
+	extcon = <&qpnp_smbcharger>;
+};

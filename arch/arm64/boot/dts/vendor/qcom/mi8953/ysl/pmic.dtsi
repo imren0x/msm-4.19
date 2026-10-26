@@ -117,14 +117,6 @@
     	};
 };
 
-&usb3 {
-	compatible = "qcom,dwc-usb3-msm-legacy";
-	qcom,usbin-vadc = <&pmi8940_vadc>;
-	qcom,detect-dpdm-floating;
-	vbus_dwc3-supply = <&smbcharger_charger_otg>;
-	extcon = <&qpnp_smbcharger>;
-};
-
 &spmi_bus {
 	qcom,pmi8940@3 {
 		labibb: qpnp-labibb-regulator {
