@@ -118,6 +118,7 @@
 };
 
 &usb3 {
+	compatible = "qcom,dwc-usb3-msm-legacy";
 	qcom,usbin-vadc = <&pmi8940_vadc>;
 	qcom,detect-dpdm-floating;
 	vbus_dwc3-supply = <&smbcharger_charger_otg>;

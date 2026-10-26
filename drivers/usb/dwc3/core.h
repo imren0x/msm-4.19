@@ -237,9 +237,7 @@
 
 /* Global Configuration Register */
 #define DWC3_GCTL_PWRDNSCALE(n)	((n) << 19)
-#ifdef CONFIG_USB_DWC3_MSM_LEGACY
 #define DWC3_GCTL_PWRDNSCALEMASK (0xFFF80000)
-#endif
 #define DWC3_GCTL_U2RSTECN	BIT(16)
 #define DWC3_GCTL_RAMCLKSEL(x)	(((x) & DWC3_GCTL_CLK_MASK) << 6)
 #define DWC3_GCTL_CLK_BUS	(0)
@@ -261,10 +259,8 @@
 #define DWC3_GCTL_U2EXIT_LFPS		BIT(2)
 #define DWC3_GCTL_GBLHIBERNATIONEN	BIT(1)
 #define DWC3_GCTL_DSBLCLKGTNG		BIT(0)
-#ifdef CONFIG_USB_DWC3_MSM_LEGACY
 /* Global User Control Register */
 #define DWC3_GUCTL_REFCLKPER            (0x3FF << 22)
-#endif
 
 /* Global User Control 1 Register */
 #define DWC3_GUCTL1_PARKMODE_DISABLE_SS	BIT(17)
@@ -399,12 +395,10 @@
 /* Global Frame Length Adjustment Register */
 #define DWC3_GFLADJ_30MHZ_SDBND_SEL		BIT(7)
 #define DWC3_GFLADJ_30MHZ_MASK			0x3f
-#ifdef CONFIG_USB_DWC3_MSM_LEGACY
 #define DWC3_GFLADJ_REFCLK_240MHZDECR_PLS1      (1 << 31)
 #define DWC3_GFLADJ_REFCLK_240MHZ_DECR          (0x7F << 24)
 #define DWC3_GFLADJ_REFCLK_LPM_SEL              (1 << 23)
 #define DWC3_GFLADJ_REFCLK_FLADJ                (0x3FFF << 8)
-#endif
 
 /* Global User Control Register 2 */
 #define DWC3_GUCTL2_RST_ACTBITLATER		BIT(14)
@@ -1353,9 +1347,8 @@ struct dwc3 {
 	unsigned		ssp_u3_u0_quirk:1;
 	unsigned		tx_de_emphasis:2;
 	unsigned		err_evt_seen:1;
-#ifdef CONFIG_USB_DWC3_MSM_LEGACY
 	unsigned                is_drd:1;
-#endif
+	unsigned		is_msm_legacy:1;
 	unsigned		disable_clk_gating:1;
 	unsigned		enable_bus_suspend:1;
 	unsigned		usb3_u1u2_disable:1;
