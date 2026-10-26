@@ -143,4 +143,10 @@ config USB_DWC3_MSM_LEGACY
 	  Driver supports host, device and dual-role modes of operation.
 	  Say 'Y' or 'M' if you have one such device.
 
+config USB_DWC3_MSM_DUAL
+	bool
+	depends on USB_DWC3_MSM=y
+	depends on USB_DWC3_MSM_LEGACY=y
+	default y
+
 endif
