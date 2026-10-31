@@ -1101,7 +1101,7 @@ static int qpnp_haptics_play_mode_config(struct hap_chip *chip)
 }
 
 static int vmax_mv_override = 0;
-module_param_named(vmax_mv_override, vmax_mv_override, int, 0664);
+static struct hap_chip *hap_override_chip;
 
 /* configuration api for max voltage */
 static int qpnp_haptics_vmax_config(struct hap_chip *chip, int vmax_mv,
@@ -1138,6 +1138,26 @@ static int qpnp_haptics_vmax_config(struct hap_chip *chip, int vmax_mv,
 			HAP_VMAX_MASK | HAP_VMAX_OVD_BIT, val);
 	return rc;
 }
+
+static int vmax_mv_override_set(const char *val, const struct kernel_param *kp)
+{
+	int rc = param_set_int(val, kp);
+
+	/*
+	 * ERM never reprograms VMAX while playing, so apply the override now
+	 * instead of only at probe. 0 restores the DT/sysfs vmax_mv.
+	 */
+	if (!rc && hap_override_chip)
+		rc = qpnp_haptics_vmax_config(hap_override_chip,
+				hap_override_chip->vmax_mv, false);
+	return rc;
+}
+
+static const struct kernel_param_ops vmax_mv_override_ops = {
+	.set = vmax_mv_override_set,
+	.get = param_get_int,
+};
+module_param_cb(vmax_mv_override, &vmax_mv_override_ops, &vmax_mv_override, 0664);
 
 /* configuration api for ilim */
 static int qpnp_haptics_ilim_config(struct hap_chip *chip)
@@ -2490,6 +2510,7 @@ static int qpnp_haptics_probe(struct platform_device *pdev)
 		}
 	}
 
+	hap_override_chip = chip;
 	return 0;
 
 sysfs_fail:
@@ -2513,6 +2534,7 @@ static int qpnp_haptics_remove(struct platform_device *pdev)
 {
 	struct hap_chip *chip = dev_get_drvdata(&pdev->dev);
 
+	hap_override_chip = NULL;
 	cancel_work_sync(&chip->haptics_work);
 	hrtimer_cancel(&chip->auto_res_err_poll_timer);
 	hrtimer_cancel(&chip->stop_timer);
