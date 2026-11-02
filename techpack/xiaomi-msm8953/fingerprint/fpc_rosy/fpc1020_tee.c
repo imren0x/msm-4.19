@@ -473,9 +473,6 @@ static ssize_t compatible_all_set(struct device *dev,
 		if (of_property_read_bool(dev->of_node, "fpc,enable-on-boot")) {
 			dev_info(dev, "Enabling hardware\n");
 			(void)device_prepare(fpc1020, true);
-#ifdef LINUX_CONTROL_SPI_CLK
-		(void)set_clks(fpc1020, false);
-#endif
 	}
 	}else if (!strncmp(buf, "disable", strlen("disable")) && fpc1020->compatible_enabled != 0){
 		if (gpio_is_valid(fpc1020->irq_gpio))
