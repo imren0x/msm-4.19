@@ -1102,7 +1102,8 @@ static void synaptics_rmi4_sw_gesture_report(
 	unsigned int max_y_distance;
 
 	mutex_lock(&rmi4_data->rmi4_report_mutex);
-	if (!rmi4_data->software_wakeup_gesture || !rmi4_data->suspend ||
+	if (!rmi4_data->software_wakeup_gesture ||
+	    (!READ_ONCE(rmi4_data->display_suspended) && !rmi4_data->suspend) ||
 	    !rmi4_data->enable_wakeup_gesture) {
 		rmi4_data->sw_gesture_touch_active = false;
 		rmi4_data->sw_gesture_touch_invalid = false;
@@ -1131,6 +1132,8 @@ static void synaptics_rmi4_sw_gesture_report(
 			rmi4_data->sw_gesture_touch_start = now;
 			rmi4_data->sw_gesture_touch_x = x;
 			rmi4_data->sw_gesture_touch_y = y;
+			dev_info(rmi4_data->pdev->dev.parent,
+				 "Software DT2W first contact: x=%d y=%d\n", x, y);
 		} else if (time_after(now, rmi4_data->sw_gesture_touch_start +
 				      msecs_to_jiffies(SW_GESTURE_TAP_MAX_MS)) ||
 			   abs(x - rmi4_data->sw_gesture_touch_x) > max_x_distance ||
@@ -1164,6 +1167,8 @@ static void synaptics_rmi4_sw_gesture_report(
 			rmi4_data->sw_gesture_first_x) <= max_x_distance &&
 		    abs(rmi4_data->sw_gesture_touch_y -
 			rmi4_data->sw_gesture_first_y) <= max_y_distance) {
+			dev_info(rmi4_data->pdev->dev.parent,
+				 "Software DT2W double tap detected\n");
 			pm_wakeup_event(&rmi4_data->pdev->dev, 500);
 			input_report_key(rmi4_data->input_dev, KEY_WAKEUP, 1);
 			input_sync(rmi4_data->input_dev);
@@ -1222,7 +1227,8 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 	extra_data = (struct synaptics_rmi4_f11_extra_data *)fhandler->extra;
 
 	sw_gesture = rmi4_data->software_wakeup_gesture &&
-			rmi4_data->suspend && rmi4_data->enable_wakeup_gesture;
+			(READ_ONCE(rmi4_data->display_suspended) ||
+			 rmi4_data->suspend) && rmi4_data->enable_wakeup_gesture;
 
 	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture &&
 	    !sw_gesture) {
@@ -1425,7 +1431,8 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 	size_of_2d_data = sizeof (struct synaptics_rmi4_f12_finger_data);
 
 	sw_gesture = rmi4_data->software_wakeup_gesture &&
-			rmi4_data->suspend && rmi4_data->enable_wakeup_gesture;
+			(READ_ONCE(rmi4_data->display_suspended) ||
+			 rmi4_data->suspend) && rmi4_data->enable_wakeup_gesture;
 
 	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture &&
 	    !sw_gesture) {
@@ -4449,6 +4456,7 @@ struct synaptics_rmi4_data *rmi4_data =
 static int synaptics_rmi4_probe (struct platform_device *pdev)
 {
 	int retval;
+	int wakeup_rc;
 	unsigned char attr_count;
 
 	const struct synaptics_dsx_hw_interface *hw_if;
@@ -4647,6 +4655,11 @@ static int synaptics_rmi4_probe (struct platform_device *pdev)
 			queue_delayed_work (rmi4_data->esd_workqueue, &rmi4_data->esd_work, SYNAPTICS_ESD_CHECK_CIRCLE);
 #endif
 
+	wakeup_rc = device_init_wakeup(&pdev->dev, true);
+	if (wakeup_rc < 0)
+		dev_warn(&pdev->dev, "failed to initialize wakeup source: %d\n",
+			 wakeup_rc);
+
 	return retval;
 
 err_sysfs:
@@ -4709,6 +4722,8 @@ static int synaptics_rmi4_remove (struct platform_device *pdev)
 	struct synaptics_rmi4_data *rmi4_data = platform_get_drvdata (pdev);
 	const struct synaptics_dsx_board_data *bdata =
 			rmi4_data->hw_if->board_data;
+
+	device_init_wakeup(&pdev->dev, false);
 
 #ifdef FB_READY_RESET
 	cancel_work_sync (&rmi4_data->reset_work);
@@ -4801,10 +4816,12 @@ static int synaptics_rmi4_fb_notifier_cb (struct notifier_block *self,
 			transition = evdata->data;
 			if (*transition == FB_BLANK_POWERDOWN) {
 				flush_work(&rmi4_data->pm_work);
+				WRITE_ONCE(rmi4_data->display_suspended, true);
 				rmi4_data->fb_ready = false;
 				schedule_work(&rmi4_data->pm_work);
 			} else if (*transition == FB_BLANK_UNBLANK) {
 				flush_work(&rmi4_data->pm_work);
+				WRITE_ONCE(rmi4_data->display_suspended, false);
 				rmi4_data->fb_ready = true;
 				schedule_work(&rmi4_data->pm_work);
 			}
@@ -4827,6 +4844,7 @@ static int synaptics_rmi4_early_suspend (struct early_suspend *h)
 	if (rmi4_data->stay_awake)
 		return retval;
 
+	WRITE_ONCE(rmi4_data->display_suspended, true);
 
 	if (rmi4_data->enable_wakeup_gesture) {
 		if (rmi4_data->software_wakeup_gesture) {
@@ -4897,6 +4915,8 @@ static int synaptics_rmi4_late_resume (struct early_suspend *h)
 	if (rmi4_data->stay_awake)
 		return retval;
 
+	WRITE_ONCE(rmi4_data->display_suspended, false);
+
 	if (rmi4_data->enable_wakeup_gesture) {
 		disable_irq_wake (rmi4_data->irq);
 		goto exit;
@@ -4939,6 +4959,7 @@ static int synaptics_rmi4_suspend (struct device *dev)
 	struct synaptics_rmi4_exp_fhandler *exp_fhandler;
 	struct synaptics_rmi4_data *rmi4_data = dev_get_drvdata (dev);
 	unsigned char device_ctrl;
+	int retval;
 
 	if (rmi4_data->stay_awake)
 		return 0;
@@ -4952,8 +4973,13 @@ static int synaptics_rmi4_suspend (struct device *dev)
 	if (rmi4_data->enable_wakeup_gesture) {
 		printk ("enable_wakeup_gesture is on\n");
 		if (rmi4_data->software_wakeup_gesture) {
+			dev_info(dev, "software DT2W active on IRQ %d\n",
+				 rmi4_data->irq);
 			synaptics_rmi4_free_fingers(rmi4_data);
-			enable_irq_wake(rmi4_data->irq);
+			retval = enable_irq_wake(rmi4_data->irq);
+			if (retval)
+				dev_err(dev, "failed to enable touch IRQ wake: %d\n",
+					retval);
 			goto exit;
 		}
 

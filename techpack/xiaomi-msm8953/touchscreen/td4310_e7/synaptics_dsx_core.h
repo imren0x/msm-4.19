@@ -431,6 +431,7 @@ struct synaptics_rmi4_data {
 	bool irq_enabled;
 	bool fingers_on_2d;
 	bool suspend;
+	bool display_suspended;
 	bool sensor_sleep;
 	bool stay_awake;
 	bool fb_ready;
