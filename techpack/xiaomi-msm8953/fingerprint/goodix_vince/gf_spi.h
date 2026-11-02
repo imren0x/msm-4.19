@@ -106,16 +106,6 @@ struct gf_ioc_chip_info {
 #define GF_NET_EVENT_FB_UNBLACK 3
 #define NETLINK_TEST 25
 
-
-#ifdef ENABLE_PINCTRL
-static const char * const pctl_names[] = {
-
-	"goodixfp_reset_reset",
-	"goodixfp_reset_active",
-	"goodixfp_irq_active",
-};
-#endif
-
 struct gf_dev {
 	dev_t devt;
 	struct list_head device_entry;
@@ -123,11 +113,6 @@ struct gf_dev {
 	struct spi_device *spi;
 #elif defined(USE_PLATFORM_BUS)
 	struct platform_device *spi;
-#endif
-
-#ifdef ENABLE_PINCTRL
-	struct pinctrl *fingerprint_pinctrl;
-	struct pinctrl_state *pinctrl_state[ARRAY_SIZE(pctl_names)];
 #endif
 
 	struct input_dev *input;
