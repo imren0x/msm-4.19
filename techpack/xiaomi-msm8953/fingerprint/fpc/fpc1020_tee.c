@@ -64,11 +64,6 @@ struct fpc1020_data {
 	struct device *dev;
 	struct pinctrl *fingerprint_pinctrl;
 	struct pinctrl_state *pinctrl_state[ARRAY_SIZE(pctl_names)];
-#ifdef LINUX_CONTROL_SPI_CLK
-	u32 max_speed_hz;
-	struct clk *iface_clk;
-	struct clk *core_clk;
-#endif
 
 	struct wakeup_source *ttw_wl;
 	int irq_gpio;
@@ -77,10 +72,6 @@ struct fpc1020_data {
 	bool prepared;
 	bool wakeup_enabled;
 	bool compatible_enabled;
-#ifdef LINUX_CONTROL_SPI_CLK
-	bool clocks_enabled;
-	bool clocks_suspended;
-#endif
 };
 
 static irqreturn_t fpc1020_irq_handler(int irq, void *handle);
@@ -90,64 +81,6 @@ static int hw_reset(struct  fpc1020_data *fpc1020);
 
 static struct kernfs_node *soc_symlink = NULL;
 
-#ifdef LINUX_CONTROL_SPI_CLK
-static int set_clks(struct fpc1020_data *fpc1020, bool enable)
-{
-	int rc = 0;
-	mutex_lock(&fpc1020->lock);
-
-	if (enable == fpc1020->clocks_enabled)
-		goto out;
-
-	if (enable) {
-		rc = clk_set_rate(fpc1020->core_clk, fpc1020->max_speed_hz);
-		if (rc) {
-			dev_err(fpc1020->dev,
-					"%s: Error setting clk_rate: %u, %d\n",
-					__func__, fpc1020->max_speed_hz,
-					rc);
-			goto out;
-		}
-		rc = clk_prepare_enable(fpc1020->core_clk);
-		if (rc) {
-			dev_err(fpc1020->dev,
-					"%s: Error enabling core clk: %d\n",
-					__func__, rc);
-			goto out;
-		}
-
-		rc = clk_prepare_enable(fpc1020->iface_clk);
-		if (rc) {
-			dev_err(fpc1020->dev,
-					"%s: Error enabling iface clk: %d\n",
-					__func__, rc);
-			clk_disable_unprepare(fpc1020->core_clk);
-			goto out;
-		}
-		dev_dbg(fpc1020->dev, "%s ok. clk rate %u hz\n", __func__,
-				fpc1020->max_speed_hz);
-
-		fpc1020->clocks_enabled = true;
-	} else {
-		clk_disable_unprepare(fpc1020->iface_clk);
-		clk_disable_unprepare(fpc1020->core_clk);
-		fpc1020->clocks_enabled = false;
-	}
-
-out:
-	mutex_unlock(&fpc1020->lock);
-	return rc;
-}
-
-static ssize_t clk_enable_set(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
-	return set_clks(fpc1020, (*buf == '1')) ? : count;
-}
-
-static DEVICE_ATTR(clk_enable, S_IWUSR, NULL, clk_enable_set);
-#endif
 /**
  * Will try to select the set of pins (GPIOS) defined in a pin control node of
  * the device tree named @p name.
@@ -409,9 +342,6 @@ static ssize_t compatible_all_set(struct device *dev,
 		if (of_property_read_bool(dev->of_node, "fpc,enable-on-boot")) {
 			dev_info(dev, "Enabling hardware\n");
 			(void)device_prepare(fpc1020, true);
-#ifdef LINUX_CONTROL_SPI_CLK
-		(void)set_clks(fpc1020, false);
-#endif
 	}
 	} else if (!strncmp(buf, "disable", strlen("disable")) && fpc1020->compatible_enabled != 0) {
 		if (gpio_is_valid(fpc1020->irq_gpio)) {
@@ -438,9 +368,6 @@ static struct attribute *attributes[] = {
 	&dev_attr_hw_reset.attr,
 	&dev_attr_wakeup_enable.attr,
 	&dev_attr_compatible_all.attr,
-#ifdef LINUX_CONTROL_SPI_CLK
-	&dev_attr_clk_enable.attr,
-#endif
 	&dev_attr_irq.attr,
 	NULL
 };
@@ -516,32 +443,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 	}
 
 
-#ifdef LINUX_CONTROL_SPI_CLK
-	if (of_property_read_u32(dev->of_node, "fpc,spi-max-frequency", &fpc1020->max_speed_hz)) {
-		fpc1020->max_speed_hz = 4800000;
-		dev_err(dev, "%s: Failed to get spi-max-frequency\n", __func__);
-	}
-
-	fpc1020->iface_clk = clk_get(dev, "iface_clk");
-	if (IS_ERR(fpc1020->iface_clk)) {
-		dev_err(dev, "%s: Failed to get iface_clk\n", __func__);
-		rc = -EINVAL;
-		goto exit;
-	}
-
-	fpc1020->core_clk = clk_get(dev, "core_clk");
-	if (IS_ERR(fpc1020->core_clk)) {
-		dev_err(dev, "%s: Failed to get core_clk\n", __func__);
-		rc = -EINVAL;
-		goto exit;
-	}
-#endif
-
 	fpc1020->wakeup_enabled = false;
-#ifdef LINUX_CONTROL_SPI_CLK
-	fpc1020->clocks_enabled = false;
-	fpc1020->clocks_suspended = false;
-#endif
 
 	mutex_init(&fpc1020->lock);
 
@@ -593,32 +495,6 @@ static int fpc1020_remove(struct platform_device *pdev)
 	return 0;
 }
 
-#ifdef LINUX_CONTROL_SPI_CLK
-static int fpc1020_suspend(struct device *dev)
-{
-	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
-
-	fpc1020->clocks_suspended = fpc1020->clocks_enabled;
-	set_clks(fpc1020, false);
-	return 0;
-}
-
-static int fpc1020_resume(struct device *dev)
-{
-	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
-
-	if (fpc1020->clocks_suspended)
-		set_clks(fpc1020, true);
-
-	return 0;
-}
-
-static const struct dev_pm_ops fpc1020_pm_ops = {
-	.suspend = fpc1020_suspend,
-	.resume = fpc1020_resume,
-};
-#endif
-
 static struct of_device_id fpc1020_of_match[] = {
 	{ .compatible = "fpc,fpc1020-mido", },
 	{}
@@ -630,9 +506,6 @@ static struct platform_driver fpc1020_driver = {
 		.name	= "fpc1020-mido",
 		.owner	= THIS_MODULE,
 		.of_match_table = fpc1020_of_match,
-#ifdef LINUX_CONTROL_SPI_CLK
-		.pm = &fpc1020_pm_ops,
-#endif
 	},
 	.probe		= fpc1020_probe,
 	.remove		= fpc1020_remove,
