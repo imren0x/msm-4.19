@@ -3573,7 +3573,7 @@ flash_prog_mode:
 	}
 
 	rmi4_data->software_wakeup_gesture =
-			bdata->software_wakeup_gesture ||
+			rmi4_data->hw_if->board_data->software_wakeup_gesture ||
 			(!rmi4_data->f11_wakeup_gesture &&
 			 !rmi4_data->f12_wakeup_gesture);
 
