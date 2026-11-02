@@ -53,17 +53,8 @@
 #define FPC_TTW_HOLD_TIME 1000
 #define NUM_PARAMS_REG_ENABLE_SET 2
 
-static const char * const pctl_names[] = {
-
-	"fpc1020_reset_reset",
-	"fpc1020_reset_active",
-	"fpc1020_irq_active",
-};
-
 struct fpc1020_data {
 	struct device *dev;
-	struct pinctrl *fingerprint_pinctrl;
-	struct pinctrl_state *pinctrl_state[ARRAY_SIZE(pctl_names)];
 
 	struct wakeup_source *ttw_wl;
 	int irq_gpio;
@@ -81,74 +72,28 @@ static int hw_reset(struct  fpc1020_data *fpc1020);
 
 static struct kernfs_node *soc_symlink = NULL;
 
-/**
- * Will try to select the set of pins (GPIOS) defined in a pin control node of
- * the device tree named @p name.
- *
- * The node can contain several eg. GPIOs that is controlled when selecting it.
- * The node may activate or deactivate the pins it contains, the action is
- * defined in the device tree node itself and not here. The states used
- * internally is fetched at probe time.
- *
- * @see pctl_names
- * @see fpc1020_probe
- */
-static int select_pin_ctl(struct fpc1020_data *fpc1020, const char *name)
-{
-	size_t i;
-	int rc;
-	struct device *dev = fpc1020->dev;
-	for (i = 0; i < ARRAY_SIZE(fpc1020->pinctrl_state); i++) {
-		const char *n = pctl_names[i];
-		if (!strncmp(n, name, strlen(n))) {
-			rc = pinctrl_select_state(fpc1020->fingerprint_pinctrl,
-					fpc1020->pinctrl_state[i]);
-			if (rc)
-				dev_err(dev, "cannot select '%s'\n", name);
-			else
-				dev_dbg(dev, "Selected '%s'\n", name);
-			goto exit;
-		}
-	}
-	rc = -EINVAL;
-	dev_err(dev, "%s:'%s' not found\n", __func__, name);
-exit:
-	return rc;
-}
-
-static ssize_t pinctl_set(struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
-	int rc = select_pin_ctl(fpc1020, buf);
-	return rc ? rc : count;
-}
-static DEVICE_ATTR(pinctl_set, S_IWUSR, NULL, pinctl_set);
-
 static int hw_reset(struct  fpc1020_data *fpc1020)
 {
 	int irq_gpio;
 	struct device *dev = fpc1020->dev;
 
-	int rc = select_pin_ctl(fpc1020, "fpc1020_reset_active");
-	if (rc)
-		goto exit;
+	if (!fpc1020->compatible_enabled ||
+	    !gpio_is_valid(fpc1020->rst_gpio) ||
+	    !gpio_is_valid(fpc1020->irq_gpio))
+		return -EINVAL;
+
+	gpio_set_value(fpc1020->rst_gpio, 1);
 	usleep_range(FPC1020_RESET_HIGH1_US, FPC1020_RESET_HIGH1_US + 100);
 
-	rc = select_pin_ctl(fpc1020, "fpc1020_reset_reset");
-	if (rc)
-		goto exit;
+	gpio_set_value(fpc1020->rst_gpio, 0);
 	usleep_range(FPC1020_RESET_LOW_US, FPC1020_RESET_LOW_US + 100);
 
-	rc = select_pin_ctl(fpc1020, "fpc1020_reset_active");
-	if (rc)
-		goto exit;
+	gpio_set_value(fpc1020->rst_gpio, 1);
 	usleep_range(FPC1020_RESET_HIGH1_US, FPC1020_RESET_HIGH1_US + 100);
 
 	irq_gpio = gpio_get_value(fpc1020->irq_gpio);
 	dev_info(dev, "IRQ after reset %d\n", irq_gpio);
-exit:
-	return rc;
+	return 0;
 }
 
 static ssize_t hw_reset_set(struct device *dev,
@@ -179,21 +124,23 @@ static DEVICE_ATTR(hw_reset, S_IWUSR, NULL, hw_reset_set);
  */
 static int device_prepare(struct fpc1020_data *fpc1020, bool enable)
 {
-	int rc;
+	int rc = 0;
+
+	if (!fpc1020->compatible_enabled ||
+	    !gpio_is_valid(fpc1020->rst_gpio))
+		return -EINVAL;
 
 	mutex_lock(&fpc1020->lock);
 	if (enable && !fpc1020->prepared) {
 		fpc1020->prepared = true;
-		select_pin_ctl(fpc1020, "fpc1020_reset_reset");
+		gpio_set_value(fpc1020->rst_gpio, 0);
 
 		usleep_range(PWR_ON_STEP_SLEEP, PWR_ON_STEP_RANGE2);
 
-		(void)select_pin_ctl(fpc1020, "fpc1020_reset_active");
+		gpio_set_value(fpc1020->rst_gpio, 1);
 		usleep_range(PWR_ON_STEP_SLEEP, PWR_ON_STEP_RANGE1);
 	} else if (!enable && fpc1020->prepared) {
-		rc = 0;
-
-		(void)select_pin_ctl(fpc1020, "fpc1020_reset_reset");
+		gpio_set_value(fpc1020->rst_gpio, 0);
 		usleep_range(PWR_ON_STEP_SLEEP, PWR_ON_STEP_RANGE2);
 
 		fpc1020->prepared = false;
@@ -276,7 +223,6 @@ static ssize_t compatible_all_set(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t count)
 {
 	int rc;
-	int i;
 	int irqf;
 	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 	dev_err(dev, "compatible all enter %d\n", fpc1020->compatible_enabled);
@@ -290,35 +236,10 @@ static ssize_t compatible_all_set(struct device *dev,
 			&fpc1020->rst_gpio);
 		if (rc)
 			goto exit;
-		fpc1020->fingerprint_pinctrl = devm_pinctrl_get(dev);
-		if (IS_ERR(fpc1020->fingerprint_pinctrl)) {
-			if (PTR_ERR(fpc1020->fingerprint_pinctrl) == -EPROBE_DEFER) {
-				dev_info(dev, "pinctrl not ready\n");
-				rc = -EPROBE_DEFER;
-				goto exit;
-			}
-			dev_err(dev, "Target does not use pinctrl\n");
-			fpc1020->fingerprint_pinctrl = NULL;
-			rc = -EINVAL;
-			goto exit;
-		}
-
-		for (i = 0; i < ARRAY_SIZE(fpc1020->pinctrl_state); i++) {
-			const char *n = pctl_names[i];
-			struct pinctrl_state *state =
-				pinctrl_lookup_state(fpc1020->fingerprint_pinctrl, n);
-			if (IS_ERR(state)) {
-				dev_err(dev, "cannot find '%s'\n", n);
-				rc = -EINVAL;
-				goto exit;
-			}
-			dev_info(dev, "found pin control %s\n", n);
-			fpc1020->pinctrl_state[i] = state;
-		}
-		rc = select_pin_ctl(fpc1020, "fpc1020_reset_reset");
+		rc = gpio_direction_output(fpc1020->rst_gpio, 0);
 		if (rc)
 			goto exit;
-		rc = select_pin_ctl(fpc1020, "fpc1020_irq_active");
+		rc = gpio_direction_input(fpc1020->irq_gpio);
 		if (rc)
 			goto exit;
 		irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;
@@ -344,6 +265,7 @@ static ssize_t compatible_all_set(struct device *dev,
 			(void)device_prepare(fpc1020, true);
 	}
 	} else if (!strncmp(buf, "disable", strlen("disable")) && fpc1020->compatible_enabled != 0) {
+		hw_reset(fpc1020);
 		if (gpio_is_valid(fpc1020->irq_gpio)) {
 			devm_gpio_free(dev, fpc1020->irq_gpio);
 			pr_info("remove irq_gpio success\n");
@@ -355,15 +277,15 @@ static ssize_t compatible_all_set(struct device *dev,
 		devm_free_irq(dev, gpio_to_irq(fpc1020->irq_gpio), fpc1020);
 		fpc1020->compatible_enabled = 0;
 	}
-	hw_reset(fpc1020);
+	if (fpc1020->compatible_enabled)
+		hw_reset(fpc1020);
 	return count;
 exit:
-	return -EINVAL;
+	return rc;
 }
 static DEVICE_ATTR(compatible_all, S_IWUSR, NULL, compatible_all_set);
 
 static struct attribute *attributes[] = {
-	&dev_attr_pinctl_set.attr,
 	&dev_attr_spi_prepare.attr,
 	&dev_attr_hw_reset.attr,
 	&dev_attr_wakeup_enable.attr,
@@ -434,6 +356,8 @@ static int fpc1020_probe(struct platform_device *pdev)
 	}
 
 	fpc1020->dev = dev;
+	fpc1020->irq_gpio = -EINVAL;
+	fpc1020->rst_gpio = -EINVAL;
 	dev_set_drvdata(dev, fpc1020);
 
 	if (!np) {
