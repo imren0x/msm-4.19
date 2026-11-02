@@ -40,7 +40,9 @@
 #include <linux/i2c.h>
 #include <linux/input.h>
 #include <linux/gpio.h>
+#include <linux/jiffies.h>
 #include <linux/platform_device.h>
+#include <linux/pm_wakeup.h>
 #include <linux/regulator/consumer.h>
 #ifdef CONFIG_FB
 #include <linux/fb.h>
@@ -134,11 +136,13 @@ bool synaptics_gesture_func_on = true;
 #if WAKEUP_GESTURE
 #define WAKEUP_OFF 4
 #define WAKEUP_ON 5
+#define SW_GESTURE_TAP_MAX_MS 250
+#define SW_GESTURE_DOUBLE_TAP_MAX_MS 400
 
 int synaptics_gesture_switch (struct input_dev *dev, unsigned int type, unsigned int code, int value)
 {
+	unsigned int input = rmi4_data->enable_wakeup_gesture;
 
-	unsigned int input ;
 	if (type == EV_SYN && code == SYN_CONFIG) {
 		if (value == WAKEUP_OFF) {
 			synaptics_gesture_func_on = false;
@@ -148,7 +152,8 @@ int synaptics_gesture_switch (struct input_dev *dev, unsigned int type, unsigned
 			input = 1;
 		}
 	}
-	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
+	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture ||
+	    rmi4_data->software_wakeup_gesture)
 		rmi4_data->enable_wakeup_gesture = input;
 
 	return 0;
@@ -934,7 +939,8 @@ static ssize_t synaptics_rmi4_wake_gesture_store (struct device *dev,
 	   else
 		input = 0;
 
-	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
+	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture ||
+	    rmi4_data->software_wakeup_gesture)
 		rmi4_data->enable_wakeup_gesture = input;
 
 	return count;
@@ -1087,10 +1093,99 @@ static void synaptics_rmi4_wakeup_gesture (struct synaptics_rmi4_data *rmi4_data
 		synaptics_rmi4_f12_wg (rmi4_data, enable);
 }
 
+static void synaptics_rmi4_sw_gesture_report(
+		struct synaptics_rmi4_data *rmi4_data,
+		unsigned char touch_count, int x, int y)
+{
+	unsigned long now = jiffies;
+	unsigned int max_x_distance;
+	unsigned int max_y_distance;
+
+	mutex_lock(&rmi4_data->rmi4_report_mutex);
+	if (!rmi4_data->software_wakeup_gesture || !rmi4_data->suspend ||
+	    !rmi4_data->enable_wakeup_gesture) {
+		rmi4_data->sw_gesture_touch_active = false;
+		rmi4_data->sw_gesture_touch_invalid = false;
+		rmi4_data->sw_gesture_first_tap = false;
+		goto out;
+	}
+
+	if (rmi4_data->sw_gesture_first_tap &&
+	    time_after(now, rmi4_data->sw_gesture_first_tap_time +
+		       msecs_to_jiffies(SW_GESTURE_DOUBLE_TAP_MAX_MS)))
+		rmi4_data->sw_gesture_first_tap = false;
+
+	if (touch_count > 1) {
+		rmi4_data->sw_gesture_touch_active = true;
+		rmi4_data->sw_gesture_touch_invalid = true;
+		rmi4_data->sw_gesture_first_tap = false;
+		goto out;
+	}
+
+	if (touch_count == 1) {
+		max_x_distance = max_t(unsigned int, rmi4_data->sensor_max_x / 8, 80);
+		max_y_distance = max_t(unsigned int, rmi4_data->sensor_max_y / 8, 80);
+		if (!rmi4_data->sw_gesture_touch_active) {
+			rmi4_data->sw_gesture_touch_active = true;
+			rmi4_data->sw_gesture_touch_invalid = false;
+			rmi4_data->sw_gesture_touch_start = now;
+			rmi4_data->sw_gesture_touch_x = x;
+			rmi4_data->sw_gesture_touch_y = y;
+		} else if (time_after(now, rmi4_data->sw_gesture_touch_start +
+				      msecs_to_jiffies(SW_GESTURE_TAP_MAX_MS)) ||
+			   abs(x - rmi4_data->sw_gesture_touch_x) > max_x_distance ||
+			   abs(y - rmi4_data->sw_gesture_touch_y) > max_y_distance) {
+			rmi4_data->sw_gesture_touch_invalid = true;
+			rmi4_data->sw_gesture_first_tap = false;
+		}
+		goto out;
+	}
+
+	if (!rmi4_data->sw_gesture_touch_active)
+		goto out;
+
+	rmi4_data->sw_gesture_touch_active = false;
+	if (rmi4_data->sw_gesture_touch_invalid) {
+		rmi4_data->sw_gesture_touch_invalid = false;
+		rmi4_data->sw_gesture_first_tap = false;
+		goto out;
+	}
+
+	if (time_after(now, rmi4_data->sw_gesture_touch_start +
+		       msecs_to_jiffies(SW_GESTURE_TAP_MAX_MS))) {
+		rmi4_data->sw_gesture_first_tap = false;
+		goto out;
+	}
+
+	if (rmi4_data->sw_gesture_first_tap) {
+		max_x_distance = max_t(unsigned int, rmi4_data->sensor_max_x / 8, 80);
+		max_y_distance = max_t(unsigned int, rmi4_data->sensor_max_y / 8, 80);
+		if (abs(rmi4_data->sw_gesture_touch_x -
+			rmi4_data->sw_gesture_first_x) <= max_x_distance &&
+		    abs(rmi4_data->sw_gesture_touch_y -
+			rmi4_data->sw_gesture_first_y) <= max_y_distance) {
+			pm_wakeup_event(&rmi4_data->pdev->dev, 500);
+			input_report_key(rmi4_data->input_dev, KEY_WAKEUP, 1);
+			input_sync(rmi4_data->input_dev);
+			input_report_key(rmi4_data->input_dev, KEY_WAKEUP, 0);
+			input_sync(rmi4_data->input_dev);
+			rmi4_data->sw_gesture_first_tap = false;
+			goto out;
+		}
+	}
+
+	rmi4_data->sw_gesture_first_tap = true;
+	rmi4_data->sw_gesture_first_tap_time = now;
+	rmi4_data->sw_gesture_first_x = rmi4_data->sw_gesture_touch_x;
+	rmi4_data->sw_gesture_first_y = rmi4_data->sw_gesture_touch_y;
+out:
+	mutex_unlock(&rmi4_data->rmi4_report_mutex);
+}
+
 static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		struct synaptics_rmi4_fn *fhandler)
 {
-	int retval;
+	int retval = 0;
 	unsigned char touch_count = 0; /* number of touch points */
 	unsigned char reg_index;
 	unsigned char finger;
@@ -1107,6 +1202,10 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 	int wx;
 	int wy;
 	int temp;
+	int sw_x = 0;
+	int sw_y = 0;
+	bool sw_gesture;
+	bool report_locked = false;
 	struct synaptics_rmi4_f11_data_1_5 *data = NULL;
 	struct synaptics_rmi4_f11_extra_data *extra_data;
 
@@ -1122,7 +1221,11 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 
 	extra_data = (struct synaptics_rmi4_f11_extra_data *)fhandler->extra;
 
-	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture) {
+	sw_gesture = rmi4_data->software_wakeup_gesture &&
+			rmi4_data->suspend && rmi4_data->enable_wakeup_gesture;
+
+	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture &&
+	    !sw_gesture) {
 		retval = synaptics_rmi4_reg_read (rmi4_data,
 				data_addr + extra_data->data38_offset,
 				&detected_gestures,
@@ -1161,6 +1264,7 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		goto exit;
 
 	mutex_lock (&(rmi4_data->rmi4_report_mutex));
+	report_locked = true;
 
 	for (finger = 0; finger < fingers_supported; finger++) {
 		reg_index = finger / 4;
@@ -1176,9 +1280,11 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		 * 11 = reserved
 		 */
 #ifdef TYPE_B_PROTOCOL
-		input_mt_slot (rmi4_data->input_dev, finger);
-		input_mt_report_slot_state (rmi4_data->input_dev,
-				MT_TOOL_FINGER, finger_status);
+		if (!sw_gesture) {
+			input_mt_slot (rmi4_data->input_dev, finger);
+			input_mt_report_slot_state (rmi4_data->input_dev,
+					MT_TOOL_FINGER, finger_status);
+		}
 #endif
 
 		if (finger_status) {
@@ -1213,23 +1319,30 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 			if (rmi4_data->hw_if->board_data->y_flip)
 				y = rmi4_data->sensor_max_y - y;
 
-			input_report_key (rmi4_data->input_dev,
+			if (touch_count == 0) {
+				sw_x = x;
+				sw_y = y;
+			}
+
+			if (!sw_gesture) {
+				input_report_key (rmi4_data->input_dev,
 					BTN_TOUCH, 1);
-			input_report_key (rmi4_data->input_dev,
+				input_report_key (rmi4_data->input_dev,
 					BTN_TOOL_FINGER, 1);
-			input_report_abs (rmi4_data->input_dev,
+				input_report_abs (rmi4_data->input_dev,
 					ABS_MT_POSITION_X, x);
-			input_report_abs (rmi4_data->input_dev,
+				input_report_abs (rmi4_data->input_dev,
 					ABS_MT_POSITION_Y, y);
 #ifdef REPORT_2D_W
-			input_report_abs (rmi4_data->input_dev,
+				input_report_abs (rmi4_data->input_dev,
 					ABS_MT_TOUCH_MAJOR, max (wx, wy));
-			input_report_abs (rmi4_data->input_dev,
+				input_report_abs (rmi4_data->input_dev,
 					ABS_MT_TOUCH_MINOR, min (wx, wy));
 #endif
 #ifndef TYPE_B_PROTOCOL
-			input_mt_sync (rmi4_data->input_dev);
+				input_mt_sync (rmi4_data->input_dev);
 #endif
+			}
 
 			dev_dbg (rmi4_data->pdev->dev.parent,
 					"%s: Finger %d: status = 0x%02x, x = %d, y = %d, wx = %d, wy = %d\n",
@@ -1241,7 +1354,7 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		}
 	}
 
-	if (touch_count == 0) {
+	if (!sw_gesture && touch_count == 0) {
 		input_report_key (rmi4_data->input_dev,
 				BTN_TOUCH, 0);
 		input_report_key (rmi4_data->input_dev,
@@ -1251,12 +1364,16 @@ static int synaptics_rmi4_f11_abs_report (struct synaptics_rmi4_data *rmi4_data,
 #endif
 	}
 
-	input_sync (rmi4_data->input_dev);
+	if (!sw_gesture)
+		input_sync (rmi4_data->input_dev);
 
 exit:
 	kfree(finger_status_reg);
 	kfree(data);
-	mutex_unlock (&(rmi4_data->rmi4_report_mutex));
+	if (report_locked)
+		mutex_unlock (&(rmi4_data->rmi4_report_mutex));
+	if (sw_gesture && retval >= 0)
+		synaptics_rmi4_sw_gesture_report(rmi4_data, touch_count, sw_x, sw_y);
 
 	return touch_count;
 }
@@ -1278,6 +1395,9 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 	int wx;
 	int wy;
 	int temp;
+	int sw_x = 0;
+	int sw_y = 0;
+	bool sw_gesture;
 #if defined (REPORT_2D_PRESSURE) || defined (F51_DISCRETE_FORCE)
 	int pressure;
 #endif
@@ -1304,7 +1424,11 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 	extra_data = (struct synaptics_rmi4_f12_extra_data *)fhandler->extra;
 	size_of_2d_data = sizeof (struct synaptics_rmi4_f12_finger_data);
 
-	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture) {
+	sw_gesture = rmi4_data->software_wakeup_gesture &&
+			rmi4_data->suspend && rmi4_data->enable_wakeup_gesture;
+
+	if (rmi4_data->suspend && rmi4_data->enable_wakeup_gesture &&
+	    !sw_gesture) {
 		retval = synaptics_rmi4_reg_read (rmi4_data,
 				data_addr + extra_data->data4_offset,
 				rmi4_data->gesture_detection,
@@ -1362,6 +1486,15 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 #endif
 
 	if (!fingers_to_process) {
+		if (sw_gesture) {
+			finger_presence = 0;
+			stylus_presence = 0;
+#ifdef F12_DATA_15_WORKAROUND
+			objects_already_present = 0;
+#endif
+			synaptics_rmi4_sw_gesture_report(rmi4_data, 0, 0, 0);
+			return 0;
+		}
 		synaptics_rmi4_free_fingers (rmi4_data);
 		finger_presence = 0;
 		stylus_presence = 0;
@@ -1422,6 +1555,15 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		switch (finger_status) {
 		case F12_FINGER_STATUS:
 		case F12_GLOVED_FINGER_STATUS:
+			if (sw_gesture) {
+				if (touch_count == 0) {
+					sw_x = x;
+					sw_y = y;
+				}
+				finger_presence = 1;
+				touch_count++;
+				break;
+			}
 			/* Stylus has priority over fingers */
 			if (stylus_presence)
 				break;
@@ -1508,6 +1650,8 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 			break;
 		case F12_STYLUS_STATUS:
 		case F12_ERASER_STATUS:
+			if (sw_gesture)
+				break;
 			if (!rmi4_data->stylus_enable)
 				break;
 			/* Stylus has priority over fingers */
@@ -1549,7 +1693,15 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		}
 	}
 
-	if (touch_count == 0) {
+	if (sw_gesture && touch_count == 0) {
+		finger_presence = 0;
+		stylus_presence = 0;
+#ifdef F12_DATA_15_WORKAROUND
+		objects_already_present = 0;
+#endif
+	}
+
+	if (!sw_gesture && touch_count == 0) {
 		finger_presence = 0;
 #ifdef F12_DATA_15_WORKAROUND
 		objects_already_present = 0;
@@ -1576,9 +1728,12 @@ static int synaptics_rmi4_f12_abs_report (struct synaptics_rmi4_data *rmi4_data,
 		}
 	}
 
-	input_sync (rmi4_data->input_dev);
+	if (!sw_gesture)
+		input_sync (rmi4_data->input_dev);
 
 	mutex_unlock (&(rmi4_data->rmi4_report_mutex));
+	if (sw_gesture)
+		synaptics_rmi4_sw_gesture_report(rmi4_data, touch_count, sw_x, sw_y);
 
 	return touch_count;
 }
@@ -3417,7 +3572,13 @@ flash_prog_mode:
 		}
 	}
 
-	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture)
+	rmi4_data->software_wakeup_gesture =
+			bdata->software_wakeup_gesture ||
+			(!rmi4_data->f11_wakeup_gesture &&
+			 !rmi4_data->f12_wakeup_gesture);
+
+	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture ||
+	    rmi4_data->software_wakeup_gesture)
 		rmi4_data->enable_wakeup_gesture = WAKEUP_GESTURE;
 	else
 		rmi4_data->enable_wakeup_gesture = false;
@@ -4668,6 +4829,12 @@ static int synaptics_rmi4_early_suspend (struct early_suspend *h)
 
 
 	if (rmi4_data->enable_wakeup_gesture) {
+		if (rmi4_data->software_wakeup_gesture) {
+			synaptics_rmi4_free_fingers(rmi4_data);
+			enable_irq_wake(rmi4_data->irq);
+			goto exit;
+		}
+
 		if (rmi4_data->no_sleep_setting) {
 			synaptics_rmi4_reg_read (rmi4_data,
 					rmi4_data->f01_ctrl_base_addr,
@@ -4784,6 +4951,12 @@ static int synaptics_rmi4_suspend (struct device *dev)
 
 	if (rmi4_data->enable_wakeup_gesture) {
 		printk ("enable_wakeup_gesture is on\n");
+		if (rmi4_data->software_wakeup_gesture) {
+			synaptics_rmi4_free_fingers(rmi4_data);
+			enable_irq_wake(rmi4_data->irq);
+			goto exit;
+		}
+
 		if (rmi4_data->no_sleep_setting) {
 			synaptics_rmi4_reg_read (rmi4_data,
 					rmi4_data->f01_ctrl_base_addr,

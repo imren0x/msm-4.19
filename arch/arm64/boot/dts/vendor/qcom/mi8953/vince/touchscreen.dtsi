@@ -15,6 +15,7 @@
 			pinctrl-names = "pmx_ts_active", "pmx_ts_suspend";
 			pinctrl-0 = <&ts_int_active &ts_reset_active>;
             pinctrl-1 = <&synaptic_int_suspend &synaptic_reset_suspend>;
+			synaptics,software-wake-gesture;
 			synaptics,cap-button-codes = <139 172 158>;
 			synaptics,irq-gpio = <&tlmm 65 0x2008>;
 			synaptics,rst-gpio = <&tlmm 64 0x2008>;

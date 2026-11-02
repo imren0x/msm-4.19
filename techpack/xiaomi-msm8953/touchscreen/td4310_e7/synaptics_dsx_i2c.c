@@ -181,6 +181,8 @@ static int parse_dt(struct device *dev, struct synaptics_dsx_board_data *bdata)
 	bdata->swap_axes = of_property_read_bool(np, "synaptics,swap-axes");
 	bdata->x_flip = of_property_read_bool(np, "synaptics,x-flip");
 	bdata->y_flip = of_property_read_bool(np, "synaptics,y-flip");
+	bdata->software_wakeup_gesture = of_property_read_bool(np,
+			"synaptics,software-wake-gesture");
 
 	prop = of_find_property(np, "synaptics,ub-i2c-addr", NULL);
 	if (prop && prop->length) {

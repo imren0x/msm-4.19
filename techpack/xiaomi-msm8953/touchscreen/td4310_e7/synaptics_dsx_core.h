@@ -437,6 +437,16 @@ struct synaptics_rmi4_data {
 	bool f11_wakeup_gesture;
 	bool f12_wakeup_gesture;
 	bool enable_wakeup_gesture;
+	bool software_wakeup_gesture;
+	bool sw_gesture_touch_active;
+	bool sw_gesture_touch_invalid;
+	bool sw_gesture_first_tap;
+	unsigned long sw_gesture_touch_start;
+	unsigned long sw_gesture_first_tap_time;
+	int sw_gesture_touch_x;
+	int sw_gesture_touch_y;
+	int sw_gesture_first_x;
+	int sw_gesture_first_y;
 	bool wedge_sensor;
 	bool report_pressure;
 	bool stylus_enable;
