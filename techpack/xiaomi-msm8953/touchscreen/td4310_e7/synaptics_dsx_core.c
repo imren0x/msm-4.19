@@ -1867,6 +1867,12 @@ static void synaptics_rmi4_report_touch (struct synaptics_rmi4_data *rmi4_data,
 			rmi4_data->fingers_on_2d = true;
 		else
 			rmi4_data->fingers_on_2d = false;
+		if (rmi4_data->software_wakeup_gesture &&
+		    (READ_ONCE(rmi4_data->display_suspended) ||
+		     READ_ONCE(rmi4_data->suspend)))
+			dev_info_ratelimited(rmi4_data->pdev->dev.parent,
+					     "DT2W F11 frame: points=%u\n",
+					     touch_count_2d);
 		break;
 	case SYNAPTICS_RMI4_F12:
 		touch_count_2d = synaptics_rmi4_f12_abs_report (rmi4_data,
@@ -1876,6 +1882,12 @@ static void synaptics_rmi4_report_touch (struct synaptics_rmi4_data *rmi4_data,
 			rmi4_data->fingers_on_2d = true;
 		else
 			rmi4_data->fingers_on_2d = false;
+		if (rmi4_data->software_wakeup_gesture &&
+		    (READ_ONCE(rmi4_data->display_suspended) ||
+		     READ_ONCE(rmi4_data->suspend)))
+			dev_info_ratelimited(rmi4_data->pdev->dev.parent,
+					     "DT2W F12 frame: points=%u\n",
+					     touch_count_2d);
 		break;
 	case SYNAPTICS_RMI4_F1A:
 		synaptics_rmi4_f1a_report (rmi4_data, fhandler);
@@ -1995,8 +2007,16 @@ static irqreturn_t synaptics_rmi4_irq (int irq, void *data)
 	struct synaptics_rmi4_data *rmi4_data = data;
 	const struct synaptics_dsx_board_data *bdata =
 			rmi4_data->hw_if->board_data;
+	int irq_level = gpio_get_value(bdata->irq_gpio);
 
-	if (gpio_get_value (bdata->irq_gpio) != bdata->irq_on_state)
+	if (rmi4_data->software_wakeup_gesture &&
+	    (READ_ONCE(rmi4_data->display_suspended) ||
+	     READ_ONCE(rmi4_data->suspend)))
+		dev_info_ratelimited(rmi4_data->pdev->dev.parent,
+				     "DT2W IRQ: irq=%d level=%d active=%d\n",
+				     irq, irq_level, bdata->irq_on_state);
+
+	if (irq_level != bdata->irq_on_state)
 		goto exit;
 
 	synaptics_rmi4_sensor_report (rmi4_data, true);
@@ -3710,7 +3730,8 @@ static void synaptics_rmi4_set_params (struct synaptics_rmi4_data *rmi4_data)
 		}
 	}
 
-	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture) {
+	if (rmi4_data->f11_wakeup_gesture || rmi4_data->f12_wakeup_gesture ||
+	    rmi4_data->software_wakeup_gesture) {
 		set_bit (KEY_WAKEUP, rmi4_data->input_dev->keybit);
 		input_set_capability (rmi4_data->input_dev, EV_KEY, KEY_WAKEUP);
 	}
