@@ -36,8 +36,8 @@
 	capacity-dmips-mhz = <1024>;
 };
 
-&clock_gcc_gfx {
-	compatible = "qcom,gcc-gfx-sdm450";
+&clock_gcc {
+	compatible = "qcom,gcc-msm8953-lite", "qcom,gcc-msm8953";
 	qcom,gfxfreq-corner =
 		<         0   0 >,
 		< 133330000   1 >,  /* Min SVS   */

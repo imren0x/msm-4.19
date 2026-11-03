@@ -26,12 +26,9 @@
 	};
 };
 
-&clock_gcc_mdss {
-	compatible = "qcom,gcc-mdss-sdm632";
-};
-
 &clock_gcc {
 	compatible = "qcom,gcc-sdm632";
+	reg-names = "cc_base";
 };
 
 &clock_debug {
@@ -39,6 +36,40 @@
 };
 
 &soc {
+	qcom,gcc-mdss@1800000 {
+		compatible = "qcom,gcc-mdss-sdm632";
+		reg = <0x1800000 0x80000>;
+		reg-names = "cc_base";
+		clocks = <&mdss_dsi0_pll clk_dsi0pll_pixel_clk_mux>,
+			 <&mdss_dsi0_pll clk_dsi0pll_byte_clk_mux>,
+			 <&mdss_dsi1_pll clk_dsi1pll_pixel_clk_mux>,
+			 <&mdss_dsi1_pll clk_dsi1pll_byte_clk_mux>;
+		clock-names = "pclk0_src", "byte0_src", "pclk1_src",
+			      "byte1_src";
+		#clock-cells = <1>;
+	};
+
+	qcom,gcc-gfx@1800000 {
+		compatible = "qcom,gcc-gfx-sdm632";
+		reg = <0x1800000 0x80000>;
+		reg-names = "cc_base";
+		clocks = <&clock_rpmcc RPM_SMD_XO_CLK_SRC>;
+		clock-names = "xo";
+		vdd_gfx-supply = <&gfx_vreg_corner>;
+		qcom,gfxfreq-corner =
+			 <         0   0 >,
+			 < 133330000   1 >,  /* Min SVS   */
+			 < 216000000   2 >,  /* Low SVS   */
+			 < 320000000   3 >,  /* SVS       */
+			 < 400000000   4 >,  /* SVS Plus  */
+			 < 510000000   5 >,  /* NOM       */
+			 < 560000000   6 >,  /* Nom Plus  */
+			 < 650000000   7 >,  /* Turbo     */
+			 < 700000000   7 >,  /* Turbo     */
+			 < 725000000   7 >;  /* Turbo     */
+		#clock-cells = <1>;
+	};
+
 	devfreq_spdm_cpu {
 		status = "disabled";
 	};
@@ -46,21 +77,6 @@
 	devfreq_spdm_gov {
 		status = "disabled";
 	};
-};
-
-&clock_gcc_gfx {
-	compatible = "qcom,gcc-gfx-sdm632";
-	qcom,gfxfreq-corner =
-		 <         0   0 >,
-		 < 133330000   1 >,  /* Min SVS   */
-		 < 216000000   2 >,  /* Low SVS   */
-		 < 320000000   3 >,  /* SVS       */
-		 < 400000000   4 >,  /* SVS Plus  */
-		 < 510000000   5 >,  /* NOM       */
-		 < 560000000   6 >,  /* Nom Plus  */
-		 < 650000000   7 >,  /* Turbo     */
-		 < 700000000   7 >,  /* Turbo     */
-		 < 725000000   7 >;  /* Turbo     */
 };
 
 &thermal_zones {
@@ -967,19 +983,6 @@
 
 	/delete-node/ devfreq-cpufreq;
 	devfreq-cpufreq {
-		mincpubw-cpufreq {
-			target-dev = <&mincpubw>;
-			cpu-to-dev-map-0 =
-				<  614400 1611>,
-				< 1363200 3221>,
-				< 1804800 5859>;
-			cpu-to-dev-map-4 =
-				< 1094400 1611>,
-				< 1401600 3221>,
-				< 1804800 5859>,
-				< 2016000 7104>;
-		};
-
 		cci-cpufreq {
 			target-dev = <&cci_cache>;
 			cpu-to-dev-map-0 =

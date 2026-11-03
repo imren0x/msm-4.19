@@ -32,11 +32,6 @@
 					 <&clock_gcc clk_qdss_a_clk>;
 		clock-names = "apb_pclk";
 
-		port {
-			etm4_out_funnel_apss0: endpoint {
-				remote-endpoint = <&funnel_apss0_in_etm4>;
-			};
-		};
 	};
 
 	etm5: etm@61b7000 {
@@ -51,11 +46,6 @@
 					 <&clock_gcc clk_qdss_a_clk>;
 		clock-names = "apb_pclk";
 
-		port {
-			etm5_out_funnel_apss0: endpoint {
-				remote-endpoint = <&funnel_apss0_in_etm5>;
-			};
-		};
 	};
 
 	etm6: etm@61bb000 {
@@ -70,11 +60,6 @@
 					 <&clock_gcc clk_qdss_a_clk>;
 		clock-names = "apb_pclk";
 
-		port {
-			etm6_out_funnel_apss0: endpoint {
-				remote-endpoint = <&funnel_apss0_in_etm6>;
-			};
-		};
 	};
 
 	etm7: etm@61bf000 {
@@ -89,11 +74,6 @@
 					 <&clock_gcc clk_qdss_a_clk>;
 		clock-names = "apb_pclk";
 
-		port {
-			etm7_out_funnel_apss0: endpoint {
-				remote-endpoint = <&funnel_apss0_in_etm7>;
-			};
-		};
 	};
 
 	cti_cpu4: cti@61b1000{
