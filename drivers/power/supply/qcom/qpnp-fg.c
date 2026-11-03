@@ -41,6 +41,9 @@
 #include <xiaomi-msm8953/mach.h>
 #endif
 
+/* Rated capacity of the 4100mAh BN43 battery in mido */
+#define MIDO_BATT_DESIGN_CAPACITY_UAH	4100000
+
 /* Register offsets */
 
 /* Interrupt offsets */
@@ -4630,6 +4633,16 @@ static int fg_power_get_property(struct power_supply *psy,
 			val->intval = 1;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		/*
+		 * nom_cap_uah is the profile's nominal capacity from FG SRAM,
+		 * not the rated capacity of the mido battery
+		 */
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
+		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+			val->intval = MIDO_BATT_DESIGN_CAPACITY_UAH;
+			break;
+		}
+#endif
 		val->intval = chip->nom_cap_uah;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:

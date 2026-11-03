@@ -1076,6 +1076,25 @@ static int get_prop_batt_resistance_id(struct smbchg_chip *chip)
 }
 
 #define DEFAULT_BATT_FULL_CHG_CAPACITY	0
+/*
+ * Listing CHARGE_FULL_DESIGN without a getter made reads of
+ * battery/charge_full_design fail, so health HAL reported a design
+ * capacity of 0. Forward the FG value like CHARGE_FULL.
+ */
+static int get_prop_batt_full_charge_design(struct smbchg_chip *chip)
+{
+	int design, rc;
+
+	rc = get_property_from_fg(chip, POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+			&design);
+	if (rc) {
+		pr_smb(PR_STATUS, "Couldn't get charge_full_design rc = %d\n",
+				rc);
+		design = DEFAULT_BATT_FULL_CHG_CAPACITY;
+	}
+	return design;
+}
+
 static int get_prop_batt_full_charge(struct smbchg_chip *chip)
 {
 	int bfc, rc;
@@ -5759,6 +5778,7 @@ static enum power_supply_property smbchg_battery_properties[] = {
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_RESISTANCE_ID,
 	POWER_SUPPLY_PROP_CHARGE_FULL,
+	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
 	POWER_SUPPLY_PROP_SAFETY_TIMER_ENABLE,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_SETTLED,
@@ -5966,6 +5986,9 @@ static int smbchg_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		val->intval = get_prop_batt_full_charge(chip);
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		val->intval = get_prop_batt_full_charge_design(chip);
 		break;
 	case POWER_SUPPLY_PROP_TEMP:
 		val->intval = get_prop_batt_temp(chip);
