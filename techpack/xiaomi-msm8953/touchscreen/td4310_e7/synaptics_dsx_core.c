@@ -2009,12 +2009,12 @@ static irqreturn_t synaptics_rmi4_irq (int irq, void *data)
 			rmi4_data->hw_if->board_data;
 	int irq_level = gpio_get_value(bdata->irq_gpio);
 
-	if (rmi4_data->software_wakeup_gesture &&
-	    (READ_ONCE(rmi4_data->display_suspended) ||
-	     READ_ONCE(rmi4_data->suspend)))
+	if (rmi4_data->software_wakeup_gesture)
 		dev_info_ratelimited(rmi4_data->pdev->dev.parent,
-				     "DT2W IRQ: irq=%d level=%d active=%d\n",
-				     irq, irq_level, bdata->irq_on_state);
+				     "DT2W IRQ: irq=%d level=%d active=%d display=%d suspend=%d\n",
+				     irq, irq_level, bdata->irq_on_state,
+				     READ_ONCE(rmi4_data->display_suspended),
+				     READ_ONCE(rmi4_data->suspend));
 
 	if (irq_level != bdata->irq_on_state)
 		goto exit;
