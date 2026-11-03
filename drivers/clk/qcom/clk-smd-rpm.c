@@ -1124,6 +1124,57 @@ static DEFINE_CLK_VOTER(bimc_wcnss_a_clk, bimc_a_clk, LONG_MAX);
 /* Branch Voter clocks */
 static DEFINE_CLK_BRANCH_VOTER(bi_tcxo_lpm_clk, bi_tcxo);
 
+/* MSM8953 uses the legacy PNOC/SNOC/BIMC RPM clock set. */
+static struct clk_hw *msm8953_clks[] = {
+	[RPM_SMD_XO_CLK_SRC] = &sdm429w_bi_tcxo.hw,
+	[RPM_SMD_XO_A_CLK_SRC] = &sdm429w_bi_tcxo_ao.hw,
+	[RPM_SMD_PCNOC_CLK] = &sdm429w_pnoc_clk.hw,
+	[RPM_SMD_PCNOC_A_CLK] = &sdm429w_pnoc_a_clk.hw,
+	[RPM_SMD_SNOC_CLK] = &sdm429w_snoc_clk.hw,
+	[RPM_SMD_SNOC_A_CLK] = &sdm429w_snoc_a_clk.hw,
+	[RPM_SMD_BIMC_CLK] = &sdm429w_bimc_clk.hw,
+	[RPM_SMD_BIMC_A_CLK] = &sdm429w_bimc_a_clk.hw,
+	[RPM_SMD_QDSS_CLK] = &sdm429w_qdss_clk.hw,
+	[RPM_SMD_QDSS_A_CLK] = &sdm429w_qdss_a_clk.hw,
+	[RPM_SMD_IPA_CLK] = &bengal_ipa_clk.hw,
+	[RPM_SMD_IPA_A_CLK] = &bengal_ipa_a_clk.hw,
+	[RPM_SMD_BB_CLK1] = &sdm429w_bb_clk1.hw,
+	[RPM_SMD_BB_CLK1_A] = &sdm429w_bb_clk1_a.hw,
+	[RPM_SMD_BB_CLK2] = &sdm429w_bb_clk2.hw,
+	[RPM_SMD_BB_CLK2_A] = &sdm429w_bb_clk2_a.hw,
+	[RPM_SMD_RF_CLK2] = &sdm429w_rf_clk2.hw,
+	[RPM_SMD_RF_CLK2_A] = &sdm429w_rf_clk2_a.hw,
+	[RPM_SMD_BB_CLK1_PIN] = &sdm429w_bb_clk1_pin.hw,
+	[RPM_SMD_BB_CLK1_A_PIN] = &sdm429w_bb_clk1_a_pin.hw,
+	[RPM_SMD_BB_CLK2_PIN] = &sdm429w_bb_clk2_pin.hw,
+	[RPM_SMD_BB_CLK2_A_PIN] = &sdm429w_bb_clk2_a_pin.hw,
+	[RPM_SMD_DIV_CLK2] = &sdm429w_div_clk2.hw,
+	[RPM_SMD_DIV_A_CLK2] = &sdm429w_div_clk2_a.hw,
+	[RPM_SMD_SYSMMNOC_CLK] = &sdm429w_sysmmnoc_clk.hw,
+	[RPM_SMD_SYSMMNOC_A_CLK] = &sdm429w_sysmmnoc_a_clk.hw,
+	[PNOC_MSMBUS_CLK] = &pnoc_msmbus_clk.hw,
+	[PNOC_MSMBUS_A_CLK] = &pnoc_msmbus_a_clk.hw,
+	[SNOC_MSMBUS_CLK] = &snoc_msmbus_clk.hw,
+	[SNOC_MSMBUS_A_CLK] = &snoc_msmbus_a_clk.hw,
+	[BIMC_MSMBUS_CLK] = &bimc_msmbus_clk.hw,
+	[BIMC_MSMBUS_A_CLK] = &bimc_msmbus_a_clk.hw,
+	[SYSMMNOC_MSMBUS_CLK] = &sysmmnoc_msmbus_clk.hw,
+	[SYSMMNOC_MSMBUS_A_CLK] = &sysmmnoc_msmbus_a_clk.hw,
+	[CXO_DWC3_CLK] = &cxo_dwc3_clk.hw,
+	[CXO_SMD_OTG_CLK] = &bi_tcxo_otg_clk.hw,
+	[CXO_SMD_LPM_CLK] = &bi_tcxo_lpm_clk.hw,
+	[CXO_SMD_PIL_PRONTO_CLK] = &bi_tcxo_pil_pronto_clk.hw,
+	[CXO_SMD_PIL_MSS_CLK] = &bi_tcxo_pil_mss_clk.hw,
+	[CXO_SMD_WLAN_CLK] = &bi_tcxo_wlan_clk.hw,
+	[CXO_SMD_PIL_LPASS_CLK] = &bi_tcxo_pil_lpass_clk.hw,
+};
+
+static const struct rpm_smd_clk_desc rpm_clk_msm8953 = {
+	.clks = msm8953_clks,
+	.num_rpm_clks = RPM_SMD_SYSMMNOC_A_CLK,
+	.num_clks = ARRAY_SIZE(msm8953_clks),
+};
+
 static struct clk_hw *qm215_clks[] = {
 	[RPM_SMD_XO_CLK_SRC] = &sdm429w_bi_tcxo.hw,
 	[RPM_SMD_XO_A_CLK_SRC] = &sdm429w_bi_tcxo_ao.hw,
@@ -1186,6 +1237,7 @@ static const struct of_device_id rpm_smd_clk_match_table[] = {
 	{ .compatible = "qcom,rpmcc-msm8916", .data = &rpm_clk_msm8916 },
 	{ .compatible = "qcom,rpmcc-msm8974", .data = &rpm_clk_msm8974 },
 	{ .compatible = "qcom,rpmcc-msm8996", .data = &rpm_clk_msm8996 },
+	{ .compatible = "qcom,rpmcc-msm8953", .data = &rpm_clk_msm8953 },
 	{ .compatible = "qcom,rpmcc-bengal", .data = &rpm_clk_bengal},
 	{ .compatible = "qcom,rpmcc-scuba", .data = &rpm_clk_scuba},
 	{ .compatible = "qcom,rpmcc-sdm660",  .data = &rpm_clk_sdm660  },

@@ -140,6 +140,14 @@ config MSM_GCC_8916
 	  Say Y if you want to use devices such as UART, SPI i2c, USB,
 	  SD/eMMC, display, graphics, camera etc.
 
+config MSM_GCC_8953
+	tristate "MSM8953 Global Clock Controller"
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the global clock controller on MSM8953 devices,
+	  including camera, display, graphics, and video clocks.
+
 config MSM_GCC_8960
 	tristate "APQ8064/MSM8960 Global Clock Controller"
 	depends on COMMON_CLK_QCOM
@@ -594,11 +602,11 @@ config SDM_GCC_429W
 	  I2C, USB, UFS, SDCC, Display, Camera, Video etc.
 
 config SDM_DEBUGCC_429W
-	tristate "SDM429W Debug Clock Controller"
-	depends on SDM_GCC_429W
+	tristate "MSM8953/SDM429W Debug Clock Controller"
+	depends on SDM_GCC_429W || MSM_GCC_8953
 	help
 	  Support for the debug clock controller on Qualcomm Technologies, Inc
-	  SDM429W/QM215 devices.
+	  MSM8953, SDM429W, and QM215 devices.
 	  Say Y if you want to support the clock measurement functionality.
 
 config CLOCK_CPU_SDM

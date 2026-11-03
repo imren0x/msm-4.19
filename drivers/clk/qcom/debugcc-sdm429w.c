@@ -9,9 +9,12 @@
 #include <linux/clk-provider.h>
 #include <linux/err.h>
 #include <linux/kernel.h>
+#include <linux/io.h>
 #include <linux/mfd/syscon.h>
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/of_address.h>
+#include <linux/of_clk.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
@@ -187,6 +190,7 @@ static const char *const gcc_debug_mux_parent_names[] = {
 	"bimc_clk",
 	"gcc_smmu_cfg_clk",
 	"apss_cc_debug_mux",
+	"wcnss_m_clk",
 };
 
 static int gcc_debug_mux_sels[] = {
@@ -318,6 +322,7 @@ static int gcc_debug_mux_sels[] = {
 	0x15A,		/* bimc_clk */
 	0x5B,		/* gcc_smmu_cfg_clk */
 	0x16A,		/* apss_cc_debug_mux */
+	0x0EC,		/* wcnss_m_clk */
 };
 
 static struct clk_debug_mux gcc_debug_mux = {
@@ -349,6 +354,13 @@ static struct clk_dummy pwrcl_clk = {
 	},
 };
 
+static struct clk_dummy wcnss_m_clk = {
+	.hw.init = &(struct clk_init_data){
+		.name = "wcnss_m_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
 struct clk_hw *debugcc_qm215_hws[] = {
 	&pwrcl_clk.hw,
 };
@@ -358,7 +370,51 @@ static struct mux_regmap_names mux_list[] = {
 	{ .mux = &apss_cc_debug_mux, .regmap_name = "qcom,cpu" },
 };
 
+static const struct regmap_config msm8953_debug_regmap_config = {
+	.reg_bits = 32,
+	.val_bits = 32,
+	.reg_stride = 4,
+	.max_register = 0x7fffc,
+};
+
+static struct clk_hw *msm8953_debugcc_clks[] = {
+	&gcc_debug_mux.hw,
+	&wcnss_m_clk.hw,
+};
+
+static struct clk_hw *
+msm8953_debugcc_clk_hw_get(struct of_phandle_args *clkspec, void *data)
+{
+	if (clkspec->args_count != 1 ||
+	    clkspec->args[0] >= ARRAY_SIZE(msm8953_debugcc_clks))
+		return ERR_PTR(-EINVAL);
+
+	return msm8953_debugcc_clks[clkspec->args[0]];
+}
+
+static int msm8953_debugcc_map_base(struct platform_device *pdev,
+				    struct clk_debug_mux *mux)
+{
+	struct resource res;
+	void __iomem *base;
+	int ret;
+
+	ret = of_address_to_resource(pdev->dev.of_node, 0, &res);
+	if (ret)
+		return ret;
+
+	base = devm_ioremap(&pdev->dev, res.start, resource_size(&res));
+	if (!base)
+		return -ENOMEM;
+
+	mux->regmap = devm_regmap_init_mmio(&pdev->dev, base,
+					   &msm8953_debug_regmap_config);
+
+	return PTR_ERR_OR_ZERO(mux->regmap);
+}
+
 static const struct of_device_id clk_debug_match_table[] = {
+	{ .compatible = "qcom,msm8953-debugcc" },
 	{ .compatible = "qcom,sdm429w-debugcc" },
 	{ .compatible = "qcom,qm215-debugcc" },
 	{ .compatible = "qcom,sdm429-debugcc" },
@@ -368,6 +424,8 @@ static const struct of_device_id clk_debug_match_table[] = {
 static int clk_debug_sdm429w_probe(struct platform_device *pdev)
 {
 	struct clk *clk;
+	bool msm8953 = of_device_is_compatible(pdev->dev.of_node,
+					       "qcom,msm8953-debugcc");
 	int ret, i;
 
 	BUILD_BUG_ON(ARRAY_SIZE(gcc_debug_mux_parent_names) !=
@@ -383,8 +441,11 @@ static int clk_debug_sdm429w_probe(struct platform_device *pdev)
 	debug_mux_priv.cxo = clk;
 
 	for (i = 0; i < ARRAY_SIZE(mux_list); i++) {
-		ret = map_debug_bases(pdev, mux_list[i].regmap_name,
-				      mux_list[i].mux);
+		if (msm8953 && mux_list[i].mux == &gcc_debug_mux)
+			ret = msm8953_debugcc_map_base(pdev, mux_list[i].mux);
+		else
+			ret = map_debug_bases(pdev, mux_list[i].regmap_name,
+					      mux_list[i].mux);
 		if (ret == -EBADR)
 			continue;
 		else if (ret)
@@ -408,10 +469,24 @@ static int clk_debug_sdm429w_probe(struct platform_device *pdev)
 		}
 	}
 
+	if (msm8953) {
+		clk = devm_clk_register(&pdev->dev, &wcnss_m_clk.hw);
+		if (IS_ERR(clk))
+			return PTR_ERR(clk);
+	}
+
 	ret = clk_debug_measure_register(&gcc_debug_mux.hw);
 	if (ret) {
 		dev_err(&pdev->dev, "Could not register Measure clocks\n");
 		return ret;
+	}
+
+	if (msm8953) {
+		ret = devm_of_clk_add_hw_provider(&pdev->dev,
+						  msm8953_debugcc_clk_hw_get,
+						  NULL);
+		if (ret)
+			return ret;
 	}
 
 	dev_info(&pdev->dev, "Registered debug measure clocks\n");

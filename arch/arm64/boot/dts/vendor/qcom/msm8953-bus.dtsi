@@ -33,8 +33,8 @@
 			qcom,bus-type = <2>;
 			qcom,util-fact = <153>;
 			clock-names = "bus_clk", "bus_a_clk";
-			clocks = <&clock_gcc  0xd212feea>,
-				<&clock_gcc  0xd212feea>;
+			clocks = <&clock_rpmcc BIMC_MSMBUS_CLK>,
+				<&clock_rpmcc BIMC_MSMBUS_A_CLK>;
 		};
 
 		fab_pcnoc: fab-pcnoc {
@@ -46,13 +46,13 @@
 			qcom,qos-off = <0x1000>;
 			qcom,bus-type = <1>;
 			clock-names = "bus_clk", "bus_a_clk";
-			clocks = <&clock_gcc  0x2b53b688>,
-				<&clock_gcc  0x9753a54f>;
+			clocks = <&clock_rpmcc PNOC_MSMBUS_CLK>,
+				<&clock_rpmcc PNOC_MSMBUS_A_CLK>;
 
 			qcom,node-qos-clks {
 				clock-names = "pcnoc-usb3-axi-no-rate";
 				clocks =
-					<&clock_gcc 0xf7f4b314>;
+					<&clock_gcc GCC_PCNOC_USB3_AXI_CLK>;
 			};
 		};
 
@@ -65,8 +65,8 @@
 			qcom,qos-off = <0x1000>;
 			qcom,bus-type = <1>;
 			clock-names = "bus_clk", "bus_a_clk";
-			clocks = <&clock_gcc  0xe6900bb6>,
-				<&clock_gcc  0x5d4683bd>;
+			clocks = <&clock_rpmcc SNOC_MSMBUS_CLK>,
+				<&clock_rpmcc SNOC_MSMBUS_A_CLK>;
 		};
 
 		fab_snoc_mm: fab-snoc-mm {
@@ -79,8 +79,8 @@
 			qcom,bus-type = <1>;
 			qcom,util-fact = <153>;
 			clock-names = "bus_clk", "bus_a_clk";
-			clocks = <&clock_gcc  0xd61e5721>,
-				<&clock_gcc  0x50600f1b>;
+			clocks = <&clock_rpmcc SYSMMNOC_MSMBUS_CLK>,
+				<&clock_rpmcc SYSMMNOC_MSMBUS_A_CLK>;
 		};
 
 		/*Masters*/
