@@ -8192,6 +8192,16 @@ static int smbchg_probe(struct platform_device *pdev)
 		goto votables_cleanup;
 	}
 
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
+	/*
+	 * mido ships with HVDCP disabled (the 4.9 kernel does the same). With
+	 * it enabled, PMI8950 forces QC chargers to 9V and the input drops
+	 * out and comes back every few seconds. Charge them as 5V DCPs.
+	 */
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
+		chip->hvdcp_not_supported = true;
+#endif
+
 	rc = smb_parse_dt(chip);
 	if (rc < 0) {
 		dev_err(&pdev->dev, "Unable to parse DT nodes: %d\n", rc);
