@@ -26,6 +26,8 @@
 #endif
 #include <dt-bindings/clock/qcom,gcc-msm8953.h>
 #include <dt-bindings/clock/qcom,debugcc-msm8953.h>
+#include <dt-bindings/clock/qcom,cpu-msm8953.h>
+#include <dt-bindings/clock/mdss-14nm-pll-clk.h>
 #include <dt-bindings/clock/qcom,rpmcc.h>
 #include <dt-bindings/msm/msm-bus-ids.h>
 
@@ -953,10 +955,10 @@
 		compatible = "qcom,gcc-msm8953";
 		reg = <0x1800000 0x80000>;
 		clocks = <&xo_board>,
-			<&mdss_dsi0_pll clk_dsi0pll_pixel_clk_mux>,
-			<&mdss_dsi1_pll clk_dsi1pll_pixel_clk_mux>,
-			<&mdss_dsi0_pll clk_dsi0pll_byte_clk_mux>,
-			<&mdss_dsi1_pll clk_dsi1pll_byte_clk_mux>;
+			<&mdss_dsi0_pll PIX0_MUX_CLK>,
+			<&mdss_dsi1_pll PIX1_MUX_CLK>,
+			<&mdss_dsi0_pll BYTE0_MUX_CLK>,
+			<&mdss_dsi1_pll BYTE1_MUX_CLK>;
 		clock-names = "xo", "dsi0pll", "dsi1pll",
 			"dsi0pllbyte", "dsi1pllbyte";
 		vdd_dig-supply = <&pm8953_s2_level>;
@@ -1080,15 +1082,15 @@
 		clock-names = "l2_clk", "cpu0_clk", "cpu1_clk", "cpu2_clk",
 				"cpu3_clk", "cpu4_clk", "cpu5_clk",
 				"cpu6_clk", "cpu7_clk";
-		clocks = <&clock_cpu clk_cci_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>;
+		clocks = <&clock_cpu CPU_MSM8953_CCI_CLK>,
+			 <&clock_cpu CPU_MSM8953_PWR_CLK>,
+			 <&clock_cpu CPU_MSM8953_PWR_CLK>,
+			 <&clock_cpu CPU_MSM8953_PWR_CLK>,
+			 <&clock_cpu CPU_MSM8953_PWR_CLK>,
+			 <&clock_cpu CPU_MSM8953_PERF_CLK>,
+			 <&clock_cpu CPU_MSM8953_PERF_CLK>,
+			 <&clock_cpu CPU_MSM8953_PERF_CLK>,
+			 <&clock_cpu CPU_MSM8953_PERF_CLK>;
 
 		qcom,cpufreq-table =
 			 <  652800 >,

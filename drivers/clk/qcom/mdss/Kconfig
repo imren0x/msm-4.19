@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 config MDSS_PLL
 	bool "MDSS pll programming"
-	depends on COMMON_CLK_QCOM
+	depends on COMMON_CLK_QCOM && (DRM_MSM || FB_MSM_MDSS)
 	help
 	It provides support for DSI, eDP and HDMI interface pll programming on MDSS
 	hardware. It also handles the pll specific resources and turn them on/off when

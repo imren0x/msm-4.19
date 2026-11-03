@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
+#ifndef _DT_BINDINGS_CLK_QCOM_CPU_MSM8953_H
+#define _DT_BINDINGS_CLK_QCOM_CPU_MSM8953_H
+
+#define CPU_MSM8953_CCI_CLK	0
+#define CPU_MSM8953_PWR_CLK	1
+#define CPU_MSM8953_PERF_CLK	2
+#define CPU_MSM8953_NUM_CLKS	3
+
+#endif

@@ -17,6 +17,16 @@
 #include <linux/sde_io_util.h>
 #else
 #include <linux/mdss_io_util.h>
+#define dss_vreg mdss_vreg
+#define dss_clk mdss_clk
+#define dss_clk_type mdss_clk_type
+#define dss_module_power mdss_module_power
+#define msm_dss_config_vreg msm_mdss_config_vreg
+#define msm_dss_enable_vreg msm_mdss_enable_vreg
+#define msm_dss_get_clk msm_mdss_get_clk
+#define msm_dss_put_clk msm_mdss_put_clk
+#define msm_dss_clk_set_rate msm_mdss_clk_set_rate
+#define msm_dss_enable_clk msm_mdss_enable_clk
 #endif
 
 #define MDSS_PLL_REG_W(base, offset, data)	\
@@ -51,6 +61,7 @@ enum {
 	MDSS_PLL_TARGET_8996,
 	MDSS_PLL_TARGET_SDM660,
 	MDSS_PLL_TARGET_SDM630,
+	MDSS_PLL_TARGET_8953,
 };
 
 #define DFPS_MAX_NUM_OF_FRAME_RATES 16
@@ -222,6 +233,7 @@ static inline bool is_gdsc_disabled(struct mdss_pll_resources *pll_res)
 	}
 	if ((pll_res->target_id == MDSS_PLL_TARGET_SDM660) ||
 	    (pll_res->target_id == MDSS_PLL_TARGET_SDM630) ||
+	    (pll_res->target_id == MDSS_PLL_TARGET_8953) ||
 			(pll_res->pll_interface_type == MDSS_DSI_PLL_28LPM) ||
 			(pll_res->pll_interface_type == MDSS_DSI_PLL_12NM))
 		ret = ((readl_relaxed(pll_res->gdsc_base + 0x4) & BIT(31)) &&

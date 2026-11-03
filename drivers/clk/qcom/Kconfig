@@ -617,6 +617,13 @@ config CLOCK_CPU_SDM
 	 Say Y if you want to support CPU clock scaling using
 	 CPUfreq drivers for dynamic power management.
 
+config CLOCK_CPU_MSM8953
+	bool "MSM8953 CPU and CCI Clock Controller"
+	depends on COMMON_CLK_QCOM && PM_OPP
+	help
+	  Support for the CPU and CCI clocks on MSM8953 and SDM450.
+	  Say Y to enable CPU frequency scaling on these platforms.
+
 config SM_GCC_KHAJE
 	tristate "KHAJE Global Clock Controller"
 	depends on COMMON_CLK_QCOM

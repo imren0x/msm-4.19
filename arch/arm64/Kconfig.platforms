@@ -275,12 +275,13 @@ config ARCH_MSM8953
 	select CPU_FREQ_QCOM
 	select COMMON_CLK
 	select COMMON_CLK_QCOM
-	select COMMON_CLK_MSM
 	select RPMSG
 	select QCOM_SMD_RPM
 	select MSM_GCC_8953
 	select QCOM_CLK_SMD_RPM
 	select SDM_DEBUGCC_429W
+	select CLOCK_CPU_MSM8953
+	select MDSS_PLL if DRM_MSM || FB_MSM_MDSS
 	select ARCH_MSM8953_SOC_SETTINGS
 	help
 	  This enables support for the MSM8953 chipset. If you do not
@@ -290,7 +291,15 @@ config ARCH_SDM450
 	bool "Enable Support for Qualcomm Technologies Inc. SDM450"
 	depends on ARCH_QCOM
 	select CPU_FREQ_QCOM
-	select COMMON_CLK_MSM
+	select COMMON_CLK
+	select COMMON_CLK_QCOM
+	select RPMSG
+	select QCOM_SMD_RPM
+	select MSM_GCC_8953
+	select QCOM_CLK_SMD_RPM
+	select SDM_DEBUGCC_429W
+	select CLOCK_CPU_MSM8953
+	select MDSS_PLL if DRM_MSM || FB_MSM_MDSS
 	select ARCH_MSM8953_SOC_SETTINGS
 	help
 	  This enables support for the sdm450 chipset. If you do not
