@@ -1568,6 +1568,7 @@ int32_t msm_sensor_init_default_params(struct msm_sensor_ctrl_t *s_ctrl)
 			s_ctrl->sensordata->sensor_info->sensor_mount_angle /
 			90) << 8);
 	s_ctrl->msm_sd.sd.entity.flags = mount_pos | MEDIA_ENT_FL_DEFAULT;
+	
 
 	return 0;
 }

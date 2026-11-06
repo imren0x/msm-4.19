@@ -119,4 +119,19 @@ struct ion_prefetch_data {
 #define ION_IOC_DRAIN			_IOWR(ION_IOC_MSM_MAGIC, 4, \
 						struct ion_prefetch_data)
 
+struct ion_flush_data {
+	__s32 handle;
+	__s32 fd;
+	__u64 vaddr;
+	__u32 offset;
+	__u32 length;
+};
+
+#define ION_IOC_CLEAN_CACHES		_IOWR(ION_IOC_MSM_MAGIC, 0, \
+						struct ion_flush_data)
+#define ION_IOC_INV_CACHES		_IOWR(ION_IOC_MSM_MAGIC, 1, \
+						struct ion_flush_data)
+#define ION_IOC_CLEAN_INV_CACHES	_IOWR(ION_IOC_MSM_MAGIC, 2, \
+						struct ion_flush_data)
+
 #endif /* _UAPI_LINUX_MSM_ION_H */

@@ -1792,7 +1792,7 @@ static unsigned int _get_protection_flags(struct kgsl_pagetable *pt,
 	struct kgsl_memdesc *memdesc)
 {
 	unsigned int flags = IOMMU_READ | IOMMU_WRITE |
-		IOMMU_NOEXEC;
+		IOMMU_NOEXEC | IOMMU_USE_UPSTREAM_HINT;
 	int ret, llc_nwa = 0, upstream_hint = 0;
 	struct kgsl_iommu_pt *iommu_pt = pt->priv;
 

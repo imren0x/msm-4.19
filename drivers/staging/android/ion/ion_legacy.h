@@ -4,6 +4,7 @@
 #ifdef CONFIG_ION_LEGACY
 
 #include "../uapi/ion.h"
+#include "../uapi/msm_ion.h"
 
 typedef int ion_user_handle_t;
 
@@ -95,6 +96,17 @@ struct ion_handle_data {
  * filed set to the corresponding opaque handle.
  */
 #define ION_IOC_IMPORT		_IOWR(ION_IOC_MAGIC, 5, struct ion_fd_data)
+
+#define ION_IOC_SYNC		_IOWR(ION_IOC_MAGIC, 7, struct ion_fd_data)
+
+struct ion_custom_data {
+	unsigned int cmd;
+	unsigned long arg;
+};
+
+#define ION_IOC_CUSTOM		_IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
+
+int ion_legacy_cache_op(unsigned int mcmd, unsigned long uarg);
 
 #endif /* CONFIG_ION_LEGACY */
 
