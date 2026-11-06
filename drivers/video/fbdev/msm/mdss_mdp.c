@@ -5340,8 +5340,7 @@ int mdss_mdp_secure_session_ctrl(unsigned int enable, u64 flags)
 				MDSS_XLOG_TOUT_HANDLER("mdp", "dsi0_ctrl",
 						"dsi0_phy", "dsi1_ctrl",
 						"dsi1_phy", "vbif", "vbif_nrt",
-						"dbg_bus", "vbif_dbg_bus",
-						"panic");
+						"dbg_bus", "vbif_dbg_bus");
 			resp = desc.ret[0];
 
 			pr_debug("scm_call MEM_PROTECT_SD_CTRL(%u): ret=%d, resp=%x\n",
