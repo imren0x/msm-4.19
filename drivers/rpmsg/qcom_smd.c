@@ -17,6 +17,8 @@
 #include <linux/sizes.h>
 #include <linux/slab.h>
 #include <linux/soc/qcom/smem.h>
+#include <linux/workqueue.h>
+#include <soc/qcom/subsystem_restart.h>
 #include <linux/termios.h>
 #include <linux/wait.h>
 #include <linux/rpmsg.h>
@@ -1737,6 +1739,48 @@ int qcom_smd_unregister_edge(struct qcom_smd_edge *edge)
 }
 EXPORT_SYMBOL(qcom_smd_unregister_edge);
 
+#define SMD_MODEM_BOOT_DELAY_MS	500
+#define SMD_MODEM_BOOT_RETRY	20
+
+struct qcom_smd_modem_boot {
+	struct delayed_work work;
+	struct device *dev;
+	int tries;
+};
+
+static struct qcom_smd_modem_boot *smd_modem_boot;
+
+static void qcom_smd_modem_boot_work(struct work_struct *work)
+{
+	struct qcom_smd_modem_boot *mb =
+		container_of(work, struct qcom_smd_modem_boot, work.work);
+	struct device_node *pil_np;
+	void *pil;
+
+	pil_np = of_find_compatible_node(NULL, NULL, "qcom,pil-q6v55-mss");
+	if (!pil_np)
+		return;
+	of_node_put(pil_np);
+
+	pil = subsystem_get("modem");
+	if (IS_ERR_OR_NULL(pil)) {
+		long err = IS_ERR(pil) ? PTR_ERR(pil) : -ENODEV;
+
+		if (err == -ENODEV && ++mb->tries < SMD_MODEM_BOOT_RETRY) {
+			schedule_delayed_work(&mb->work,
+				msecs_to_jiffies(SMD_MODEM_BOOT_DELAY_MS));
+			return;
+		}
+		dev_warn(mb->dev,
+			 "subsystem_get(modem) failed (%ld) after %d tries\n",
+			 err, mb->tries);
+		return;
+	}
+
+	dev_info(mb->dev, "modem subsystem boot requested (%d tries)\n",
+		 mb->tries + 1);
+}
+
 static int qcom_smd_probe(struct platform_device *pdev)
 {
 	struct device_node *node;
@@ -1749,6 +1793,33 @@ static int qcom_smd_probe(struct platform_device *pdev)
 
 	for_each_available_child_of_node(pdev->dev.of_node, node)
 		qcom_smd_register_edge(&pdev->dev, node);
+		
+	for_each_available_child_of_node(pdev->dev.of_node, node) {
+		const char *label = NULL;
+		bool found = false;
+
+		if (!of_property_read_string(node, "label", &label) &&
+		    label && !strcmp(label, "mpss"))
+			found = true;
+
+		if (!found)
+			continue;
+
+		if (!smd_modem_boot) {
+			smd_modem_boot = devm_kzalloc(&pdev->dev,
+					sizeof(*smd_modem_boot), GFP_KERNEL);
+			if (smd_modem_boot) {
+				smd_modem_boot->dev = &pdev->dev;
+				INIT_DELAYED_WORK(&smd_modem_boot->work,
+						  qcom_smd_modem_boot_work);
+				schedule_delayed_work(&smd_modem_boot->work,
+					msecs_to_jiffies(SMD_MODEM_BOOT_DELAY_MS));
+			}
+		}
+
+		of_node_put(node);
+		break;
+	}
 
 	return 0;
 }
