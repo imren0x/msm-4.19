@@ -213,6 +213,7 @@ struct sdhci_msm_pltfm_data {
 	unsigned char sup_ice_clk_cnt;
 	u32 ice_clk_max;
 	u32 ice_clk_min;
+	int sd_vdd_en;
 };
 
 struct sdhci_msm_bus_vote {
