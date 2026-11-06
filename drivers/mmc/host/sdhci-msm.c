@@ -2270,6 +2270,14 @@ struct sdhci_msm_pltfm_data *sdhci_msm_populate_pdata(struct device *dev,
 	if (gpio_is_valid(pdata->status_gpio) && !(flags & OF_GPIO_ACTIVE_LOW))
 		pdata->caps2 |= MMC_CAP2_CD_ACTIVE_HIGH;
 
+	pdata->sd_vdd_en = of_get_named_gpio_flags(np, "vdd-gpio-en", 0,
+						   &flags);
+	if (pdata->sd_vdd_en < 0)
+		dev_dbg(dev, "vdd-gpio-en failed, assuming always-on\n");
+	else
+		dev_info(dev, "sdcard vdd enable gpio = %d\n",
+			 pdata->sd_vdd_en);
+
 	of_property_read_u32(np, "qcom,bus-width", &bus_width);
 	if (bus_width == 8)
 		pdata->mmc_bus_width = MMC_CAP_8_BIT_DATA;
@@ -2891,8 +2899,19 @@ static int sdhci_msm_setup_vreg(struct sdhci_msm_pltfm_data *pdata,
 			bool enable, bool is_init)
 {
 	int ret = 0, i;
+	struct sdhci_msm_pltfm_data *pl = pdata;
 	struct sdhci_msm_slot_reg_data *curr_slot;
 	struct sdhci_msm_reg_data *vreg_table[2];
+	static bool first_pwr_on = true;
+
+	if (gpio_is_valid(pl->sd_vdd_en)) {
+		if (enable) {
+			gpio_direction_output(pl->sd_vdd_en, 1);
+			gpio_set_value(pl->sd_vdd_en, 1);
+			mdelay(first_pwr_on ? 20 : 2);
+			first_pwr_on = false;
+		}
+	}
 
 	curr_slot = pdata->vreg_data;
 	if (!curr_slot) {
@@ -2915,6 +2934,11 @@ static int sdhci_msm_setup_vreg(struct sdhci_msm_pltfm_data *pdata,
 		}
 	}
 out:
+	if (!enable && gpio_is_valid(pl->sd_vdd_en)) {
+		gpio_direction_output(pl->sd_vdd_en, 0);
+		gpio_set_value(pl->sd_vdd_en, 0);
+		mdelay(2);
+	}
 	return ret;
 }
 
@@ -5526,11 +5550,35 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 
 	sdhci_msm_bus_voting(host, 1);
 
+	if (gpio_is_valid(msm_host->pdata->sd_vdd_en)) {
+		ret = gpio_request(msm_host->pdata->sd_vdd_en,
+				   "sdcard_vdd_enable");
+		if (ret) {
+			dev_err(&pdev->dev,
+				"failed to request sdcard vdd gpio %d: %d\n",
+				msm_host->pdata->sd_vdd_en, ret);
+			msm_host->pdata->sd_vdd_en = -EINVAL;
+			ret = 0;
+		} else {
+			gpio_direction_output(msm_host->pdata->sd_vdd_en, 0);
+		}
+	}
+
 	/* Setup regulators */
 	ret = sdhci_msm_vreg_init(&pdev->dev, msm_host->pdata, true);
 	if (ret) {
 		dev_err(&pdev->dev, "Regulator setup failed (%d)\n", ret);
 		goto bus_unregister;
+	}
+
+	if (gpio_is_valid(msm_host->pdata->sd_vdd_en)) {
+		ret = sdhci_msm_setup_vreg(msm_host->pdata, true, true);
+		if (ret) {
+			dev_warn(&pdev->dev,
+				 "sdcard vdd power-up failed (%d), continue\n",
+				 ret);
+			ret = 0;
+		}
 	}
 
 	/* Reset the core and Enable SDHC mode */
@@ -5923,6 +5971,9 @@ static int sdhci_msm_remove(struct platform_device *pdev)
 	pr_debug("%s: %s Enter\n", dev_name(&pdev->dev), __func__);
 	if (!gpio_is_valid(msm_host->pdata->status_gpio))
 		device_remove_file(&pdev->dev, &msm_host->polling);
+
+	if (gpio_is_valid(msm_host->pdata->sd_vdd_en))
+		gpio_free(msm_host->pdata->sd_vdd_en);
 
 	device_remove_file(&pdev->dev, &msm_host->auto_cmd21_attr);
 	device_remove_file(&pdev->dev, &msm_host->msm_bus_vote.max_bus_bw);
