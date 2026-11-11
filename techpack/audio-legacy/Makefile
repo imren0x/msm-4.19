@@ -27,8 +27,10 @@ LINUXINCLUDE    += \
                 -I$(srctree)/techpack/audio-legacy/include
 
 ifeq ($(CONFIG_ARCH_SDM450), y)
+ifneq ($(CONFIG_ARCH_MSM8953), y)
 LINUXINCLUDE    += \
                 -include $(srctree)/techpack/audio-legacy/config/sdm450autoconf.h
+endif
 endif
 ifeq ($(CONFIG_ARCH_SDM660), y)
 LINUXINCLUDE    += \
@@ -36,7 +38,7 @@ LINUXINCLUDE    += \
 endif
 ifeq ($(CONFIG_ARCH_MSM8953), y)
 LINUXINCLUDE    += \
-                -include $(srctree)/techpack/audio-legacy/config/sdm450autoconf.h
+                -include $(srctree)/techpack/audio-legacy/config/msm8953autoconf.h
 endif
 ifeq ($(CONFIG_ARCH_MSM8937), y)
 LINUXINCLUDE    += \
