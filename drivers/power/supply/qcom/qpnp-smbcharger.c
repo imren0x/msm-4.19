@@ -6042,14 +6042,24 @@ static int smbchg_dc_is_writeable(struct power_supply *psy,
 #define BAT_LOW_BIT		BIT(5)
 #define BAT_MISSING_BIT		BIT(6)
 #define BAT_TERM_MISSING_BIT	BIT(7)
+static bool smbchg_has_thermal_float_voltage_comp(void)
+{
+	switch (xiaomi_msm8953_mach_get()) {
+	case XIAOMI_MSM8953_MACH_MIDO:
+	case XIAOMI_MSM8953_MACH_SAKURA:
+	case XIAOMI_MSM8953_MACH_VINCE:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static irqreturn_t batt_hot_handler(int irq, void *_chip)
 {
 	struct smbchg_chip *chip = _chip;
 	u8 reg = 0;
 
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+	if (smbchg_has_thermal_float_voltage_comp()) {
 		
 		int rc;
 		/* set the warm float voltage compensation, set the warm float voltage to 4.1V */
@@ -6079,9 +6089,7 @@ static irqreturn_t batt_cold_handler(int irq, void *_chip)
 	struct smbchg_chip *chip = _chip;
 	u8 reg = 0;
 
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_SAKURA ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE) {
+	if (smbchg_has_thermal_float_voltage_comp()) {
 		
 		int rc;
 		/* set the cool float voltage compensation, set the cool float voltage to 4.4V */
@@ -7921,6 +7929,7 @@ static void rerun_hvdcp_det_if_necessary(struct smbchg_chip *chip)
 static int smbchg_probe(struct platform_device *pdev)
 {
 	int rc;
+	enum xiaomi_msm8953_mach_types mach = xiaomi_msm8953_mach_get();
 	struct smbchg_chip *chip;
 	struct power_supply *typec_psy = NULL;
 	const char *typec_psy_name;
@@ -7928,8 +7937,8 @@ static int smbchg_probe(struct platform_device *pdev)
 	struct power_supply_config batt_psy_cfg = {};
 	struct power_supply_config dc_psy_cfg = {};
 
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TISSOT) {
+	if (mach == XIAOMI_MSM8953_MACH_VINCE ||
+	    mach == XIAOMI_MSM8953_MACH_TIFFANY) {
 		smbchg_default_hvdcp_icl_ma = 2500;
 	} else {
 		smbchg_default_hvdcp_icl_ma = 1800;
@@ -8440,4 +8449,3 @@ module_exit(smbchg_exit);
 MODULE_DESCRIPTION("QPNP SMB Charger");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:qpnp-smbcharger");
-
