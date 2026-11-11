@@ -1906,9 +1906,10 @@ static int mdss_mdp_irq_clk_setup(struct mdss_data_type *mdata)
 
 	mdata->fs = devm_regulator_get(&mdata->pdev->dev, "vdd");
 	if (IS_ERR_OR_NULL(mdata->fs)) {
+		ret = IS_ERR(mdata->fs) ? PTR_ERR(mdata->fs) : -EINVAL;
 		mdata->fs = NULL;
-		pr_err("unable to get gdsc regulator\n");
-		return -EINVAL;
+		pr_err("unable to get gdsc regulator: %d\n", ret);
+		return ret;
 	}
 
 	mdata->core_gdsc = devm_regulator_get_optional(&mdata->pdev->dev,
@@ -2496,6 +2497,11 @@ void mdss_mdp_footswitch_ctrl_splash(int on)
 	struct mdss_data_type *mdata = mdss_mdp_get_mdata();
 
 	if (mdata != NULL) {
+		if (!mdata->fs) {
+			pr_warn("MDP footswitch regulator is unavailable\n");
+			return;
+		}
+
 		if (on) {
 			mdata->handoff_pending = true;
 			pr_debug("Enable MDP FS for splash.\n");
@@ -3229,7 +3235,7 @@ static int mdss_mdp_probe(struct platform_device *pdev)
 
 probe_done:
 	if (IS_ERR_VALUE((unsigned long) rc)) {
-		if (!num_of_display_on)
+		if (!num_of_display_on && mdata->handoff_pending)
 			mdss_mdp_footswitch_ctrl_splash(false);
 
 		if (mdata->regulator_notif_register)
