@@ -26,9 +26,14 @@ static int __init msmb_camera_init(void)
 
 #if IS_ENABLED(CONFIG_MSMB_CAMERA_LEGACY_M)
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || IS_ENABLED(CONFIG_MACH_XIAOMI_MARKW)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
-		xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MARKW)
-		msmb_camera_enable = false;
+	{
+		enum xiaomi_msm8953_mach_types mach =
+			xiaomi_msm8953_mach_get();
+
+		if (mach == XIAOMI_MSM8953_MACH_MIDO ||
+		    mach == XIAOMI_MSM8953_MACH_MARKW)
+			msmb_camera_enable = false;
+	}
 #endif
 #endif
 

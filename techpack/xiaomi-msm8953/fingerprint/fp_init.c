@@ -37,8 +37,10 @@ extern int xiaomi_msm8953_fingerprint_goodix_ysl_init(void);
 
 static int __init xiaomi_msm8953_fingerprint_init(void)
 {
+	enum xiaomi_msm8953_mach_types mach = xiaomi_msm8953_mach_get();
+
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
+	if (mach == XIAOMI_MSM8953_MACH_YSL) {
 		switch (xiaomi_ysl_fpsensor_variant) {
 			case XIAOMI_YSL_FPSENSOR_FPC:
 				xiaomi_msm8953_fingerprint_fpc_ysl_init();
@@ -54,20 +56,20 @@ static int __init xiaomi_msm8953_fingerprint_init(void)
 	}
 #endif
 	
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-		xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
+	if (mach == XIAOMI_MSM8953_MACH_VINCE ||
+		mach == XIAOMI_MSM8953_MACH_MIDO)
 		xiaomi_msm8953_fingerprint_fpc_mido_init();
 	
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY)
+	if (mach == XIAOMI_MSM8953_MACH_ROSY)
 		xiaomi_msm8953_fingerprint_fpc_rosy_init();
 	
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
+	if (mach == XIAOMI_MSM8953_MACH_MIDO)
 		xiaomi_msm8953_fingerprint_goodix_mido_init();
 	
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_ROSY)
+	if (mach == XIAOMI_MSM8953_MACH_ROSY)
 		xiaomi_msm8953_fingerprint_goodix_rosy_init();
 	
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE)
+	if (mach == XIAOMI_MSM8953_MACH_VINCE)
 		xiaomi_msm8953_fingerprint_goodix_vince_init();
 
 	return 0;
