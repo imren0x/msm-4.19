@@ -41,82 +41,6 @@
 	};
 };	
 
-/* msm-pmi8940 */
-&spmi_bus {
-    qcom,pmi8940@2 {  
-   		qpnp_smbcharger: qcom,qpnp-smbcharger {
-			spmi-dev-container;
-			compatible = "qcom,qpnp-smbcharger";
-			#address-cells = <1>;
-			#size-cells = <1>;
-
-			qcom,iterm-ma = <200>;
-			qcom,float-voltage-mv = <4400>;
-			qcom,resume-delta-mv = <50>;
-			qcom,chg-inhibit-fg;
-			dpdm-supply = <&qusb_phy>;
-			qcom,hvdcp-disable;
-			qcom,micro-usb;
-			
-			/delete-property/qcom,chg-inhibit-en;
-			/delete-property/ qcom,external-typec;
-        		/delete-property/ qcom,typec-psy-name;
-			qcom,rparasitic-uohm = <100000>;
-			qcom,bms-psy-name = "bms";
-			qcom,thermal-mitigation = <2000 1000 800 500 200 0>;
-			qcom,pmic-revid = <&pmi8940_revid>;
-			qcom,force-aicl-rerun;
-			qcom,aicl-rerun-period-s = <180>;/*default 180*/
-			qcom,autoadjust-vfloat;
-			qcom,fastchg-current-ma = <2000>;
-			qcom,dc-psy-type = "Mains";
-			qcom,dc-psy-ma = <2000>;
-			qcom,low-volt-dcin;
-			qcom,bmd-pin-src = "bpd_thm_id";
-			qcom,charge-unknown-battery;
-			/*xiaomi-jeita*/
-			qcom,jeita-temp-hard-limit = <1>;
-			/delete-property/qcom,fastchg-current-comp;
-			qcom,cool-xiaomi-bat-decidegc = <50>;
-			qcom,battery-data = <&mtp_batterydata>;
-	    	/delete-property/ qcom,chg-led-sw-controls;
-			/delete-property/ qcom,chg-led-support;
-			io-channels = <&pmi8940_vadc VADC_VCHG_SNS_LEGACY>;
-			io-channel-names = "vchg_sns";
-		};
-	
-		qcom_fg: qcom,fg {
-			spmi-dev-container;
-			compatible = "qcom,qpnp-fg";
-			#address-cells = <1>;
-			#size-cells = <1>;
-			status = "okay";
-			qcom,resume-soc = <99>;
-			qcom,resume-soc-raw = <254>;
-			qcom,hold-soc-while-full;
-			qcom,fg-delta-soc = <1>;//fg soc update frequency
-			qcom,bcl-lm-threshold-ma = <127>;
-			qcom,bcl-mh-threshold-ma = <405>;
-			qcom,fg-iterm-ma = <400>;
-			qcom,fg-chg-iterm-ma = <200>;/*default 100ma*/
-			qcom,pmic-revid = <&pmi8940_revid>;
-			qcom,fg-cutoff-voltage-mv = <3400>;
-			qcom,cycle-counter-en;
-			qcom,battery-data = <&mtp_batterydata>;
-			qcom,fg-cc-cv-threshold-mv = <4390>;
-			qcom,vbat-estimate-diff-mv = <150>;
-			qcom,thermal-coefficients = [C8 86 C1 50 D3 37];/*R=10K B25/85 = 3435*/
-			qcom,cold-hot-jeita-hysteresis = <10 20>;//jeita recharger
-			/delete-property/qcom,capacity-learning-on;
-			/*xiaomi-jeita*/
-			qcom,hot-bat-decidegc = <600>;
-			qcom,warm-bat-decidegc = <450>;
-			qcom,cool-bat-decidegc = <150>;
-			qcom,cold-bat-decidegc = <0>;
-    		};
-    	};
-};
-
 &spmi_bus {
 	qcom,pmi8940@3 {
 		labibb: qpnp-labibb-regulator {
@@ -127,6 +51,12 @@
 
 			lab_regulator: qcom,lab@de00 {
 				qcom,qpnp-lab-init-lcd-voltage = <5500000>;
+			};
+		};
+
+		flash_led: qcom,leds@d300 {
+			pmi8940_switch: qcom,switch {
+				qcom,led-name = "flashlight";
 			};
 		};
 	};
