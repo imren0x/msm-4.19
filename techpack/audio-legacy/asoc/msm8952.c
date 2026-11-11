@@ -3704,10 +3704,11 @@ parse_mclk_freq:
 	msm8952_dt_parse_cap_info(pdev, pdata);
 
 #if IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL) {
 		ret = msm_setup_spk_ext_pa(pdev, pdata);
 		if (ret)
 			pr_debug("%s, msm_setup_spk_ext_pa error!\n", __func__);
+	}
 #endif
 
 	card->dev = &pdev->dev;
