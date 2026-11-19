@@ -4707,8 +4707,7 @@ static int mdss_dsi_parse_ctrl_params(struct platform_device *ctrl_pdev,
 
 }
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 u32 te_count;
 static irqreturn_t te_interrupt(int irq, void *data)
 {
@@ -4932,10 +4931,10 @@ int dsi_panel_device_register(struct platform_device *ctrl_pdev,
 	if (ctrl_pdata->status_mode == ESD_REG ||
 			ctrl_pdata->status_mode == ESD_REG_NT35596)
 		ctrl_pdata->check_status = mdss_dsi_reg_status_check;
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 	else if ((xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-		  xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) && 
+		  xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
+		  xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) && 
 		 ctrl_pdata->status_mode == ESD_TE_NT35596) {
 		ctrl_pdata->check_status = mdss_dsi_TE_NT35596_check;
 		init_te_irq(ctrl_pdata);

@@ -2152,11 +2152,11 @@ static void mdss_dsi_parse_esd_params(struct device_node *np,
 			ctrl->status_error_count = 0;
 			ctrl->check_read_status =
 				mdss_dsi_gen_read_status;
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || \
-    IS_ENABLED(CONFIG_MACH_XIAOMI_VINCE)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
 		} else if (!strcmp(string, "TE_check_NT35596")) {
 			if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_VINCE ||
-                xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
+                xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
+				xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_TIFFANY) {
 				ctrl->status_mode = ESD_TE_NT35596;
 			}
 #endif
