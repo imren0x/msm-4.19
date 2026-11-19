@@ -2,6 +2,27 @@
 #include "../common/panel/dsi-panel-ili7807-fhd-video.dtsi"
 #include "panel/dsi-panel-otm1911-fhd-video.dtsi"
 
+&dsi_panel_pwr_supply {
+	qcom,panel-supply-entry@2 {
+		reg = <2>;
+		qcom,supply-name = "lab";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+	};
+
+	qcom,panel-supply-entry@3 {
+		reg = <3>;
+		qcom,supply-name = "ibb";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		qcom,supply-post-on-sleep = <10>;
+	};
+};
+
 &mdss_dsi0 {
 	qcom,dsi-pref-prim-pan = <&dsi_otm1911_fhd_vid>;
 };
