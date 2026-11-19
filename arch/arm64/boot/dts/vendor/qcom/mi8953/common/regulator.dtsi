@@ -9,6 +9,7 @@
 	rpm-regulator-ldoa6 {
 		pm8953_l6: regulator-l6 {
             regulator-always-on;
+			enable-active-high;
 		};
 	};
 
@@ -17,10 +18,17 @@
             regulator-always-on;
 		};
 	};
+
+	rpm-regulator-ldoa23 {
+		pm8953_l22: regulator-l22 {
+			enable-active-high;
+		};
+	};
 	
 	rpm-regulator-ldoa23 {
 		pm8953_l23: regulator-l23 {
 			qcom,init-voltage = <1200000>;
+			enable-active-high;
 		};
 	};
 };
