@@ -1,6 +1,12 @@
+&adsp_fw_mem {
+	reg = <0x0 0x8d600000 0x0 0x1200000>;
+};
+&wcnss_fw_mem {
+	reg = <0x0 0x8e800000 0x0 0x700000>;
+};
+
 #include "../common/sdhc.dtsi"
 #include "../common/pinctrl.dtsi"
-#include "android.dtsi"
 #include "pinctrl.dtsi"
 #include "ysl-pinctrl.dtsi"
 #include "pmic.dtsi"

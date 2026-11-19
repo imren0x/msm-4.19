@@ -1,5 +1,4 @@
 #include "../common/pinctrl.dtsi"
-#include "android.dtsi"
 #include "display.dtsi"
 #include "touchscreen.dtsi"
 #include "camera.dtsi"

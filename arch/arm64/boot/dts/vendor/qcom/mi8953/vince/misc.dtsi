@@ -5,3 +5,7 @@
 &spi_peel_ir {
 	status = "okay";
 };
+
+&led_aw2013 {
+	status = "okay";
+};
