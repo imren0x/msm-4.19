@@ -19,7 +19,7 @@
 		};
 	};
 
-	rpm-regulator-ldoa23 {
+	rpm-regulator-ldoa22 {
 		pm8953_l22: regulator-l22 {
 			enable-active-high;
 		};
