@@ -41,9 +41,6 @@
 #include <xiaomi-msm8953/mach.h>
 #endif
 
-/* Rated capacity of the 4100mAh BN43 battery in mido */
-#define MIDO_BATT_DESIGN_CAPACITY_UAH	4100000
-
 /* Register offsets */
 
 /* Interrupt offsets */
@@ -573,6 +570,7 @@ struct fg_chip {
 	int			ocv_junction_p1p2;
 	int			ocv_junction_p2p3;
 	int			nom_cap_uah;
+	int			design_cap_uah;
 	int			actual_cap_uah;
 	int			status;
 	int			prev_status;
@@ -4634,15 +4632,13 @@ static int fg_power_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
 		/*
-		 * nom_cap_uah is the profile's nominal capacity from FG SRAM,
-		 * not the rated capacity of the mido battery
+		 * If a design capacity is configured via DT, report that;
+		 * otherwise fall back to the profile's nominal capacity from SRAM.
 		 */
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MSM8953)
-		if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO) {
-			val->intval = MIDO_BATT_DESIGN_CAPACITY_UAH;
+		if (chip->design_cap_uah > 0) {
+			val->intval = chip->design_cap_uah;
 			break;
 		}
-#endif
 		val->intval = chip->nom_cap_uah;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
@@ -7006,6 +7002,20 @@ static int fg_of_init(struct fg_chip *chip)
 	const char *data;
 	struct device_node *node = chip->pdev->dev.of_node;
 	u32 temp[2] = {0};
+	u32 cap_mah;
+
+	rc = of_property_read_u32(node, "qcom,design-capacity-uah",
+					&chip->design_cap_uah);
+	if (rc) {
+		rc = of_property_read_u32(node,
+					"charge-full-design-microamp-hours",
+					&chip->design_cap_uah);
+	}
+	if (rc) {
+		if (!of_property_read_u32(node, "qcom,design-capacity-mah",
+						&cap_mah))
+			chip->design_cap_uah = cap_mah * 1000;
+	}
 
 	OF_READ_SETTING(FG_MEM_SOFT_HOT, "warm-bat-decidegc", rc, 1);
 	OF_READ_SETTING(FG_MEM_SOFT_COLD, "cool-bat-decidegc", rc, 1);
