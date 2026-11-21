@@ -8192,13 +8192,14 @@ static int smbchg_probe(struct platform_device *pdev)
 		goto votables_cleanup;
 	}
 
-#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO)
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
 	/*
-	 * mido ships with HVDCP disabled (the 4.9 kernel does the same). With
-	 * it enabled, PMI8950 forces QC chargers to 9V and the input drops
+	 * mido and ysl ship with HVDCP disabled (the 4.9 kernel does the same).
+	 * With it enabled, the PMIC forces QC chargers to 9V and the input drops
 	 * out and comes back every few seconds. Charge them as 5V DCPs.
 	 */
-	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO)
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
 		chip->hvdcp_not_supported = true;
 #endif
 
