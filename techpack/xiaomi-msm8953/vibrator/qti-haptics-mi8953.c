@@ -475,7 +475,7 @@ static int qti_haptics_module_en(struct qti_hap_chip *chip, bool en)
 }
 
 static int vmax_mv_override = 0;
-module_param_named(vmax_mv_override, vmax_mv_override, int, 0664);
+static struct qti_hap_chip *hap_override_chip;
 
 static int qti_haptics_config_vmax(struct qti_hap_chip *chip, int vmax_mv)
 {
@@ -497,6 +497,26 @@ static int qti_haptics_config_vmax(struct qti_hap_chip *chip, int vmax_mv)
 
 	return rc;
 }
+
+static int vmax_mv_override_set(const char *val, const struct kernel_param *kp)
+{
+	int rc = param_set_int(val, kp);
+
+	/*
+	 * ERM never reprograms VMAX while playing, so apply the override now
+	 * instead of only at probe. 0 restores the DT/sysfs vmax_mv.
+	 */
+	if (!rc && hap_override_chip)
+		rc = qti_haptics_config_vmax(hap_override_chip,
+				hap_override_chip->config.vmax_mv);
+	return rc;
+}
+
+static const struct kernel_param_ops vmax_mv_override_ops = {
+	.set = vmax_mv_override_set,
+	.get = param_get_int,
+};
+module_param_cb(vmax_mv_override, &vmax_mv_override_ops, &vmax_mv_override, 0664);
 
 static int qti_haptics_config_wf_src(struct qti_hap_chip *chip,
 						enum wf_src src)
@@ -2031,6 +2051,7 @@ static int qti_haptics_probe(struct platform_device *pdev)
 	if (rc < 0)
 		dev_dbg(chip->dev, "create debugfs failed, rc=%d\n", rc);
 #endif
+	hap_override_chip = chip;
 	return 0;
 
 destroy_ff:
@@ -2041,6 +2062,8 @@ destroy_ff:
 static int qti_haptics_remove(struct platform_device *pdev)
 {
 	struct qti_hap_chip *chip = dev_get_drvdata(&pdev->dev);
+
+	hap_override_chip = NULL;
 
 #ifdef CONFIG_DEBUG_FS
 	debugfs_remove_recursive(chip->hap_debugfs);

@@ -40,6 +40,7 @@
 	qcom,fg-iterm-ma = <300>;
 	qcom,fg-chg-iterm-ma = <200>;
 	qcom,fg-cutoff-voltage-mv = <3400>;
+	qcom,design-capacity-uah = <4000000>;
 	qcom,hold-soc-while-full;
 	qcom,fg-cc-cv-threshold-mv =<4370>;
 	qcom,vbat-estimate-diff-mv = <200>;

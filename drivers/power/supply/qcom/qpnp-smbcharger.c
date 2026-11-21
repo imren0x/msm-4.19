@@ -258,6 +258,8 @@ struct smbchg_chip {
 	struct work_struct		usb_set_online_work;
 	struct delayed_work		vfloat_adjust_work;
 	struct delayed_work		hvdcp_det_work;
+	struct delayed_work		sdp_float_work;
+	bool				sdp_host_seen;
 	spinlock_t			sec_access_lock;
 	struct mutex			therm_lvl_lock;
 	struct mutex			usb_set_online_lock;
@@ -1074,6 +1076,25 @@ static int get_prop_batt_resistance_id(struct smbchg_chip *chip)
 }
 
 #define DEFAULT_BATT_FULL_CHG_CAPACITY	0
+/*
+ * Listing CHARGE_FULL_DESIGN without a getter made reads of
+ * battery/charge_full_design fail, so health HAL reported a design
+ * capacity of 0. Forward the FG value like CHARGE_FULL.
+ */
+static int get_prop_batt_full_charge_design(struct smbchg_chip *chip)
+{
+	int design, rc;
+
+	rc = get_property_from_fg(chip, POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+			&design);
+	if (rc) {
+		pr_smb(PR_STATUS, "Couldn't get charge_full_design rc = %d\n",
+				rc);
+		design = DEFAULT_BATT_FULL_CHG_CAPACITY;
+	}
+	return design;
+}
+
 static int get_prop_batt_full_charge(struct smbchg_chip *chip)
 {
 	int bfc, rc;
@@ -4325,6 +4346,39 @@ static int force_9v_hvdcp(struct smbchg_chip *chip)
 	return rc;
 }
 
+/*
+ * Chargers that leave D+/D- open (charge-only cables, many car chargers and
+ * power banks) are detected by APSD as SDP. No host ever resets the bus, so
+ * dwc3 sees an idle bus, reports a suspend before enumeration and votes
+ * 2mA, which suspends USBIN: the phone stops charging and the input keeps
+ * dropping out and coming back. A real host always resets the bus first,
+ * which votes 100mA, so if nothing above the suspend current was requested
+ * by now there is no host and this is a dumb charger.
+ */
+#define SDP_FLOAT_CHECK_MS	3000
+#define FLOAT_CHARGER_ICL_MA	1000
+static void smbchg_sdp_float_work(struct work_struct *work)
+{
+	struct smbchg_chip *chip = container_of(work,
+				struct smbchg_chip,
+				sdp_float_work.work);
+
+	mutex_lock(&chip->usb_status_lock);
+	if (!chip->usb_present || chip->sdp_host_seen
+			|| chip->usb_supply_type != POWER_SUPPLY_TYPE_USB)
+		goto unlock;
+
+	pr_smb(PR_STATUS, "SDP never enumerated, treating as %dmA charger\n",
+			FLOAT_CHARGER_ICL_MA);
+	/* Not a host: stop the USB stack and charge it like a DCP */
+	extcon_set_state_sync(chip->extcon, EXTCON_USB, false);
+	smbchg_change_usb_supply_type(chip, POWER_SUPPLY_TYPE_USB_DCP);
+	vote(chip->usb_icl_votable, PSY_ICL_VOTER, true, FLOAT_CHARGER_ICL_MA);
+	power_supply_changed(chip->usb_psy);
+unlock:
+	mutex_unlock(&chip->usb_status_lock);
+}
+
 static void smbchg_hvdcp_det_work(struct work_struct *work)
 {
 	struct smbchg_chip *chip = container_of(work,
@@ -4485,6 +4539,12 @@ static void handle_usb_removal(struct smbchg_chip *chip)
 	/* cancel/wait for hvdcp pending work if any */
 	cancel_delayed_work_sync(&chip->hvdcp_det_work);
 	smbchg_relax(chip, PM_DETECT_HVDCP);
+	/*
+	 * Not _sync: the work takes usb_status_lock, which is held here. It
+	 * rechecks usb_present under the lock, so a late run does nothing.
+	 */
+	cancel_delayed_work(&chip->sdp_float_work);
+	chip->sdp_host_seen = false;
 	smbchg_change_usb_supply_type(chip, POWER_SUPPLY_TYPE_USB);
 	extcon_set_state_sync(chip->extcon, EXTCON_USB, chip->usb_present);
 	smbchg_request_dpdm(chip, false);
@@ -4570,6 +4630,11 @@ static void handle_usb_insertion(struct smbchg_chip *chip)
 	if (chip->typec_psy)
 		update_typec_status(chip);
 	smbchg_change_usb_supply_type(chip, usb_supply_type);
+
+	chip->sdp_host_seen = false;
+	if (usb_supply_type == POWER_SUPPLY_TYPE_USB)
+		mod_delayed_work(system_wq, &chip->sdp_float_work,
+				msecs_to_jiffies(SDP_FLOAT_CHECK_MS));
 
 	/* Only notify USB if it's not a charger */
 	if (usb_supply_type == POWER_SUPPLY_TYPE_USB ||
@@ -5560,6 +5625,19 @@ static void update_typec_otg_status(struct smbchg_chip *chip, int mode,
 static int smbchg_set_sdp_current(struct smbchg_chip *chip, int current_ma)
 {
 	if (chip->usb_supply_type == POWER_SUPPLY_TYPE_USB) {
+		if (current_ma > SUSPEND_CURRENT_MA) {
+			/* Bus reset or configuration: a real host is there */
+			chip->sdp_host_seen = true;
+			cancel_delayed_work(&chip->sdp_float_work);
+		} else if (!chip->sdp_host_seen) {
+			/*
+			 * Suspend before any host activity means D+/D- are
+			 * open, not a suspended host; see smbchg_sdp_float_work
+			 */
+			pr_smb(PR_MISC, "Ignoring %dmA before enumeration\n",
+					current_ma);
+			return 0;
+		}
 		/* Override if type-c charger used */
 		if (chip->typec_current_ma > 500 &&
 				current_ma < chip->typec_current_ma) {
@@ -5700,6 +5778,7 @@ static enum power_supply_property smbchg_battery_properties[] = {
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_RESISTANCE_ID,
 	POWER_SUPPLY_PROP_CHARGE_FULL,
+	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
 	POWER_SUPPLY_PROP_SAFETY_TIMER_ENABLE,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_SETTLED,
@@ -5907,6 +5986,9 @@ static int smbchg_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		val->intval = get_prop_batt_full_charge(chip);
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		val->intval = get_prop_batt_full_charge_design(chip);
 		break;
 	case POWER_SUPPLY_PROP_TEMP:
 		val->intval = get_prop_batt_temp(chip);
@@ -8069,6 +8151,7 @@ static int smbchg_probe(struct platform_device *pdev)
 			smbchg_parallel_usb_en_work);
 	INIT_DELAYED_WORK(&chip->vfloat_adjust_work, smbchg_vfloat_adjust_work);
 	INIT_DELAYED_WORK(&chip->hvdcp_det_work, smbchg_hvdcp_det_work);
+	INIT_DELAYED_WORK(&chip->sdp_float_work, smbchg_sdp_float_work);
 	init_completion(&chip->src_det_lowered);
 	init_completion(&chip->src_det_raised);
 	init_completion(&chip->usbin_uv_lowered);
@@ -8108,6 +8191,17 @@ static int smbchg_probe(struct platform_device *pdev)
 		pr_err("Unable to check schg version rc=%d\n", rc);
 		goto votables_cleanup;
 	}
+
+#if IS_ENABLED(CONFIG_MACH_XIAOMI_MIDO) || IS_ENABLED(CONFIG_MACH_XIAOMI_YSL)
+	/*
+	 * mido and ysl ship with HVDCP disabled (the 4.9 kernel does the same).
+	 * With it enabled, the PMIC forces QC chargers to 9V and the input drops
+	 * out and comes back every few seconds. Charge them as 5V DCPs.
+	 */
+	if (xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_MIDO ||
+	    xiaomi_msm8953_mach_get() == XIAOMI_MSM8953_MACH_YSL)
+		chip->hvdcp_not_supported = true;
+#endif
 
 	rc = smb_parse_dt(chip);
 	if (rc < 0) {
@@ -8290,6 +8384,7 @@ static int smbchg_remove(struct platform_device *pdev)
 {
 	struct smbchg_chip *chip = dev_get_drvdata(&pdev->dev);
 
+	cancel_delayed_work_sync(&chip->sdp_float_work);
 	debugfs_remove_recursive(chip->debug_root);
 
 	destroy_votable(chip->aicl_deglitch_short_votable);
