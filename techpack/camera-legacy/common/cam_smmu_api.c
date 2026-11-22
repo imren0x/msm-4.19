@@ -1559,6 +1559,11 @@ static int cam_populate_smmu_context_banks(struct device *dev,
 		ctx = dev;
 		CDBG("getting Arm SMMU ctx : %s\n", cb->name);
 
+	if (!ctx->dma_parms)
+		ctx->dma_parms = devm_kzalloc(ctx, sizeof(*ctx->dma_parms),
+					      GFP_KERNEL);
+	dma_set_max_seg_size(ctx, DMA_BIT_MASK(32));
+
 	rc = cam_smmu_setup_cb(cb, ctx);
 	if (rc < 0)
 		pr_err("Error: failed to setup cb : %s\n", cb->name);
