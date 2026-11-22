@@ -5145,7 +5145,7 @@ static void mdss_mdp_notify_idle_pc(struct mdss_data_type *mdata)
 	int i;
 
 	for (i = 0; i < mdata->nctl; i++)
-		if ((mdata->ctl_off[i].ref_cnt) &&
+		if ((mdata->ctl_off[i].ref_cnt) && mdata->ctl_off[i].mfd &&
 			!mdss_mdp_ctl_is_power_off(&mdata->ctl_off[i]))
 			mdss_fb_idle_pc(mdata->ctl_off[i].mfd);
 }
